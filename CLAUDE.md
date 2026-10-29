@@ -59,6 +59,6 @@ O harness local é versionado, nasce no primeiro commit e muda como o código: u
 | --- | --- | --- |
 | `.claude/skills/docs/` | Lei de escrita da documentação | Invocar antes de tocar em qualquer documentação; alterá-la é mudança de harness |
 | `.claude/agents/docs-auditor.md` | Auditor de deriva, só leitura | Rodar antes de todo commit feito por IA; ele reporta e nunca corrige |
-| `.claude/settings.json` | Negações: ler `.env*`, pular verificações com `--no-verify` ou `-n`, force push e `git reset --hard` | Não afrouxar nenhuma negação sem uma spec que o decida |
+| `.claude/settings.json` | Negações: ler `.env*`, pular verificações com `--no-verify` ou `-n`, force push e `git reset --hard`. Pergunta antes de `git commit` e `git push` | Não afrouxar nenhuma negação nem pergunta sem uma spec que o decida |
 | `.claude/settings.local.json` | Preferências pessoais de quem trabalha no repositório | Fica fora do git e nunca é versionado |
 | `AGENTS.md` | Symlink para este arquivo, para outras ferramentas | Nunca editar como arquivo; edite `CLAUDE.md` |
