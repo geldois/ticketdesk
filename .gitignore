@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+coverage/
+reports/
+.cache/
+.stryker-tmp/
+*.tsbuildinfo
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+.claude/settings.local.json
