@@ -14,12 +14,14 @@ Relato honesto do uso de IA neste projeto. Cada afirmação cita o rodapé `spec
 
 - `spec: none (scaffold)`: no primeiro rascunho de spec, a IA escreveu um critério de tempo ("o hook conclui em até 10 segundos") que ninguém mediu. Percebi que uma afirmação não determinística faria uma spec congelada envelhecer; o critério saiu, junto com versões e fatos externos, e a regra entrou na skill `docs`.
 - `spec: none (scaffold)`: a IA descreveu a estrutura de pastas como uma árvore desenhada com caracteres num bloco de código. Pedi tabelas simples de markdown, e a regra de estilo entrou na skill `docs`.
+- `spec: none (scaffold)`: a IA escreveu no `CLAUDE.md` que o `settings.json` nega "commitar sem passar pelo hook", mas o repositório não tem hook algum. O `docs-auditor` apontou o desvio; a linha passou a listar as negações que o arquivo tem de fato.
 
 ## Uma decisão minha
 
 - `spec: none (scaffold)`: specs congeladas, sem status nem registro. A IA tinha proposto um status e um registro editáveis; decidi que a spec nunca é editada depois do commit que a introduz.
 - `spec: none (scaffold)`: auditor de documentação como convenção do `CLAUDE.md`, e não como hook. A IA recomendou um hook de commit; recusei para deixar livres os commits manuais ou só de formatação.
 - `spec: none (scaffold)`: specs numeradas em `docs/specs/` para praticar desenvolvimento orientado por especificação. A IA tinha proposto só o `README.md`.
+- `spec: none (scaffold)`: proteção das branches sem pull request obrigatória. A IA recomendou exigir pull request para a `main`; decidi só bloquear exclusão e force push, para iterar com push direto em `dev` e merge local.
 
 ## Onde a IA não entrou
 

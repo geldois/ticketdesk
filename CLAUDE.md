@@ -33,6 +33,8 @@ Cada contexto vive em um só lugar. Se o contexto cabe em dois, ele pertence ao 
 - Todo commit cita a spec no rodapé: `spec: 0000N` (minúsculo, como os demais rodapés do Conventional Commits).
 - Só dispensa spec, com `spec: none (motivo)`, o que cabe num motivo desta lista fechada: `typo`, `format`, `deps-bump` (sem mudança de comportamento), `revert` ou `scaffold` (estrutura do repositório criada antes de existir a primeira spec; depois dela, nunca mais).
 - Commits pequenos e focados: um passo termina em um ou mais commits, todos com o rodapé da spec.
+- Duas branches: todo commit e todo push vão para `dev`; a `main` só recebe o merge de `dev` e nunca um commit direto. A IA nunca pusha a `main` nem faz o merge para ela: é ordem do usuário.
+- O push para `dev` só acontece depois que todas as verificações do repositório passam; verificação que ainda não existe não conta como passada.
 
 ## Idioma e comentários
 
@@ -57,6 +59,6 @@ O harness local é versionado, nasce no primeiro commit e muda como o código: u
 | --- | --- | --- |
 | `.claude/skills/docs/` | Lei de escrita da documentação | Invocar antes de tocar em qualquer documentação; alterá-la é mudança de harness |
 | `.claude/agents/docs-auditor.md` | Auditor de deriva, só leitura | Rodar antes de todo commit feito por IA; ele reporta e nunca corrige |
-| `.claude/settings.json` | Negações: ler `.env*` e commitar sem passar pelo hook | Não afrouxar nenhuma negação sem uma spec que o decida |
+| `.claude/settings.json` | Negações: ler `.env*`, pular verificações com `--no-verify` ou `-n`, force push e `git reset --hard` | Não afrouxar nenhuma negação sem uma spec que o decida |
 | `.claude/settings.local.json` | Preferências pessoais de quem trabalha no repositório | Fica fora do git e nunca é versionado |
 | `AGENTS.md` | Symlink para este arquivo, para outras ferramentas | Nunca editar como arquivo; edite `CLAUDE.md` |

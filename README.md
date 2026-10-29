@@ -2,8 +2,6 @@
 
 Sistema de tickets de atendimento full-stack em TypeScript, Node e PostgreSQL: uma operadora registra tickets de clientes, acompanha o andamento até a resolução, consulta o histórico de cada mudança e nunca sobrescreve, sem aviso, a alteração de outra operadora.
 
-Estado: em construção. Este arquivo cresce junto com as specs; cada seção abaixo diz de qual spec virá o seu conteúdo.
-
 ## Como este projeto é desenvolvido
 
 Desenvolvimento orientado por especificação: cada fatia nasce como uma spec congelada em [docs/specs/](docs/specs/), e cada passo dela vira um commit que cita a spec. As regras de trabalho estão em [CLAUDE.md](CLAUDE.md) e o uso de IA está relatado, por spec, em [IA.md](IA.md).
@@ -34,3 +32,4 @@ Da mais antiga para a mais recente.
 | Documentação concentrada no `README.md` e no `IA.md`, com as specs em `docs/specs/` e sem outras pastas de docs | Uma pasta de documentação por área | O `README.md` pode crescer; o código é a fonte da verdade e o mantém enxuto |
 | Auditor de documentação como convenção explícita do `CLAUDE.md`, sem hook que o imponha | Hook de commit que recusa sem a auditoria | Depende de disciplina, e deixa livres os commits manuais ou só de formatação |
 | Documentação e comentários em português, código em inglês | Tudo em inglês | Uma tradução posterior da documentação é um commit à parte |
+| Fluxo em duas branches (a regra está em `CLAUDE.md`), com um ruleset do GitHub que bloqueia exclusão e force push, sem exigir pull request | Pull request obrigatória para a `main` | Nada impede um push direto na `main`; a regra depende de disciplina, e o ciclo fica mais curto |
