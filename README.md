@@ -8,7 +8,14 @@ Desenvolvimento orientado por especificação: cada fatia nasce como uma spec co
 
 ## Como rodar
 
-Ainda sem conteúdo.
+### Para quem desenvolve
+
+O projeto usa uma única versão de Node, exata, declarada em [.node-version](.node-version) e em `engines.node` do
+`package.json`. O `.npmrc` liga o `engine-strict`: com qualquer outra versão, o `npm` recusa a instalação. A versão não é
+repetida aqui; o `.node-version` é o dono dela.
+
+Para ter essa versão no `PATH`, use um gerenciador de versões configurado para ler o `.node-version` ou instale a versão
+direto. O repositório não depende de nenhum gerenciador específico.
 
 ## Visão geral da arquitetura
 
@@ -38,4 +45,4 @@ Da mais antiga para a mais recente.
 | Auditor nos dois sentidos, deriva e omissão, com a omissão como achado de gravidade média | Auditor só de deriva | Mais achados por rodada e mais custo por auditoria |
 | Teste mede comportamento, e o harness é medido pelas ferramentas da própria IA | Teste de texto sobre skill e `CLAUDE.md` | Medir o auditor exige clones com defeito e custa execuções do próprio auditor |
 | Auditor uma vez por commit que toca documento, e achado baixo só registrado | Auditor a cada commit, repetido até o relatório vir limpo | Menos custo por commit, e um detalhe baixo pode ficar sem correção |
-| Spec que substitui outra se chama `0000N-nome-replaces-0000M` | Editar a spec antiga | A spec substituída vira só registro, e a nova repete o que continua valendo |
+| Spec que substitui outra se chama `0000N-nome-replaces-0000M` | Editar a spec antiga | A spec substituída vira só registro, e a nova absorve tudo o que continua valendo, inclusive o que ainda não foi feito |
