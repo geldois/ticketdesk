@@ -1,18 +1,22 @@
 # ticketdesk
 
-Sistema de tickets de atendimento full-stack em TypeScript, Node e PostgreSQL: uma operadora registra tickets de clientes, acompanha o andamento até a resolução, consulta o histórico de cada mudança e nunca sobrescreve, sem aviso, a alteração de outra operadora.
+Sistema de tickets de atendimento full-stack em TypeScript, Node e PostgreSQL: uma operadora registra tickets de
+clientes, acompanha o andamento até a resolução, consulta o histórico de cada mudança e nunca sobrescreve, sem aviso, a
+alteração de outra operadora.
 
 ## Como este projeto é desenvolvido
 
-Desenvolvimento orientado por especificação: cada fatia nasce como uma spec congelada em [docs/specs/](docs/specs/), e cada passo dela vira um commit que cita a spec. As regras de trabalho estão em [CLAUDE.md](CLAUDE.md) e o uso de IA está relatado, por spec, em [IA.md](IA.md).
+Desenvolvimento orientado por especificação: cada fatia nasce como uma spec congelada em [docs/specs/](docs/specs/), e
+cada passo dela vira um commit que cita a spec. As regras de trabalho estão em [CLAUDE.md](CLAUDE.md) e o uso de IA está
+relatado, por spec, em [IA.md](IA.md).
 
 ## Como rodar
 
 ### Para quem desenvolve
 
 O projeto usa uma única versão de Node, exata, declarada em [.node-version](.node-version) e em `engines.node` do
-`package.json`. O `.npmrc` liga o `engine-strict`: com qualquer outra versão, o `npm` recusa a instalação. A versão não é
-repetida aqui; o `.node-version` é o dono dela.
+`package.json`. O `.npmrc` liga o `engine-strict`: com qualquer outra versão, o `npm` recusa a instalação. A versão não
+é repetida aqui; o `.node-version` é o dono dela.
 
 Para ter essa versão no `PATH`, use um gerenciador de versões configurado para ler o `.node-version` ou instale a versão
 direto. O repositório não depende de nenhum gerenciador específico.
@@ -49,3 +53,5 @@ Da mais antiga para a mais recente.
 | Versões exatas, sem scripts de instalação (`ignore-scripts`) e com Node exato recusado por `engine-strict` | Faixas semver, scripts de instalação liberados e uma faixa de Node | Toda atualização é um commit `deps-bump` à parte, e quem tem outro Node não instala |
 | Cobertura mínima em linhas, ramos, funções e instruções desde o primeiro teste | Sem mínimo enquanto houver um único teste trivial, ou um mínimo mais alto | O mínimo reprova o `check` desde o início, e cada arquivo novo exige teste |
 | Prettier só para `.ts`, `.js`, `.json` e `.yml`, fora dos `*.md` e do lockfile, com o ESLint cuidando só de lint | Prettier também nos `*.md`, ou formato dentro do ESLint | Um dono por tipo de arquivo, e o `eslint-config-prettier` precisa ficar por último na configuração |
+| `rumdl` como único dono do Markdown, em lint e formato, com largura de 120 colunas e reflow | Prettier ou markdownlint nos `*.md`, ou sem largura fixa | O reflow reescreve parágrafos já escritos, e uma spec congelada só muda de formatação |
+| Todo cache do tooling em `.cache/`, ignorado pelo git | Os caches padrão de cada ferramenta, espalhados pela raiz e por `node_modules` | Cada ferramenta precisa de uma flag ou opção de cache, e uma nova ferramenta sem ela suja a raiz |

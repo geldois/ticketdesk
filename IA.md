@@ -53,6 +53,13 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   reprovando um `==` e um `if` sobre `number | undefined` pelas regras `eqeqeq` e `strict-boolean-expressions`, o
   Prettier reprovando uma linha mal formatada, e o `fix` trocando um `let` nunca reatribuído por `const` e formatando o
   arquivo. O `fix` rodou uma vez no repositório e só reformatou o `.claude/settings.json`. O `check` não foi rodado.
+- `spec: 00003`, passo 5: a IA escreveu uma sonda fora do repositório, com dez casos (instalação limpa, versões exatas,
+  `rumdl` sem saída sobre todos os `.md`, cache em `.cache/rumdl`, raiz sem arquivo novo, os canários, a quebra de linha
+  final e as linhas do Registro), vermelha antes do código e verde depois dele. Os canários, em clones descartáveis,
+  mostraram o `rumdl` reprovando um parágrafo acima de 120 colunas pela regra `MD013` e o `fix` quebrando o parágrafo em
+  até 120 colunas. O `fix` rodou uma vez no repositório e só reformatou os `.md`: o reflow dos que já estavam
+  commitados, menos o `README.md`, foi para um commit à parte com `spec: none (format)`, e o do `README.md` entrou junto
+  com este passo. O `check` não foi rodado.
 - `spec: 00002`, passo 1: a IA mediu o `docs-auditor` novo com clones do repositório, um defeito por clone. Dos 8 clones
   rodados, 5 trouxeram a categoria e a gravidade esperadas, e 3 trouxeram a categoria com gravidade alta em vez de
   média, o que levou à correção da regra de gravidade no agente. Os outros 8 casos da spec ficaram sem medir, por custo.
