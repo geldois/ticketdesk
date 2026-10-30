@@ -139,7 +139,8 @@ motivo diz por que o campo não cabe nesta fatia e não repete o que `IA.md`, `R
 - A spec é congelada no conteúdo a partir do commit que a introduz: não tem status nem registro, e só a formatação pode
   mudar depois, com o commit `spec: none (format)`. Corrigir ou mudar uma decisão é abrir uma spec nova.
 - A spec que substitui outra se chama `0000N-nome-replaces-0000M.md` e traz a linha `Substitui: 0000M` logo abaixo do
-  H1. Ela diz o que continua valendo do que substitui, e a substituída fica como registro: o auditor confere só a
+  H1. A substituta sempre absorve a substituída: tudo o que continua valendo, incluindo o que ainda não foi feito, passa
+  a morar nela, e a substituída deixa de ser fonte de qualquer passo. Ela fica só como registro: o auditor confere só a
   estrutura dela, nunca a qualidade dos casos.
 - A spec só afirma o que é determinístico e está sob controle do projeto: comportamento, contrato e critérios binários.
   Nomear a ferramenta escolhida é uma decisão e pode entrar na spec. Ficam de fora tempo, desempenho medido, versão,
