@@ -11,6 +11,7 @@ Relato honesto do uso de IA neste projeto. Cada afirmação cita o rodapé `spec
 
 - `spec: none (scaffold)`: conferi à mão que o `settings.json` é JSON válido, que `AGENTS.md` aponta para `CLAUDE.md`, que a documentação não tem árvore desenhada, versão nem tempo medido, e que cada caminho citado existe.
 - `spec: 00001`: antes de congelar a spec, a IA provou, a meu pedido, num esqueleto descartável fora do repositório, que o `npm ci` com `ignore-scripts` e `engine-strict` passa no Node pinado e é recusado em outro, que cada uma das 28 provocações da spec (teste, tipos, lint, formato, Markdown, lockfile, workflow e cobertura) faz o `check` sair com código diferente de 0, que o `fix` conserta formato, lint e a largura do Markdown, que o `npm audit` e as assinaturas passam, e que todo cache do tooling cai em `.cache/` sem deixar nada novo na raiz. Aprovei o toolkit a partir desse relatório, e os critérios da spec repetem as provas como comandos que qualquer pessoa pode rodar.
+- `spec: 00001`, passo 1: a IA escreveu uma sonda fora do repositório, com sete casos (instalação limpa, lockfile intacto, versões exatas, `.npmrc`, `.node-version` igual a `engines.node`, recusa de outro Node e importação entre os dois pacotes), que ficou vermelha antes do código e verde depois dele.
 
 ## Um erro da IA
 

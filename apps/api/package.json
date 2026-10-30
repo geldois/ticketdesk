@@ -1,0 +1,9 @@
+{
+  "name": "@ticketdesk/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@ticketdesk/contract": "0.0.0"
+  }
+}
