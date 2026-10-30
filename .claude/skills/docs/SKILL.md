@@ -143,7 +143,9 @@ motivo diz por que o campo não cabe nesta fatia e não repete o que `IA.md`, `R
   comportamento observável, em tabelas. Nunca traz código, assinatura, classe, função auxiliar nem organização em
   arquivos dessa parte, porque a forma é de quem a escreve.
 - A spec é congelada no conteúdo a partir do commit que a introduz: não tem status nem registro, e só a formatação pode
-  mudar depois, com o commit `spec: none (format)`. Corrigir ou mudar uma decisão é abrir uma spec nova.
+  mudar depois, com o commit `spec: none (format)`. Corrigir ou mudar uma decisão é abrir uma spec nova. Um commit que
+  diverge da spec que cita, por erro ou falta de clareza nela, declara o desvio no próprio commit (regra de
+  `CLAUDE.md`), sem editar a spec.
 - A spec que substitui outra se chama `0000N-nome-replaces-0000M.md` e traz a linha `Substitui: 0000M` logo abaixo do
   H1. A substituta sempre absorve a substituída: tudo o que continua valendo, incluindo o que ainda não foi feito, passa
   a morar nela, e a substituída deixa de ser fonte de qualquer passo. Ela fica só como registro: o auditor confere só a

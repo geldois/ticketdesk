@@ -41,8 +41,13 @@ aponta para ele.
 
 ## Commits
 
-- Conventional Commits, linha única: `tipo(escopo): descrição`. O commit da própria spec usa o tipo `spec`.
+- Conventional Commits, assunto em linha única: `tipo(escopo): descrição`. O commit da própria spec usa o tipo `spec`.
 - Todo commit cita a spec no rodapé: `spec: 0000N` (minúsculo, como os demais rodapés do Conventional Commits).
+- Um commit que contraria ou conflita com a spec que cita leva, entre o assunto e o rodapé, um parágrafo único, separado
+  por linhas vazias, sem quebra de linha e em inglês, como o resto do commit, que diz quais foram os conflitos e por
+  quê. A spec é a fonte da verdade congelada, mas não é imune a erro, falta de clareza ou bug local, e o parágrafo é o
+  registro do desvio. A ordem é assunto, linha vazia, parágrafo, linha vazia e rodapé `spec: 0000N`. Uma mudança
+  duradoura de contrato abre uma spec nova, como manda a skill `docs`.
 - Só dispensa spec, com `spec: none (motivo)`, o que cabe num motivo desta lista fechada: `typo`, `format`, `deps-bump`
   (sem mudança de comportamento), `revert`, `tweak` (mudança pequena, local e reversível, sem contrato público nem
   decisão que outras specs consumam) ou `scaffold` (estrutura do repositório criada antes de existir a primeira spec;
