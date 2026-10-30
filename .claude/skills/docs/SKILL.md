@@ -49,8 +49,10 @@ Esta skill governa toda a documentação do repositório e do seu harness local:
 
 - O `README.md` cita, em "Como rodar", os comandos que uma pessoa digita (a instalação e cada script do `package.json`)
   e aponta para `.github/workflows/` para o que o CI roda, sem listar os comandos dos workflows.
-- O Registro de decisões tem uma linha para cada decisão técnica com alternativa descartada, no mesmo commit que traz o
-  código.
+- O Registro de decisões tem uma linha para cada decisão de alto ROI para defender numa entrevista (arquitetura,
+  concorrência, segurança, dados, portões e cadeia de suprimento), com alternativa descartada, no mesmo commit que traz
+  o código. Escolha pequena, de processo, de documentação ou de nome não entra: o relato dela é do `IA.md`, quando
+  diverge do que a IA propôs.
 - Uma seção que diz `Ainda sem conteúdo.` só continua assim enquanto não existe o que descrever.
 - O documento dono de um fato muda no mesmo commit que o fato.
 
@@ -71,7 +73,7 @@ do autor) e nunca relata o que a IA fez. Seções fixas, nesta ordem:
 | Visão geral da arquitetura | Prosa curta e, se preciso, um Mermaid enxuto |
 | Premissas | Cada uma como "assumi X porque Y" |
 | O que faria com mais tempo | Evolução e o que ficou de fora |
-| Registro de decisões | Último; da mais antiga para a mais recente |
+| Registro de decisões | Último; só decisões de alto ROI, da mais antiga para a mais recente |
 
 - Só o que uma pessoa toca: comandos, arquivos, rotas, esquemas, variáveis. Nenhum passo oculto.
 - Seção ainda sem conteúdo escreve apenas `Ainda sem conteúdo.` e não promete nada.
@@ -154,7 +156,7 @@ motivo diz por que o campo não cabe nesta fatia e não repete o que `IA.md`, `R
   Nomear a ferramenta escolhida é uma decisão e pode entrar na spec. Ficam de fora tempo, desempenho medido, versão,
   estimativa, data e qualquer afirmação sobre o comportamento, a versão ou a compatibilidade de uma ferramenta de
   terceiros.
-- Uma decisão com motivo mora no Registro de decisões do `README.md`. Uma versão mora no manifesto.
+- Uma decisão de alto ROI, com motivo, mora no Registro de decisões do `README.md`. Uma versão mora no manifesto.
 - Antes do commit `spec(...)`, o rascunho vive só na árvore de trabalho e o agente `docs-auditor` o revisa: é o único
   momento em que corrigir um defeito não custa uma spec nova.
 

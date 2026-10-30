@@ -48,7 +48,7 @@ arquivo nem altere o git.
 | Checagem | O que reportar |
 | --- | --- |
 | Omissão de comando | Script do `package.json` ou comando de instalação que existe no repositório e que o documento dono não cita; o comando de um workflow não é omissão, basta o documento apontar para `.github/workflows/` |
-| Decisão sem registro | Decisão técnica com alternativa descartada, visível em spec, commit ou código, sem linha no Registro de decisões |
+| Decisão sem registro | Decisão de alto ROI, no corte da lei de completude da skill `docs`, com alternativa descartada, visível em spec, commit ou código, sem linha no Registro de decisões; escolha pequena, de processo ou de documentação não conta |
 | Seção vazia com sustento | `Ainda sem conteúdo.` numa seção cujo conteúdo já existe no repositório |
 | Contexto fora do dono | Fato escrito fora do dono que a tabela de fontes de verdade do `CLAUDE.md` indica; cobre o fato que está em um único lugar, mas no lugar errado, enquanto `Sobreposição` cobre o fato com dois donos |
 | Regra sem dono ou gatilho | Regra em documento que não diz o seu dono ou quando se aplica |

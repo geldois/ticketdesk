@@ -12,7 +12,7 @@ aponta para ele.
 | O que muda, o contrato de uma fatia e os passos dela | `docs/specs/` | `README.md`, `IA.md` |
 | O andamento (o que já foi feito) | o git, pelo rodapé `spec: 0000N` | specs, `README.md` |
 | Como rodar, arquitetura e premissas | `README.md` | specs |
-| Uma decisão técnica, o motivo e o trade-off aceito | Registro de decisões do `README.md` | specs, `IA.md` |
+| Uma decisão técnica de alto ROI, o motivo e o trade-off aceito | Registro de decisões do `README.md` | specs |
 | O comportamento da IA: prompts relevantes, erros pegos, divergências do autor, validações e o que o autor escreveu | `IA.md` | specs, `README.md` |
 | Versões e dependências | os manifestos | qualquer documento |
 | As regras de processo: dependências e gatilhos de commit e de documentação | `CLAUDE.md` | a skill `docs`, `README.md` |
