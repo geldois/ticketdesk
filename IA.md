@@ -170,6 +170,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00004`: o que escrevo à mão não tem forma prescrita pela spec. A IA tinha escrito o contrato como código
   (tipos, classes e assinaturas); decidi que a spec fixa só nomes públicos, tipos e invariantes, e que a Filosofia do
   README vale para a IA como regra.
+- `spec: 00004`: renomeei os campos `note` e `reason` da entrada do histórico para `resolutionNote` e `reopenReason`,
+  para os nomes dizerem a que se referem. É um desvio da spec congelada, que a IA me apresentou como pergunta; aceitei o
+  desvio e o commit o registra num parágrafo próprio.
 
 ## Onde a IA não entrou
 
