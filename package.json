@@ -6,7 +6,7 @@
     "node": "26.13.0"
   },
   "scripts": {
-    "check": "tsc --noEmit && eslint . --quiet --max-warnings 0 --cache --cache-strategy content --cache-location .cache/eslint/ && prettier --check . --log-level warn --cache --cache-strategy content --cache-location .cache/prettier/cache && rumdl check . --quiet && vitest run --coverage --silent --reporter=dot",
+    "check": "tsc --noEmit && eslint . --quiet --max-warnings 0 --cache --cache-strategy content --cache-location .cache/eslint/ && prettier --check . --log-level warn --cache --cache-strategy content --cache-location .cache/prettier/cache && rumdl check . --quiet && lockfile-lint --path package-lock.json --type npm --allowed-hosts npm --validate-https --validate-integrity && action-validator .github/workflows/check.yml && action-validator .github/workflows/audit.yml && vitest run --coverage --silent --reporter=dot",
     "fix": "eslint --fix . --quiet --cache --cache-strategy content --cache-location .cache/eslint/ && prettier --write . --log-level warn --cache --cache-strategy content --cache-location .cache/prettier/cache && rumdl fmt . --quiet"
   },
   "workspaces": [
@@ -14,12 +14,15 @@
     "packages/contract"
   ],
   "devDependencies": {
+    "@action-validator/cli": "0.6.0",
+    "@action-validator/core": "0.6.0",
     "@eslint/js": "10.0.1",
     "@types/node": "26.6.6",
     "@vitest/coverage-v8": "5.0.5",
     "@vitest/eslint-plugin": "1.6.28",
     "eslint": "10.13.0",
     "eslint-config-prettier": "10.1.8",
+    "lockfile-lint": "5.1.0",
     "prettier": "3.9.10",
     "rumdl": "0.3.2",
     "typescript": "6.0.3",

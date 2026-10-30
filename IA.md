@@ -60,6 +60,13 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   até 120 colunas. O `fix` rodou uma vez no repositório e só reformatou os `.md`: o reflow dos que já estavam
   commitados, menos o `README.md`, foi para um commit à parte com `spec: none (format)`, e o do `README.md` entrou junto
   com este passo. O `check` não foi rodado.
+- `spec: 00003`, passo 6: a IA escreveu uma sonda fora do repositório, com doze casos (instalação limpa, versões exatas,
+  `lockfile-lint` e `action-validator` sobre os arquivos do repositório, os dois canários, os jobs, gatilhos e comandos
+  dos workflows lidos como YAML, permissões, ações por SHA, a forma final do `check`, raiz sem arquivo novo e as linhas
+  do Registro), vermelha antes do código e verde depois dele. Os canários, em clones descartáveis, mostraram o
+  `lockfile-lint` reprovando uma dependência fora do registro e sem https, nomeando o pacote, e o `action-validator`
+  reprovando uma chave inválida no workflow. O `check` não foi rodado, e o run do `check.yml` no CI só se prova depois
+  do push.
 - `spec: 00002`, passo 1: a IA mediu o `docs-auditor` novo com clones do repositório, um defeito por clone. Dos 8 clones
   rodados, 5 trouxeram a categoria e a gravidade esperadas, e 3 trouxeram a categoria com gravidade alta em vez de
   média, o que levou à correção da regra de gravidade no agente. Os outros 8 casos da spec ficaram sem medir, por custo.
@@ -99,6 +106,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   reporter padrão só imprime as contagens. A própria IA percebeu ao escrever a sonda do passo 3 e perguntou como provar
   o caso; como a spec já estava congelada, a sonda roda o Vitest com `--reporter=verbose` para ver o nome do teste e lê
   o resumo de cobertura que ele imprime.
+- `spec: 00003`: a IA escreveu na spec que cada ferramenta reprovada imprime o arquivo da provocação, mas o
+  `action-validator` imprime só o caminho dentro do workflow e a chave inválida, sem o nome do arquivo, e não tem flag
+  para isso. A própria IA percebeu ao rodar o canário do passo 6 e perguntou como tratar; decidi aceitar o desvio, com a
+  spec congelada, e o canário passa a conferir a chave e o caminho no lugar do arquivo.
 - `spec: none (scaffold)`: a IA escreveu no `CLAUDE.md` que o `settings.json` nega "commitar sem passar pelo hook", mas
   o repositório não tem hook algum. O `docs-auditor` apontou o desvio; a linha passou a listar as negações que o arquivo
   tem de fato.
