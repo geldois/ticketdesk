@@ -14,18 +14,21 @@ Cada contexto vive em um só lugar. Se o contexto cabe em dois, ele pertence ao 
 | Uma decisão técnica, o motivo e o trade-off aceito | Registro de decisões do `README.md` | specs, `IA.md` |
 | O comportamento da IA: prompts relevantes, erros pegos, divergências do autor, validações e o que o autor escreveu | `IA.md` | specs, `README.md` |
 | Versões e dependências | os manifestos | qualquer documento |
+| As regras de processo: dependências e gatilhos de commit e de documentação | `CLAUDE.md` | a skill `docs`, `README.md` |
 | Como cada documento é escrito | a skill `docs` | `CLAUDE.md` |
 | O que o sistema faz hoje | o código | qualquer documento |
 
 ## Documentação
 
 - Toda escrita ou revisão de documentação passa pela skill `docs`: invoque-a antes, sem exceção.
+- Ao commitar, confira a lei de completude da skill `docs`.
 
 ## Desenvolvimento orientado por especificação
 
 - Uma spec em `docs/specs/` é obrigatória só quando a mudança altera um contrato público ou um comportamento observável, tem vários passos ou carrega uma decisão com trade-off que outras specs vão consumir. Uma mudança pequena, local e reversível dispensa spec: entra num commit rápido com `spec: none (tweak)`, e o registro que couber vai para o Registro de decisões do `README.md` ou para o `IA.md`.
 - A spec vem antes do código: o commit da spec precede os commits dos seus passos.
-- Uma spec nunca é editada depois do commit que a introduz.
+- O conteúdo de uma spec nunca é editado depois do commit que a introduz; só a formatação pode mudar, com `spec: none (format)`.
+- Dependência nova ou atualizada: a versão é pesquisada ao vivo, a compatibilidade é provada fora do repositório, a versão exata mora só no manifesto e no lockfile, nunca em spec ou documento, a prova entra no `IA.md`, em "O que validei", quando a IA a faz, e a atualização é um commit `deps-bump`.
 
 ## Commits
 
