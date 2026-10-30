@@ -6,7 +6,7 @@
     "node": "26.13.0"
   },
   "scripts": {
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit && vitest run --coverage --silent --reporter=dot"
   },
   "workspaces": [
     "apps/api",
@@ -14,6 +14,8 @@
   ],
   "devDependencies": {
     "@types/node": "26.6.6",
-    "typescript": "6.0.3"
+    "@vitest/coverage-v8": "5.0.5",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
   }
 }

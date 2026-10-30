@@ -47,3 +47,4 @@ Da mais antiga para a mais recente.
 | Auditor uma vez por commit que toca documento, e achado baixo só registrado | Auditor a cada commit, repetido até o relatório vir limpo | Menos custo por commit, e um detalhe baixo pode ficar sem correção |
 | Spec que substitui outra se chama `0000N-nome-replaces-0000M` | Editar a spec antiga | A spec substituída vira só registro, e a nova absorve tudo o que continua valendo, inclusive o que ainda não foi feito |
 | Versões exatas, sem scripts de instalação (`ignore-scripts`) e com Node exato recusado por `engine-strict` | Faixas semver, scripts de instalação liberados e uma faixa de Node | Toda atualização é um commit `deps-bump` à parte, e quem tem outro Node não instala |
+| Cobertura mínima em linhas, ramos, funções e instruções desde o primeiro teste | Sem mínimo enquanto houver um único teste trivial, ou um mínimo mais alto | O mínimo reprova o `check` desde o início, e cada arquivo novo exige teste |
