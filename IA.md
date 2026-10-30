@@ -118,6 +118,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: none (scaffold)`: a IA escreveu no `CLAUDE.md` que o `settings.json` nega "commitar sem passar pelo hook", mas
   o repositório não tem hook algum. O `docs-auditor` apontou o desvio; a linha passou a listar as negações que o arquivo
   tem de fato.
+- `spec: none (tweak)`: a IA propôs ligar o `check` obrigatório no ruleset `protect-branches`, que cobre também a `dev`,
+  o que travaria o meu push direto nela, porque o GitHub exige o check antes de aceitar o push. Percebi ao ver a tela do
+  ruleset e perguntei; o check obrigatório ficou num ruleset à parte, o `protect-main`, só para a `main`.
 
 ## Uma decisão minha
 
