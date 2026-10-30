@@ -43,11 +43,13 @@ aponta para ele.
 
 - Conventional Commits, assunto em linha única: `tipo(escopo): descrição`. O commit da própria spec usa o tipo `spec`.
 - Todo commit cita a spec no rodapé: `spec: 0000N` (minúsculo, como os demais rodapés do Conventional Commits).
-- Um commit que contraria ou conflita com a spec que cita leva, entre o assunto e o rodapé, um parágrafo único, separado
-  por linhas vazias, sem quebra de linha e em inglês, como o resto do commit, que diz quais foram os conflitos e por
-  quê. A spec é a fonte da verdade congelada, mas não é imune a erro, falta de clareza ou bug local, e o parágrafo é o
-  registro do desvio. A ordem é assunto, linha vazia, parágrafo, linha vazia e rodapé `spec: 0000N`. Uma mudança
-  duradoura de contrato abre uma spec nova, como manda a skill `docs`.
+- Todo commit leva, entre o assunto e o rodapé, um parágrafo único, separado por linhas vazias, sem quebra de linha e em
+  inglês, como o resto do commit. Ele é curto e descritivo: diz a intenção e acrescenta ao assunto o que o assunto
+  sozinho não diz, para localizar a intenção de cada commit no `git log`. Quando não houver nada a acrescentar, o
+  parágrafo se dispensa. A ordem é assunto, linha vazia, parágrafo, linha vazia e rodapé `spec: 0000N`.
+- Um commit que contraria ou conflita com a spec que cita leva esse parágrafo sempre, e ele diz também quais foram os
+  conflitos e por quê. A spec é a fonte da verdade congelada, mas não é imune a erro, falta de clareza ou bug local, e o
+  parágrafo é o registro do desvio. Uma mudança duradoura de contrato abre uma spec nova, como manda a skill `docs`.
 - Só dispensa spec, com `spec: none (motivo)`, o que cabe num motivo desta lista fechada: `typo`, `format`, `deps-bump`
   (sem mudança de comportamento), `revert`, `tweak` (mudança pequena, local e reversível, sem contrato público nem
   decisão que outras specs consumam) ou `scaffold` (estrutura do repositório criada antes de existir a primeira spec;
@@ -60,7 +62,8 @@ aponta para ele.
 
 ## Idioma e comentários
 
-- Documentação e comentários em português do Brasil; código (identificadores, mensagens de erro, rotas) em inglês.
+- Documentação e comentários em português do Brasil; código (identificadores, mensagens de erro, rotas) e mensagens de
+  commit em inglês.
 - Comentário é permitido quando atômico, enxuto e capaz de provar o próprio valor; nunca repete o que o código já diz. O
   código é a fonte da verdade.
 

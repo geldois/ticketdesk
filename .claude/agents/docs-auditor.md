@@ -67,7 +67,7 @@ arquivo nem altere o git.
 | Asserção fraca | Em rascunho de spec ou em spec ainda não substituída, caso de teste que afirma só a presença de texto, só um código de saída ou só uma contagem, sem o resultado observável |
 | Teste de texto em harness | Em rascunho de spec ou em spec ainda não substituída, caso de teste que procura frase em skill, agente, `CLAUDE.md` ou hook, em vez de medir o comportamento da ferramenta |
 | Espelho do IA.md | Número de spec ausente do IA.md, número citado sem spec correspondente, ou afirmação que não cita o rodapé `spec:` do trabalho |
-| Rodapés de commit | Commit sem `spec: 0000N` ou `spec: none (motivo)`; motivo fora da lista fechada de `CLAUDE.md`; motivo `scaffold` num commit posterior ao primeiro commit `spec(...)`; spec citada inexistente; commit `spec(...)` que não vem antes dos commits dos seus passos |
+| Rodapés de commit | Commit sem `spec: 0000N` ou `spec: none (motivo)`; motivo fora da lista fechada de `CLAUDE.md`; motivo `scaffold` num commit posterior ao primeiro commit `spec(...)`; spec citada inexistente; commit `spec(...)` que não vem antes dos commits dos seus passos; commit que conflita com a spec que cita sem o parágrafo de desvio, ou com parágrafo em mais de um bloco ou fora do inglês |
 
 Nunca reporte uma spec commitada por divergir do código atual: ela é um registro congelado, e só a sua estrutura é
 auditada. Uma spec substituída por outra fica como registro: só a estrutura é auditada, nunca a qualidade dos casos. O
