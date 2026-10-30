@@ -23,6 +23,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   rascunho da spec, que o `docs-auditor` revisou antes do commit. Prompts relevantes: "e a lógica é a spec de replace
   sempre absorver a spec deprecada" e "check roda apenas uma vez, obrigatoriamente, no CI de linting, como montamos, ou
   uma vez, opcional, explicitamente permitido antes do seu commit, ou quando explicitamente solicitado".
+- `spec: 00004`: a IA me entrevistou sobre o domínio do ticket e redigiu o rascunho da spec, que o `docs-auditor`
+  revisou antes do commit. Prompt relevante: "é um dicionário de movimentos permitidos, certo? cada status é uma chave,
+  com um set de valores dos status 'para' permitidos [...] assim, o custo fica O(1), sem complexidade e sem ifs
+  condicionais".
 
 ## O que validei
 
@@ -121,6 +125,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: none (tweak)`: a IA propôs ligar o `check` obrigatório no ruleset `protect-branches`, que cobre também a `dev`,
   o que travaria o meu push direto nela, porque o GitHub exige o check antes de aceitar o push. Percebi ao ver a tela do
   ruleset e perguntei; o check obrigatório ficou num ruleset à parte, o `protect-main`, só para a `main`.
+- `spec: 00004`: a IA escreveu os tipos, os erros e um esqueleto de `createTicket` no domínio, que eu escrevo à mão, e a
+  spec trazia o contrato desse código como assinaturas e classes. Interrompi, mandei apagar tudo o que a IA escreveu
+  nesses arquivos e exigi que a spec fixe só nomes públicos, tipos e invariantes; a regra entrou na skill `docs` e no
+  `CLAUDE.md`.
 
 ## Uma decisão minha
 
@@ -159,6 +167,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: none (tweak)`: o README aponta para os workflows em vez de listar os comandos que o CI roda. A IA tinha escrito
   na skill `docs` que o README cita cada comando do CI, e o auditor me fez listar os `npm audit`; decidi trocar a regra
   por citar só os comandos que uma pessoa digita e apontar para `.github/workflows/`, para não duplicar a fonte.
+- `spec: 00004`: o que escrevo à mão não tem forma prescrita pela spec. A IA tinha escrito o contrato como código (tipos,
+  classes e assinaturas); decidi que a spec fixa só nomes públicos, tipos e invariantes, e que a Filosofia do README vale
+  para a IA como regra.
 
 ## Onde a IA não entrou
 
