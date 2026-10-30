@@ -23,7 +23,7 @@ Cada contexto vive em um só lugar. Se o contexto cabe em dois, ele pertence ao 
 
 ## Desenvolvimento orientado por especificação
 
-- Nada é escrito (implementação, teste, configuração, documentação ou harness) sem um passo numa spec de `docs/specs/`. Trabalho que nenhum passo cobre exige uma spec nova antes.
+- Uma spec em `docs/specs/` é obrigatória só quando a mudança altera um contrato público ou um comportamento observável, tem vários passos ou carrega uma decisão com trade-off que outras specs vão consumir. Uma mudança pequena, local e reversível dispensa spec: entra num commit rápido com `spec: none (tweak)`, e o registro que couber vai para o Registro de decisões do `README.md` ou para o `IA.md`.
 - A spec vem antes do código: o commit da spec precede os commits dos seus passos.
 - Uma spec nunca é editada depois do commit que a introduz.
 
@@ -31,7 +31,7 @@ Cada contexto vive em um só lugar. Se o contexto cabe em dois, ele pertence ao 
 
 - Conventional Commits, linha única: `tipo(escopo): descrição`. O commit da própria spec usa o tipo `spec`.
 - Todo commit cita a spec no rodapé: `spec: 0000N` (minúsculo, como os demais rodapés do Conventional Commits).
-- Só dispensa spec, com `spec: none (motivo)`, o que cabe num motivo desta lista fechada: `typo`, `format`, `deps-bump` (sem mudança de comportamento), `revert` ou `scaffold` (estrutura do repositório criada antes de existir a primeira spec; depois dela, nunca mais).
+- Só dispensa spec, com `spec: none (motivo)`, o que cabe num motivo desta lista fechada: `typo`, `format`, `deps-bump` (sem mudança de comportamento), `revert`, `tweak` (mudança pequena, local e reversível, sem contrato público nem decisão que outras specs consumam) ou `scaffold` (estrutura do repositório criada antes de existir a primeira spec; depois dela, nunca mais).
 - Commits pequenos e focados: um passo termina em um ou mais commits, todos com o rodapé da spec.
 - Duas branches: todo commit e todo push vão para `dev`; a `main` só recebe o merge de `dev` e nunca um commit direto. A IA nunca pusha a `main` nem faz o merge para ela: é ordem do usuário.
 - O push para `dev` só acontece depois que todas as verificações do repositório passam; verificação que ainda não existe não conta como passada.
@@ -44,7 +44,7 @@ Cada contexto vive em um só lugar. Se o contexto cabe em dois, ele pertence ao 
 ## Antes de commitar
 
 - Em todo commit, de IA ou manual, decide-se antes se o passo gera registro no `IA.md`: houve uso relevante de IA, um erro da IA percebido, uma divergência do autor em relação ao que a IA propôs ou uma validação que provou o resultado? Se sim, o registro entra no mesmo commit do passo, no formato da skill `docs`. Se não, nada é registrado, e um registro nunca é inventado para preencher o arquivo.
-- Quando uma IA vai commitar, ela roda antes o agente `docs-auditor` sobre o repositório inteiro, inclusive sobre o rascunho de uma spec antes do commit `spec(...)`, corrige os achados pela skill `docs` e roda o agente de novo até o relatório vir limpo. Commits manuais e puramente de formatação não precisam dele.
+- Quando uma IA vai commitar, ela roda antes o agente `docs-auditor` sobre o diff e sobre tudo que o tangencia, inclusive sobre o rascunho de uma spec antes do commit `spec(...)`, corrige os achados pela skill `docs` e roda o agente de novo até o relatório vir limpo. A auditoria do repositório inteiro só acontece quando o usuário a pede. Commits manuais e puramente de formatação não precisam dele.
 - O harness local só é carregado quando a sessão da IA abre dentro deste repositório.
 
 ## Pausas
@@ -53,12 +53,12 @@ Cada contexto vive em um só lugar. Se o contexto cabe em dois, ele pertence ao 
 
 ## Harness local
 
-O harness local é versionado, nasce no primeiro commit e muda como o código: um passo numa spec, um commit pequeno, nenhuma edição fora disso.
+O harness local é versionado, nasce no primeiro commit e muda como o código: pela regra de spec acima, em commits pequenos.
 
 | Peça | Papel | Como operar |
 | --- | --- | --- |
 | `.claude/skills/docs/` | Lei de escrita da documentação | Invocar antes de tocar em qualquer documentação; alterá-la é mudança de harness |
-| `.claude/agents/docs-auditor.md` | Auditor de deriva, só leitura | Rodar antes de todo commit feito por IA; ele reporta e nunca corrige |
+| `.claude/agents/docs-auditor.md` | Auditor de deriva, só leitura | Rodar antes de todo commit feito por IA, sobre o diff e o que o tangencia; ele reporta e nunca corrige |
 | `.claude/settings.json` | Negações: ler `.env*`, pular verificações com `--no-verify` ou `-n`, force push e `git reset --hard`. Pergunta antes de `git commit` e `git push` | Não afrouxar nenhuma negação nem pergunta sem uma spec que o decida |
 | `.claude/settings.local.json` | Preferências pessoais de quem trabalha no repositório | Fica fora do git e nunca é versionado |
 | `AGENTS.md` | Symlink para este arquivo, para outras ferramentas | Nunca editar como arquivo; edite `CLAUDE.md` |

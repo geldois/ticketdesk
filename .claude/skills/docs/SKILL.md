@@ -5,7 +5,7 @@ description: "Governa toda a documentação do repositório: docs/ (as specs num
 
 # docs
 
-Lei de escrita da documentação. Quando escrever (nada sem passo numa spec) e como commitar ficam em `CLAUDE.md`; aqui fica como cada arquivo é escrito.
+Lei de escrita da documentação. Quando escrever e como commitar ficam em `CLAUDE.md`; aqui fica como cada arquivo é escrito.
 
 ## Princípios
 

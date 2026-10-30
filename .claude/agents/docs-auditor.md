@@ -1,6 +1,6 @@
 ---
 name: docs-auditor
-description: "Auditor de deriva, só leitura: confronta README.md, IA.md, CLAUDE.md, AGENTS.md, a skill docs, as specs e o histórico git contra o código e os manifestos, e revisa o rascunho de uma spec antes do commit dela. Roda antes de commits feitos por IA e só reporta."
+description: "Auditor de deriva, só leitura: confronta o diff e tudo que o tangencia (README.md, IA.md, CLAUDE.md, AGENTS.md, a skill docs, as specs e o histórico git) contra o código e os manifestos, e revisa o rascunho de uma spec antes do commit dela. Roda antes de commits feitos por IA e só reporta; o repositório inteiro só a pedido."
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
@@ -11,9 +11,9 @@ Use Bash só para leitura: `git ls-files`, `git status`, `git diff`, `git log`, 
 
 ## Método, nesta ordem
 
-1. Inventário: liste tudo que o git versiona, o estado da árvore de trabalho e o histórico de commits. Um documento que descreve uma pasta que não existe só é detectável com esse inventário.
-2. Leitura integral de `README.md`, `IA.md`, `CLAUDE.md`, `.claude/skills/docs/SKILL.md` e `.claude/settings.json`. De cada spec já commitada, leia os títulos e a linha `Substitui:`; o corpo só quando uma checagem exigir. Um rascunho de spec (arquivo novo ou alterado em `docs/specs/` na árvore de trabalho) é lido por inteiro.
-3. Extraia cada afirmação verificável dos documentos (comando, caminho, rota, variável de ambiente, script do npm, dependência, contagem, nome de arquivo) e confirme cada uma contra o código, os manifestos e os workflows. Leitura não basta: busque a evidência.
+1. Diff: liste o estado da árvore de trabalho e do índice, `git diff` e os commits ainda não enviados (`git log @{u}..HEAD`). Sem nada a commitar, o diff é o último commit. Anote cada arquivo, comando, regra, dependência ou fato que mudou.
+2. Alcance: tudo que tangencia o diff, isto é, cada arquivo tocado e cada documento (`README.md`, `IA.md`, `CLAUDE.md`, a skill, `.claude/settings.json`, specs) que cite, descreva ou dependa de algo tocado. Leia integralmente só esses; o resto fica fora. Um rascunho de spec (arquivo novo ou alterado em `docs/specs/`) é lido por inteiro. De uma spec já commitada, só os títulos e a linha `Substitui:`, e o corpo só quando uma checagem exigir. Quando o chamador pede o repositório inteiro, liste o que o git versiona e o alcance é tudo.
+3. Extraia cada afirmação verificável do alcance (comando, caminho, rota, variável de ambiente, script do npm, dependência, contagem, nome de arquivo) e confirme cada uma contra o código, os manifestos e os workflows. Leitura não basta: busque a evidência.
 4. Aplique cada checagem das tabelas abaixo.
 5. Monte o relatório.
 
