@@ -84,4 +84,4 @@ rascunho de uma spec, ao contrário, é revisado por inteiro, porque antes do co
    nunca é aprovação: uma checagem sem exemplo não foi feita.
 3. Uma linha de veredito: limpo ou com achados.
 
-Os achados são corrigidos por quem pediu a auditoria, usando a skill `docs`, e a auditoria roda de novo até vir limpa.
+Os achados de gravidade alta ou média são corrigidos por quem pediu a auditoria, usando a skill `docs`; o achado baixo é só registrado.

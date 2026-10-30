@@ -40,6 +40,7 @@ Relato honesto do uso de IA neste projeto. Cada afirmação cita o rodapé `spec
 - `spec: 00002`: a skill `docs` como única fonte da lei, com o `CLAUDE.md` só reforçando o gatilho. A IA propôs a skill como lei e o `CLAUDE.md` com o gatilho; exigi que o gatilho nunca sobreponha a descrição da skill, só a reforce.
 - `spec: 00002`: a skill `docs` reescrita no mesmo nome, governando toda a documentação do harness, e não substituída por uma skill nova com outro nome. A IA propôs uma skill `specs` à parte; exigi que continuasse `docs`. Defini também que uma spec que substitui outra se chama `0000N-nome-replaces-0000M`.
 - `spec: none (tweak)`: spec só quando a mudança exige, pelo critério do `CLAUDE.md`, e o auditor só sobre o diff e o que o tangencia. A IA tinha mantido spec para toda mudança e a auditoria do repositório inteiro a cada commit; decidi flexibilizar as duas coisas para iterar mais rápido.
+- `spec: none (tweak)`: o auditor roda uma vez por commit que toca documento, sem repetir até o relatório vir limpo, e só os achados de gravidade alta ou média bloqueiam. A IA tinha a regra de repetir até vir limpo; troquei por uma mais consciente, porque cada rodada custava dezenas de milhares de tokens e as últimas só achavam detalhes baixos.
 
 ## Onde a IA não entrou
 

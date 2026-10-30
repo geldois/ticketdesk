@@ -37,4 +37,5 @@ Da mais antiga para a mais recente.
 | Skill `docs` como lei única de toda a documentação, com o `CLAUDE.md` só reforçando gatilhos | Lei dividida entre a skill e o `CLAUDE.md`, ou uma skill nova com outro nome | Toda mudança de regra de documentação passa pela skill, e o `CLAUDE.md` não define regra sozinho |
 | Auditor nos dois sentidos, deriva e omissão, com a omissão como achado de gravidade média | Auditor só de deriva | Mais achados por rodada e mais custo por auditoria |
 | Teste mede comportamento, e o harness é medido pelas ferramentas da própria IA | Teste de texto sobre skill e `CLAUDE.md` | Medir o auditor exige clones com defeito e custa execuções do próprio auditor |
+| Auditor uma vez por commit que toca documento, e achado baixo só registrado | Auditor a cada commit, repetido até o relatório vir limpo | Menos custo por commit, e um detalhe baixo pode ficar sem correção |
 | Spec que substitui outra se chama `0000N-nome-replaces-0000M` | Editar a spec antiga | A spec substituída vira só registro, e a nova repete o que continua valendo |

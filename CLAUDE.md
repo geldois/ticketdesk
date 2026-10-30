@@ -47,7 +47,7 @@ Cada contexto vive em um só lugar. Se o contexto cabe em dois, ele pertence ao 
 ## Antes de commitar
 
 - Em todo commit, de IA ou manual, decide-se antes se o passo gera registro no `IA.md`: houve uso relevante de IA, um erro da IA percebido, uma divergência do autor em relação ao que a IA propôs ou uma validação que provou o resultado? Se sim, o registro entra no mesmo commit do passo, no formato da skill `docs`. Se não, nada é registrado, e um registro nunca é inventado para preencher o arquivo.
-- Quando uma IA vai commitar, ela roda antes o agente `docs-auditor` sobre o diff e sobre tudo que o tangencia, inclusive sobre o rascunho de uma spec antes do commit `spec(...)`, corrige os achados pela skill `docs` e roda o agente de novo até o relatório vir limpo. A auditoria do repositório inteiro só acontece quando o usuário a pede. Commits manuais e puramente de formatação não precisam dele.
+- Quando o commit de uma IA toca documento (`README.md`, `IA.md`, `CLAUDE.md`, `AGENTS.md`, specs, a skill ou os agentes), ela roda antes o agente `docs-auditor` uma vez sobre o diff e sobre tudo que o tangencia, inclusive sobre o rascunho de uma spec antes do commit `spec(...)`. Corrige os achados de gravidade alta ou média pela skill `docs` e roda o agente uma segunda vez só se uma correção mudou documento; achado baixo é registrado e não abre outra rodada. Commit que só toca código, commit manual e commit só de formatação não precisam dele. A auditoria do repositório inteiro só acontece quando o usuário a pede.
 - O harness local só é carregado quando a sessão da IA abre dentro deste repositório.
 
 ## Pausas
@@ -61,7 +61,7 @@ O harness local é versionado, nasce no primeiro commit e muda como o código: p
 | Peça | Papel | Como operar |
 | --- | --- | --- |
 | `.claude/skills/docs/` | Lei de escrita da documentação | Invocar antes de tocar em qualquer documentação; alterá-la é mudança de harness |
-| `.claude/agents/docs-auditor.md` | Auditor de deriva, só leitura | Rodar antes de todo commit feito por IA, sobre o diff e o que o tangencia; ele reporta e nunca corrige |
+| `.claude/agents/docs-auditor.md` | Auditor de deriva, só leitura | Rodar antes do commit de IA que toca documento, sobre o diff e o que o tangencia; ele reporta e nunca corrige |
 | `.claude/settings.json` | Negações: ler `.env*`, pular verificações com `--no-verify` ou `-n`, force push e `git reset --hard`. Pergunta antes de `git commit` e `git push` | Não afrouxar nenhuma negação nem pergunta sem uma spec que o decida |
 | `.claude/settings.local.json` | Preferências pessoais de quem trabalha no repositório | Fica fora do git e nunca é versionado |
 | `AGENTS.md` | Symlink para este arquivo, para outras ferramentas | Nunca editar como arquivo; edite `CLAUDE.md` |
