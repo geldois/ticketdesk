@@ -18,8 +18,8 @@ qualquer regra de negócio. A 00001 fica só como registro: tudo o que continua 
 - Configuração do host do repositório (ruleset, check obrigatório) e atualização automática de dependências.
 - Teste de linter: nenhuma suíte, commitada ou não, roda o `check` em laço nem aplica uma lista de provocações a ele. A
   prova de cada ferramenta é um canário descartável que roda só aquela ferramenta. Custo aceito: as opções do
-  `tsconfig.json` e as regras do ESLint além das do canário não têm caso próprio, e uma delas desligada por engano
-  passa sem ser vista até o CI ou o uso mostrar.
+  `tsconfig.json` e as regras do ESLint além das do canário não têm caso próprio, e uma delas desligada por engano passa
+  sem ser vista até o CI ou o uso mostrar.
 - Provar que o `check` roda com o ambiente reduzido a `PATH` e `HOME`: exigiria rodar o `check` fora do CI.
 - Validar os arquivos sem dono na tabela de donos (`.npmrc`, `.node-version`, `.gitignore`, `.gitattributes`,
   `.prettierignore`, `.rumdl.toml`, `.editorconfig`, `LICENSE`, `docs/specs/.gitkeep`): nenhuma etapa os valida.
@@ -34,8 +34,8 @@ npm run check
 npm run fix
 ```
 
-Scripts do `package.json` da raiz. O `check` para na primeira etapa que falha. Cada ferramenta roda com a flag que
-reduz a saída ao que reprova, e nenhum script filtra ou formata a saída com redirecionamento ou `|`:
+Scripts do `package.json` da raiz. O `check` para na primeira etapa que falha. Cada ferramenta roda com a flag que reduz
+a saída ao que reprova, e nenhum script filtra ou formata a saída com redirecionamento ou `|`:
 
 ```json
 "check": "tsc --noEmit && eslint . --quiet --max-warnings 0 --cache --cache-strategy content --cache-location .cache/eslint/ && prettier --check . --log-level warn --cache --cache-strategy content --cache-location .cache/prettier/cache && rumdl check . --quiet && lockfile-lint --path package-lock.json --type npm --allowed-hosts npm --validate-https --validate-integrity && action-validator .github/workflows/check.yml && action-validator .github/workflows/audit.yml && vitest run --coverage --silent --reporter=dot",
@@ -110,15 +110,15 @@ Workflows:
 11. Os dois workflows declaram `permissions: contents: read`, `persist-credentials: false`,
     `node-version-file: .node-version` e `timeout-minutes`, e referenciam cada ação por SHA de commit.
 12. Cada ferramenta, rodada com a flag de redução que o script `check` ou `fix` lhe dá, imprime sobre a árvore limpa só
-    o que a flag permite (nada, ou o relatório de cobertura), e sobre a provocação do canário ainda imprime o arquivo e a
-    regra ou o diagnóstico; os scripts não contêm `>` nem `|`.
+    o que a flag permite (nada, ou o relatório de cobertura), e sobre a provocação do canário ainda imprime o arquivo e
+    a regra ou o diagnóstico; os scripts não contêm `>` nem `|`.
 13. O run do `check.yml` para o SHA do `HEAD` de `dev` termina com conclusão `success`.
 14. Depois de rodar sozinhas as ferramentas de tipos, lint, formato, Markdown e testes na árvore sem alterações,
     `git status --porcelain --ignored` não lista nada além de `node_modules/` e `.cache/`.
 15. A seção "Como rodar" do `README.md` cita `npm ci`, `npm run check`, `npm run fix` e `.node-version`, e cada comando
     citado existe como comando ou script do repositório. O `CLAUDE.md` aponta o CI como portão do push para `dev` e não
-    traz mais a frase de que o push só acontece depois de todas as verificações; o `docs-auditor`, rodado sobre o diff do
-    passo 7, não reporta `Omissão de comando`, `Referência pendurada`, `Valor repetido` nem contradição entre o
+    traz mais a frase de que o push só acontece depois de todas as verificações; o `docs-auditor`, rodado sobre o diff
+    do passo 7, não reporta `Omissão de comando`, `Referência pendurada`, `Valor repetido` nem contradição entre o
     `CLAUDE.md` e o Contrato.
 16. Cada passo de 2 a 6 acrescenta ao Registro de decisões do `README.md`, no mesmo commit que traz o código, a linha da
     decisão que o passo introduz, com a alternativa descartada e o trade-off aceito.
@@ -214,9 +214,9 @@ critérios 1 e 2 continuam valendo: `npm ci` não altera o lockfile e nenhuma ve
 4. ESLint com os presets, as regras extras e o plugin de testes, Prettier com o `.prettierignore`, o script `fix`, e as
    etapas de lint e formato no `check`, com cache em `.cache/`; o Registro ganha a linha do Prettier fora dos `*.md`.
    Prova: critérios 6, 7 e 8 para o ESLint e o Prettier, 14 e 16.
-5. `rumdl` com o `.rumdl.toml`, a formatação dos `.md` do repositório pelo `fix`, rodado uma vez, e a etapa no
-   `check`; o Registro ganha as linhas do `rumdl` como dono do Markdown e do `.cache`. Prova: critérios 6, 7 e 9 para o
-   `rumdl`, 14 e 16.
+5. `rumdl` com o `.rumdl.toml`, a formatação dos `.md` do repositório pelo `fix`, rodado uma vez, e a etapa no `check`;
+   o Registro ganha as linhas do `rumdl` como dono do Markdown e do `.cache`. Prova: critérios 6, 7 e 9 para o `rumdl`,
+   14 e 16.
 6. `lockfile-lint`, os workflows `check.yml` e `audit.yml` e as etapas de `lockfile-lint` e `action-validator` no
    `check`; o Registro ganha as linhas do CI como único portão, do `audit` em workflow próprio e do canário no lugar da
    suíte de linter. Prova: critérios 6 e 7 para o `lockfile-lint` e o `action-validator`, 10 a 14 e 16.
