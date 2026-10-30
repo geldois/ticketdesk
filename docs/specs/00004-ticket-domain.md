@@ -160,8 +160,8 @@ Isolamento: o `eslint.config.js` recusa, nos arquivos de `apps/api/src/domain/`,
 
 ## Casos de teste
 
-Todos os casos de operação são unitários e rodam o código real, sem relógio, banco ou rede: o instante é um valor
-fixo. O caso do critério 14 roda o ESLint real num clone descartável do repositório, no scratchpad, com a provocação
+Todos os casos de operação são unitários e rodam o código real, sem relógio, banco ou rede: o instante é um valor fixo.
+O caso do critério 14 roda o ESLint real num clone descartável do repositório, no scratchpad, com a provocação
 descartada depois; o resultado vai ao `IA.md`, em "O que validei". Nenhum caso roda o `check` inteiro.
 
 | Critério | Nível | Asserção e bordas |
@@ -212,8 +212,8 @@ provocação do critério 14 tem o canário do passo 3.
 Em todo passo, o `npm ci` não altera o lockfile e nenhuma versão vira faixa.
 
 1. Os tipos e os erros; a normalização de texto; `createTicket`; os testes. O Registro de decisões ganha as linhas do
-   domínio sem `id` nem `version`, dos erros lançados com `code` em vez de devolvidos como resultado, das entradas
-   de texto validadas pelo domínio, do texto normalizado em uma linha sem emoji nem símbolos, do instante recebido por
+   domínio sem `id` nem `version`, dos erros lançados com `code` em vez de devolvidos como resultado, das entradas de
+   texto validadas pelo domínio, do texto normalizado em uma linha sem emoji nem símbolos, do instante recebido por
    argumento no lugar de o domínio ler o relógio e da primeira falha que vence no lugar de acumular todas. Prova:
    critérios 1 a 6, 11 (a parte de criar), 12 (a parte de criar), 13 e 16.
 2. `TRANSITIONS` e `transitionTicket`, com os testes. O Registro ganha a linha da tabela de transições como dicionário

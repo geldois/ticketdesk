@@ -167,9 +167,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: none (tweak)`: o README aponta para os workflows em vez de listar os comandos que o CI roda. A IA tinha escrito
   na skill `docs` que o README cita cada comando do CI, e o auditor me fez listar os `npm audit`; decidi trocar a regra
   por citar só os comandos que uma pessoa digita e apontar para `.github/workflows/`, para não duplicar a fonte.
-- `spec: 00004`: o que escrevo à mão não tem forma prescrita pela spec. A IA tinha escrito o contrato como código (tipos,
-  classes e assinaturas); decidi que a spec fixa só nomes públicos, tipos e invariantes, e que a Filosofia do README vale
-  para a IA como regra.
+- `spec: 00004`: o que escrevo à mão não tem forma prescrita pela spec. A IA tinha escrito o contrato como código
+  (tipos, classes e assinaturas); decidi que a spec fixa só nomes públicos, tipos e invariantes, e que a Filosofia do
+  README vale para a IA como regra.
 
 ## Onde a IA não entrou
 

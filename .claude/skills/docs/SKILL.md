@@ -139,8 +139,8 @@ motivo diz por que o campo não cabe nesta fatia e não repete o que `IA.md`, `R
 ### Regras
 
 - O autor escreve a spec. A IA entrevista, aponta trade-offs e confere o formato; ela nunca decide o domínio.
-- Respeita a Filosofia do `README.md`: para o que ela reserva à mão, a spec fixa só nomes públicos, tipos, invariantes
-  e comportamento observável, em tabelas. Nunca traz código, assinatura, classe, função auxiliar nem organização em
+- Respeita a Filosofia do `README.md`: para o que ela reserva à mão, a spec fixa só nomes públicos, tipos, invariantes e
+  comportamento observável, em tabelas. Nunca traz código, assinatura, classe, função auxiliar nem organização em
   arquivos dessa parte, porque a forma é de quem a escreve.
 - A spec é congelada no conteúdo a partir do commit que a introduz: não tem status nem registro, e só a formatação pode
   mudar depois, com o commit `spec: none (format)`. Corrigir ou mudar uma decisão é abrir uma spec nova.
