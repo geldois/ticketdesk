@@ -21,6 +21,16 @@ O projeto usa uma única versão de Node, exata, declarada em [.node-version](.n
 Para ter essa versão no `PATH`, use um gerenciador de versões configurado para ler o `.node-version` ou instale a versão
 direto. O repositório não depende de nenhum gerenciador específico.
 
+Comandos, executados na raiz:
+
+| Comando | O que faz |
+| --- | --- |
+| `npm ci` | Instala as dependências exatas do lockfile |
+| `npm run check` | Roda as verificações do repositório, parando na primeira que falha; é o que o CI roda a cada push |
+| `npm run fix` | Corrige o que o lint e os formatadores sabem corrigir |
+| `npm audit --audit-level=high` | Falha se uma dependência tem advisory de gravidade alta ou acima; o workflow `audit` o roda |
+| `npm audit signatures` | Confere as assinaturas dos pacotes instalados; o workflow `audit` o roda |
+
 ## Visão geral da arquitetura
 
 Ainda sem conteúdo.

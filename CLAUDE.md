@@ -48,8 +48,8 @@ aponta para ele.
 - Commits pequenos e focados: um passo termina em um ou mais commits, todos com o rodapé da spec.
 - Duas branches: todo commit e todo push vão para `dev`; a `main` só recebe o merge de `dev` e nunca um commit direto. A
   IA nunca pusha a `main` nem faz o merge para ela: é ordem do usuário.
-- O push para `dev` só acontece depois que todas as verificações do repositório passam; verificação que ainda não existe
-  não conta como passada.
+- O CI é o único portão do push para `dev`: o `check` roda nele a cada push, sem hook local, e um commit quebrado pode
+  entrar em `dev`.
 
 ## Idioma e comentários
 
@@ -69,6 +69,8 @@ aponta para ele.
   roda o agente uma segunda vez só se uma correção mudou documento; achado baixo é registrado e não abre outra rodada.
   Commit que só toca código, commit manual e commit só de formatação não precisam dele. A auditoria do repositório
   inteiro só acontece quando o usuário a pede.
+- O `npm run check` roda no CI. Fora dele, a IA só o roda uma vez e opcionalmente antes do commit, com permissão
+  explícita do usuário, ou quando ele pedir. O `npm run fix` só roda quando o usuário pedir.
 - O harness local só é carregado quando a sessão da IA abre dentro deste repositório.
 
 ## Pausas

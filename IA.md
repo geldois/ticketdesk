@@ -67,6 +67,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   `lockfile-lint` reprovando uma dependência fora do registro e sem https, nomeando o pacote, e o `action-validator`
   reprovando uma chave inválida no workflow. O `check` não foi rodado, e o run do `check.yml` no CI só se prova depois
   do push.
+- `spec: 00003`, passo 7: a IA escreveu uma sonda fora do repositório, com sete casos (os comandos e o `.node-version`
+  em "Como rodar", os scripts existentes, a versão do Node fora do README, a frase antiga do push fora do `CLAUDE.md`, o
+  CI na seção Commits, a regra do `check` e do `fix` e o `rumdl` sem apontar arquivo), vermelha antes dos textos e verde
+  depois deles. A regra de quando o `check` e o `fix` rodam não tem teste de texto: o `docs-auditor` confere que o
+  documento dono a traz. O `check` não foi rodado.
 - `spec: 00002`, passo 1: a IA mediu o `docs-auditor` novo com clones do repositório, um defeito por clone. Dos 8 clones
   rodados, 5 trouxeram a categoria e a gravidade esperadas, e 3 trouxeram a categoria com gravidade alta em vez de
   média, o que levou à correção da regra de gravidade no agente. Os outros 8 casos da spec ficaram sem medir, por custo.
