@@ -28,8 +28,8 @@ Comandos, executados na raiz:
 | `npm ci` | Instala as dependências exatas do lockfile |
 | `npm run check` | Roda as verificações do repositório, parando na primeira que falha; é o que o CI roda a cada push |
 | `npm run fix` | Corrige o que o lint e os formatadores sabem corrigir |
-| `npm audit --audit-level=high` | Falha se uma dependência tem advisory de gravidade alta ou acima; o workflow `audit` o roda |
-| `npm audit signatures` | Confere as assinaturas dos pacotes instalados; o workflow `audit` o roda |
+
+O que o CI roda, incluindo a auditoria de dependências, está em [.github/workflows/](.github/workflows/).
 
 ## Visão geral da arquitetura
 
@@ -68,3 +68,4 @@ Da mais antiga para a mais recente.
 | O CI é o único portão, sem hook local, e o `check` roda nele a cada push | Hook de pre-commit, ou os dois, ou um script que orquestra os portões | Um commit quebrado entra no histórico de `dev`, e a primeira falha esconde as seguintes |
 | `audit` em workflow próprio, não obrigatório, em push e em agenda | `audit` como etapa do `check` | Um advisory novo não trava o push, e o alerta pode passar despercebido até alguém olhar o workflow |
 | Canário descartável por ferramenta em lugar de uma suíte de testes de linter | Suíte versionada que aplica uma lista de provocações ao `check` | Uma regra desligada por engano passa sem ser vista, e a prova de cada ferramenta não se repete sozinha |
+| O README cita só os comandos que uma pessoa digita e aponta para `.github/workflows/` para o que o CI roda | Listar no README cada comando que o CI roda | Quem quer ver a auditoria de dependências precisa abrir o workflow |

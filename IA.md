@@ -153,6 +153,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: none (tweak)`: a spec que substitui outra sempre absorve a substituída, inclusive o que ainda não foi feito, e
   a substituída deixa de ser fonte de passos. A IA tinha escrito só que a substituta diz o que continua valendo; exigi a
   absorção como regra explícita da skill `docs`.
+- `spec: none (tweak)`: o README aponta para os workflows em vez de listar os comandos que o CI roda. A IA tinha escrito
+  na skill `docs` que o README cita cada comando do CI, e o auditor me fez listar os `npm audit`; decidi trocar a regra
+  por citar só os comandos que uma pessoa digita e apontar para `.github/workflows/`, para não duplicar a fonte.
 
 ## Onde a IA não entrou
 

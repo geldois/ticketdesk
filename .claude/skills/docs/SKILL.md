@@ -47,7 +47,8 @@ Esta skill governa toda a documentação do repositório e do seu harness local:
 
 ## Completude
 
-- O `README.md` cita, em "Como rodar", cada comando que o CI exercita.
+- O `README.md` cita, em "Como rodar", os comandos que uma pessoa digita (a instalação e cada script do `package.json`)
+  e aponta para `.github/workflows/` para o que o CI roda, sem listar os comandos dos workflows.
 - O Registro de decisões tem uma linha para cada decisão técnica com alternativa descartada, no mesmo commit que traz o
   código.
 - Uma seção que diz `Ainda sem conteúdo.` só continua assim enquanto não existe o que descrever.
@@ -64,7 +65,7 @@ comportamento da IA, que mora só no `IA.md`. Seções fixas, nesta ordem:
 | --- | --- |
 | Título e resumo | O que o sistema é |
 | Como este projeto é desenvolvido | Um parágrafo que aponta para `docs/specs/`, `IA.md` e `CLAUDE.md` |
-| Como rodar | Só comandos que existem e que o CI exercita |
+| Como rodar | Só comandos que existem e que uma pessoa digita, e o apontamento para os workflows |
 | Visão geral da arquitetura | Prosa curta e, se preciso, um Mermaid enxuto |
 | Premissas | Cada uma como "assumi X porque Y" |
 | O que faria com mais tempo | Evolução e o que ficou de fora |
