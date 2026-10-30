@@ -16,6 +16,18 @@ Desenvolvimento orientado por especificação: cada fatia nasce como uma spec co
 cada passo dela vira um commit que cita a spec. As regras de trabalho estão em [CLAUDE.md](CLAUDE.md) e o uso de IA está
 relatado, por spec, em [IA.md](IA.md).
 
+## Filosofia
+
+Este repositório é estudo e trabalho ao mesmo tempo. A spec vem antes do código, e cada trade-off dela é decidido em
+entrevista, nunca assumido; a IA pesquisa, aponta alternativas e revisa, mas nunca decide o domínio. A regra de autoria:
+o que exige raciocínio sobre estado e falha é escrito à mão, e o que é encanamento é delegado à IA e revisado.
+
+| À mão | Delegado à IA, revisado |
+| --- | --- |
+| O núcleo: regras do domínio, concorrência e tratamento de erros | Ferramentas e CI, rotas, front-end, corpos de teste, documentação |
+
+O que a IA de fato fez em cada spec está em [IA.md](IA.md).
+
 ## Como rodar
 
 ### Para quem desenvolve
@@ -77,3 +89,4 @@ Da mais antiga para a mais recente.
 | O README cita só os comandos que uma pessoa digita e aponta para `.github/workflows/` para o que o CI roda | Listar no README cada comando que o CI roda | Quem quer ver a auditoria de dependências precisa abrir o workflow |
 | Check obrigatório só na `main`, num ruleset à parte (`protect-main`), e o `protect-branches` segue só com bloqueio de exclusão e force push | Check obrigatório também na `dev`, que travaria o push direto nela | A `main` só aceita um commit cujo `check` já passou na `dev`, e há dois rulesets para manter, com o bloqueio de exclusão e force push repetido na `main` |
 | Badges de estado dos workflows e de licença, e de versão de Node e de TypeScript lidos do `package.json` por consulta dinâmica | Badges com a versão escrita no próprio texto | Os badges dependem do serviço de badges e da branch `main`, e a versão mostrada só muda depois do merge na `main` |
+| A spec do que se escreve à mão fixa só nomes públicos, tipos e invariantes, em tabelas | O contrato da spec escrito como código, com assinaturas e classes | A spec deixa de ser executável à primeira vista, e os testes dependem só dos nomes públicos que ela fixa |

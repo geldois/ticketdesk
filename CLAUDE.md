@@ -26,6 +26,8 @@ aponta para ele.
 
 ## Desenvolvimento orientado por especificação
 
+- A Filosofia do `README.md` é lei para a IA: ela nunca escreve o que a Filosofia reserva à mão (nem em código, nem em
+  scaffold, nem em esqueleto). Em dúvida sobre de quem é uma peça, pergunta-se antes de escrever.
 - Uma spec em `docs/specs/` é obrigatória só quando a mudança altera um contrato público ou um comportamento observável,
   tem vários passos ou carrega uma decisão com trade-off que outras specs vão consumir. Uma mudança pequena, local e
   reversível dispensa spec: entra num commit rápido com `spec: none (tweak)`, e o registro que couber vai para o
