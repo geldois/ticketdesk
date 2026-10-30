@@ -6,16 +6,23 @@
     "node": "26.13.0"
   },
   "scripts": {
-    "check": "tsc --noEmit && vitest run --coverage --silent --reporter=dot"
+    "check": "tsc --noEmit && eslint . --quiet --max-warnings 0 --cache --cache-strategy content --cache-location .cache/eslint/ && prettier --check . --log-level warn --cache --cache-strategy content --cache-location .cache/prettier/cache && vitest run --coverage --silent --reporter=dot",
+    "fix": "eslint --fix . --quiet --cache --cache-strategy content --cache-location .cache/eslint/ && prettier --write . --log-level warn --cache --cache-strategy content --cache-location .cache/prettier/cache"
   },
   "workspaces": [
     "apps/api",
     "packages/contract"
   ],
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "@types/node": "26.6.6",
     "@vitest/coverage-v8": "5.0.5",
+    "@vitest/eslint-plugin": "1.6.28",
+    "eslint": "10.13.0",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.9.10",
     "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1",
     "vitest": "5.0.5"
   }
 }
