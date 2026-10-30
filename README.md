@@ -1,5 +1,11 @@
 # ticketdesk
 
+[![check](https://img.shields.io/github/actions/workflow/status/geldois/ticketdesk/check.yml?branch=main&label=check)](https://github.com/geldois/ticketdesk/actions/workflows/check.yml)
+[![audit](https://img.shields.io/github/actions/workflow/status/geldois/ticketdesk/audit.yml?branch=main&label=audit)](https://github.com/geldois/ticketdesk/actions/workflows/audit.yml)
+[![node](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fgeldois%2Fticketdesk%2Fmain%2Fpackage.json&query=%24.engines.node&label=node)](.node-version)
+[![typescript](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fgeldois%2Fticketdesk%2Fmain%2Fpackage.json&query=%24.devDependencies.typescript&label=typescript)](package.json)
+[![license](https://img.shields.io/github/license/geldois/ticketdesk)](LICENSE)
+
 Sistema de tickets de atendimento full-stack em TypeScript, Node e PostgreSQL: uma operadora registra tickets de
 clientes, acompanha o andamento até a resolução, consulta o histórico de cada mudança e nunca sobrescreve, sem aviso, a
 alteração de outra operadora.
@@ -70,3 +76,4 @@ Da mais antiga para a mais recente.
 | Canário descartável por ferramenta em lugar de uma suíte de testes de linter | Suíte versionada que aplica uma lista de provocações ao `check` | Uma regra desligada por engano passa sem ser vista, e a prova de cada ferramenta não se repete sozinha |
 | O README cita só os comandos que uma pessoa digita e aponta para `.github/workflows/` para o que o CI roda | Listar no README cada comando que o CI roda | Quem quer ver a auditoria de dependências precisa abrir o workflow |
 | Check obrigatório só na `main`, num ruleset à parte (`protect-main`), e o `protect-branches` segue só com bloqueio de exclusão e force push | Check obrigatório também na `dev`, que travaria o push direto nela | A `main` só aceita um commit cujo `check` já passou na `dev`, e há dois rulesets para manter, com o bloqueio de exclusão e force push repetido na `main` |
+| Badges de estado dos workflows e de licença, e de versão de Node e de TypeScript lidos do `package.json` por consulta dinâmica | Badges com a versão escrita no próprio texto | Os badges dependem do serviço de badges e da branch `main`, e a versão mostrada só muda depois do merge na `main` |
