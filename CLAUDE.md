@@ -83,8 +83,9 @@ aponta para ele.
   roda o agente uma segunda vez só se uma correção mudou documento; achado baixo é registrado e não abre outra rodada.
   Commit que só toca código, commit manual e commit só de formatação não precisam dele. A auditoria do repositório
   inteiro só acontece quando o usuário a pede.
-- O `npm run check` roda no CI. Fora dele, a IA só o roda uma vez e opcionalmente antes do commit, com permissão
-  explícita do usuário, ou quando ele pedir. O `npm run fix` só roda quando o usuário pedir.
+- Antes de todo commit de IA, ela roda o `npm run fix` e depois o `npm run check`, nessa ordem e uma vez cada, e só
+  então o `docs-auditor`, para ele auditar o documento já formatado. Se o `check` reprovar, ela reporta ao usuário e
+  pergunta antes de commitar, sem rodar de novo. Fora desse momento, só os roda quando o usuário pedir.
 - O harness local só é carregado quando a sessão da IA abre dentro deste repositório.
 
 ## Pausas
