@@ -64,6 +64,10 @@ aponta para ele.
 
 - Documentação e comentários em português do Brasil; código (identificadores, mensagens de erro, rotas) e mensagens de
   commit em inglês.
+- O vocabulário é um só em todo o projeto: o mesmo conceito tem o mesmo nome em parâmetros, funções, classes, tipos,
+  interfaces, valores, constantes, códigos de erro e testes. Antes de nomear algo, procure como o conceito já se chama e
+  reuse; um nome novo para um conceito que já tem nome é um defeito, e renomear tudo de uma vez custa menos que conviver
+  com dois.
 - Comentário é permitido quando atômico, enxuto e capaz de provar o próprio valor; nunca repete o que o código já diz. O
   código é a fonte da verdade.
 

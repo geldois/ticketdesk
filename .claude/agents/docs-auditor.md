@@ -40,6 +40,7 @@ arquivo nem altere o git.
 | Sobreposição | Regra definida em `CLAUDE.md` que a skill `docs` também define, ou o contrário; qualquer fato com dois donos |
 | Valor repetido | Versão, número ou nome escrito num documento quando um manifesto ou um arquivo de configuração é o dono |
 | Estilo | Árvore de diretório desenhada, diagrama de caixas em texto, alinhamento por espaços, ou seção fixa fora de ordem ou faltando, conforme a skill `docs` |
+| Vocabulário | Um conceito com dois nomes, no código, nos testes ou nos documentos, ou um nome citado em documento que o código não usa, conforme a regra de vocabulário de `CLAUDE.md` |
 | Afirmação que envelhece | Tempo, desempenho, versão ou fato externo escrito numa spec ou num documento |
 | Harness local | `settings.json` que não é JSON válido; agente, skill ou caminho citado que não existe; `AGENTS.md` que não é symlink para `CLAUDE.md` |
 
@@ -78,8 +79,8 @@ rascunho de uma spec, ao contrário, é revisado por inteiro, porque antes do co
 1. Uma tabela de achados, ordenada por gravidade, com as colunas Gravidade, Arquivo e linha, Afirmação, Evidência. Sem
    achados, diga isso em uma linha. A gravidade é alta só para `Spec commitada alterada`, `Rodapés de commit`,
    `Harness local` e `Referência pendurada`, que bloqueiam o commit; média para toda omissão e para as checagens de
-   dono, de prova, de voz, de ruído, de substituição e de dependência; baixa para estilo e detalhe. O achado leva o nome
-   da checagem que o produziu.
+   dono, de prova, de voz, de ruído, de substituição, de dependência e de vocabulário; baixa para estilo e detalhe. O
+   achado leva o nome da checagem que o produziu.
 2. A seção "Verificado e limpo": o que você realmente conferiu, por checagem, com um exemplo concreto de cada. Silêncio
    nunca é aprovação: uma checagem sem exemplo não foi feita.
 3. Uma linha de veredito: limpo ou com achados.
