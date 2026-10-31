@@ -29,6 +29,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   condicionais".
 - `spec: 00004`, passo 1: a IA escreveu os corpos dos testes das classes de erro, da normalização, dos predicados, dos
   normalizadores de canal e prioridade, do instante e do `createTicketChange`, a partir dos casos da spec.
+- `spec: 00004`, passo 2: a IA escreveu os corpos dos testes do `transitionTicketChange`, da tabela de transições e do
+  normalizador de status, e, a meu pedido, as duas classes de erro de texto fora do destino e a troca, no meu
+  `validateTransitionUnexpected`, dos dois erros que ele lançava por elas.
 
 ## O que validei
 
@@ -89,6 +92,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00004`, passo 1: a IA escreveu fora do repositório uma sonda com os casos do passo, que parte vermelha e
   termina com as 31 linhas verdes sobre o meu `createTicketChange`, e rodou os testes com cobertura de 100% nas quatro
   métricas do domínio, além de `tsc`, `eslint` e `prettier`, cada ferramenta sozinha. O `check` não foi rodado.
+- `spec: 00004`, passo 2: a IA escreveu fora do repositório uma sonda com os casos do passo, que parte vermelha e
+  termina toda verde sobre o meu `transitionTicketChange`. Uma linha dela apontou, no meu código, que o `createdAt` do
+  ticket devolvido dividia o objeto `Date` com o ticket recebido; corrigi, e um teste agora trava o caso. O
+  `npm run check` passou, com 100% de cobertura nas quatro métricas do domínio.
 
 ## Um erro da IA
 
@@ -213,6 +220,12 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   spec, que aceita toda pontuação. A IA apontou o desvio e recomendou o mesmo regex dos outros campos; mantive o mais
   restrito porque um nome só precisa de apóstrofo e hífen, aceitando recusar nomes com outra pontuação, e o commit
   registra o desvio.
+- `spec: 00004`, passo 2: a transição recusa a nota ou o motivo que não pertencem ao destino, com um erro próprio por
+  campo, e exige as duas chaves sempre, com `null` quando não se aplicam. A spec congelada manda ignorar o texto fora do
+  destino, e a IA recomendou seguir a spec e levar a dúvida para a spec da API. Escolhi falhar alto e rápido, porque
+  perder um dado em silêncio é pior que recusar a chamada; aceitei que quem chama monte o corpo conforme o destino. O
+  desvio vai declarado no parágrafo do commit. A IA recomendou a ordem em que o texto sobrando vem antes do faltando, e
+  aceitei.
 
 ## Onde a IA não entrou
 
@@ -233,3 +246,6 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   categorias aceitas de cada campo são meus.
 - `spec: 00004`, passo 1: o `createTicketChange` com a ordem das checagens e as cópias do instante, o `validateInstant`,
   os predicados `isTicket…` e os normalizadores de canal e prioridade são meus.
+- `spec: 00004`, passo 2: a tabela `TRANSITION_TICKET_STATUSES`, o `transitionTicketChange` com a ordem das checagens e
+  as cópias dos instantes, e as funções `validateTransition…` são meus, exceto a troca dos dois erros do
+  `validateTransitionUnexpected`.

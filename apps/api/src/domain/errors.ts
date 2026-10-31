@@ -8,6 +8,8 @@ export const DOMAIN_ERROR_CODES = [
   "invalid_resolution_note",
   "missing_reopen_reason",
   "invalid_reopen_reason",
+  "unexpected_resolution_note",
+  "unexpected_reopen_reason",
   "invalid_transition",
 ] as const;
 
@@ -86,6 +88,22 @@ export class InvalidReopenReasonError extends DomainError {
 
   constructor() {
     super("reopen reason must have 1 to 500 valid characters");
+  }
+}
+
+export class UnexpectedResolutionNoteError extends DomainError {
+  readonly code = "unexpected_resolution_note";
+
+  constructor() {
+    super("a resolution note is only accepted when resolving a ticket");
+  }
+}
+
+export class UnexpectedReopenReasonError extends DomainError {
+  readonly code = "unexpected_reopen_reason";
+
+  constructor() {
+    super("a reopen reason is only accepted when reopening a ticket");
   }
 }
 

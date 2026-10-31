@@ -8,6 +8,7 @@ import {
   InvalidReopenReasonError,
   InvalidTicketChannelError,
   InvalidTicketPriorityError,
+  InvalidTransitionError,
   MissingResolutionNoteError,
   MissingReopenReasonError,
 } from "./errors.ts";
@@ -20,9 +21,12 @@ import {
   normalizeInvariantField,
   normalizeTicketChannel,
   normalizeTicketPriority,
+  normalizeTicketStatus,
   REOPEN_REASON,
   RESOLUTION_NOTE,
+  TRANSITION_TICKET_STATUSES,
   validateInstant,
+  validateTransitionTicketStatus,
 } from "./invariants.ts";
 
 const FIELDS = [
@@ -197,6 +201,58 @@ describe("normalizeTicketPriority", () => {
     expect(() => normalizeTicketPriority(raw)).toThrow(
       InvalidTicketPriorityError,
     );
+  });
+});
+
+describe("normalizeTicketStatus", () => {
+  it.each(["open", "in_progress", "resolved"])("accepts %j", (raw) => {
+    expect(normalizeTicketStatus(raw)).toBe(raw);
+  });
+
+  it.each(["", "closed", "OPEN", "in-progress"])("refuses %j", (raw) => {
+    expect(() => normalizeTicketStatus(raw)).toThrow(InvalidTransitionError);
+  });
+});
+
+describe("TRANSITION_TICKET_STATUSES", () => {
+  it("has one key for each status and exactly the three destinations of the table", () => {
+    expect(
+      Object.fromEntries(
+        Object.entries(TRANSITION_TICKET_STATUSES).map(([from, to]) => [
+          from,
+          [...to],
+        ]),
+      ),
+    ).toEqual({
+      open: ["in_progress"],
+      in_progress: ["resolved"],
+      resolved: ["open"],
+    });
+  });
+});
+
+describe("validateTransitionTicketStatus", () => {
+  it.each([
+    ["open", "in_progress"],
+    ["in_progress", "resolved"],
+    ["resolved", "open"],
+  ] as const)("accepts %s to %s", (from, to) => {
+    expect(() => {
+      validateTransitionTicketStatus(from, to);
+    }).not.toThrow();
+  });
+
+  it.each([
+    ["open", "open"],
+    ["open", "resolved"],
+    ["in_progress", "open"],
+    ["in_progress", "in_progress"],
+    ["resolved", "in_progress"],
+    ["resolved", "resolved"],
+  ] as const)("refuses %s to %s", (from, to) => {
+    expect(() => {
+      validateTransitionTicketStatus(from, to);
+    }).toThrow(InvalidTransitionError);
   });
 });
 

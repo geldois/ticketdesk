@@ -13,6 +13,8 @@ import {
   InvalidTransitionError,
   MissingResolutionNoteError,
   MissingReopenReasonError,
+  UnexpectedReopenReasonError,
+  UnexpectedResolutionNoteError,
 } from "./errors.ts";
 
 const ERRORS = [
@@ -25,6 +27,8 @@ const ERRORS = [
   { error: InvalidResolutionNoteError, code: "invalid_resolution_note" },
   { error: MissingReopenReasonError, code: "missing_reopen_reason" },
   { error: InvalidReopenReasonError, code: "invalid_reopen_reason" },
+  { error: UnexpectedResolutionNoteError, code: "unexpected_resolution_note" },
+  { error: UnexpectedReopenReasonError, code: "unexpected_reopen_reason" },
   { error: InvalidTransitionError, code: "invalid_transition" },
 ] as const;
 

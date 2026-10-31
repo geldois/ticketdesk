@@ -4,9 +4,17 @@ import {
   normalizeInvariantField,
   normalizeTicketChannel,
   normalizeTicketPriority,
+  REOPEN_REASON,
+  RESOLUTION_NOTE,
   validateInstant,
+  validateTransition,
 } from "./invariants.ts";
-import type { Ticket, TicketChange, TicketHistoryEntry } from "./ticket.ts";
+import type {
+  Ticket,
+  TicketChange,
+  TicketHistoryEntry,
+  TicketStatus,
+} from "./ticket.ts";
 
 export function createTicketChange(
   {
@@ -22,9 +30,9 @@ export function createTicketChange(
   },
   at: Date,
 ): TicketChange {
-  const createdAt = new Date(at);
+  const atCopy = new Date(at);
 
-  validateInstant(createdAt);
+  validateInstant(atCopy);
 
   const resolutionNote = null;
 
@@ -33,7 +41,7 @@ export function createTicketChange(
     to: "open",
     resolutionNote,
     reopenReason: null,
-    at: createdAt,
+    at: atCopy,
   };
 
   const normalizedCustomerName = normalizeInvariantField(
@@ -56,8 +64,56 @@ export function createTicketChange(
     priority: normalizedPriority,
     status: "open",
     resolutionNote,
-    createdAt: createdAt,
+    createdAt: atCopy,
   };
 
   return { ticketHistoryEntry, ticket };
+}
+
+export function transitionTicketChange(
+  ticket: Ticket,
+  {
+    to,
+    resolutionNote,
+    reopenReason,
+  }: {
+    to: TicketStatus;
+    resolutionNote: string | null;
+    reopenReason: string | null;
+  },
+  at: Date,
+): TicketChange {
+  const atCopy = new Date(at);
+
+  validateInstant(atCopy);
+  validateTransition(ticket.status, to, resolutionNote, reopenReason);
+
+  const normalizedResolutionNote =
+    resolutionNote !== null
+      ? normalizeInvariantField(resolutionNote, RESOLUTION_NOTE)
+      : null;
+  const normalizedReopenReason =
+    reopenReason !== null
+      ? normalizeInvariantField(reopenReason, REOPEN_REASON)
+      : null;
+
+  const ticketHistoryEntry: TicketHistoryEntry = {
+    from: ticket.status,
+    to,
+    resolutionNote: normalizedResolutionNote,
+    reopenReason: normalizedReopenReason,
+    at: atCopy,
+  };
+
+  const newTicket: Ticket = {
+    customerName: ticket.customerName,
+    description: ticket.description,
+    channel: ticket.channel,
+    priority: ticket.priority,
+    status: to,
+    resolutionNote: normalizedResolutionNote,
+    createdAt: new Date(ticket.createdAt),
+  };
+
+  return { ticketHistoryEntry, ticket: newTicket };
 }

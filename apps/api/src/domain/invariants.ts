@@ -9,6 +9,9 @@ import {
   InvalidTicketChannelError,
   InvalidTicketPriorityError,
   InvalidInstantError,
+  InvalidTransitionError,
+  UnexpectedReopenReasonError,
+  UnexpectedResolutionNoteError,
 } from "./errors.ts";
 import {
   TICKET_CHANNELS,
@@ -122,4 +125,69 @@ export function normalizeTicketPriority(raw: string): TicketPriority {
   }
 
   return raw;
+}
+
+export function normalizeTicketStatus(raw: string): TicketStatus {
+  if (!isTicketStatus(raw)) {
+    throw new InvalidTransitionError();
+  }
+
+  return raw;
+}
+
+export const TRANSITION_TICKET_STATUSES: Record<
+  TicketStatus,
+  Set<TicketStatus>
+> = {
+  open: new Set(["in_progress"]),
+  in_progress: new Set(["resolved"]),
+  resolved: new Set(["open"]),
+};
+
+export function validateTransitionTicketStatus(
+  from: TicketStatus,
+  to: TicketStatus,
+): void {
+  if (!TRANSITION_TICKET_STATUSES[from].has(to)) {
+    throw new InvalidTransitionError();
+  }
+}
+
+export function validateTransitionUnexpected(
+  to: TicketStatus,
+  resolutionNote: string | null,
+  reopenReason: string | null,
+): void {
+  if (to !== "resolved" && resolutionNote !== null) {
+    throw new UnexpectedResolutionNoteError();
+  }
+
+  if (to !== "open" && reopenReason !== null) {
+    throw new UnexpectedReopenReasonError();
+  }
+}
+
+export function validateTransitionMissing(
+  to: TicketStatus,
+  resolutionNote: string | null,
+  reopenReason: string | null,
+): void {
+  if (to === "resolved" && resolutionNote === null) {
+    throw new MissingResolutionNoteError();
+  }
+
+  if (to === "open" && reopenReason === null) {
+    throw new MissingReopenReasonError();
+  }
+}
+
+export function validateTransition(
+  from: TicketStatus,
+  to: TicketStatus,
+  resolutionNote: string | null,
+  reopenReason: string | null,
+): void {
+  validateTransitionTicketStatus(from, to);
+  validateTransitionUnexpected(to, resolutionNote, reopenReason);
+  validateTransitionMissing(to, resolutionNote, reopenReason);
 }

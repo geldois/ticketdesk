@@ -6,11 +6,20 @@ import {
   InvalidDescriptionError,
   InvalidInstantError,
   InvalidTicketChannelError,
+  InvalidResolutionNoteError,
+  InvalidReopenReasonError,
   InvalidTicketPriorityError,
+  InvalidTransitionError,
+  MissingResolutionNoteError,
+  MissingReopenReasonError,
+  UnexpectedReopenReasonError,
+  UnexpectedResolutionNoteError,
 } from "./errors.ts";
-import { createTicketChange } from "./lifecycle.ts";
+import { createTicketChange, transitionTicketChange } from "./lifecycle.ts";
+import type { Ticket, TicketStatus } from "./ticket.ts";
 
 const AT = new Date("2026-03-01T12:00:00.000Z");
+const CREATED_AT = new Date("2026-02-01T09:00:00.000Z");
 
 const VALID = {
   customerName: "Maria Souza",
@@ -181,5 +190,337 @@ describe("createTicketChange", () => {
     const input = Object.freeze({ ...VALID });
 
     expect(() => createTicketChange(input, AT)).not.toThrow();
+  });
+});
+
+function ticketIn(status: TicketStatus, resolutionNote: string | null): Ticket {
+  return {
+    customerName: "Maria Souza",
+    description: "Não consigo acessar a fatura",
+    channel: "email",
+    priority: "medium",
+    status,
+    resolutionNote,
+    createdAt: new Date(CREATED_AT),
+  };
+}
+
+function transition(
+  ticket: Ticket,
+  to: TicketStatus,
+  over: { resolutionNote?: string | null; reopenReason?: string | null } = {},
+  at: Date = AT,
+) {
+  return transitionTicketChange(
+    ticket,
+    { to, resolutionNote: null, reopenReason: null, ...over },
+    at,
+  );
+}
+
+const VALID_PAIRS = [
+  ["open", "in_progress"],
+  ["in_progress", "resolved"],
+  ["resolved", "open"],
+] as const;
+
+const STATUSES = ["open", "in_progress", "resolved"] as const;
+
+describe("transitionTicketChange", () => {
+  it("moves open to in_progress and records the entry at the instant", () => {
+    const { ticket, ticketHistoryEntry } = transition(
+      ticketIn("open", null),
+      "in_progress",
+    );
+
+    expect(ticket.status).toBe("in_progress");
+    expect(ticketHistoryEntry).toEqual({
+      from: "open",
+      to: "in_progress",
+      resolutionNote: null,
+      reopenReason: null,
+      at: AT,
+    });
+  });
+
+  it("moves in_progress to resolved and writes the note on the ticket and on the entry", () => {
+    const { ticket, ticketHistoryEntry } = transition(
+      ticketIn("in_progress", null),
+      "resolved",
+      { resolutionNote: "Fatura reenviada" },
+    );
+
+    expect(ticket.status).toBe("resolved");
+    expect(ticket.resolutionNote).toBe("Fatura reenviada");
+    expect(ticketHistoryEntry.from).toBe("in_progress");
+    expect(ticketHistoryEntry.to).toBe("resolved");
+    expect(ticketHistoryEntry.resolutionNote).toBe("Fatura reenviada");
+    expect(ticketHistoryEntry.reopenReason).toBeNull();
+  });
+
+  it("moves resolved to open, writes the reason only on the entry and clears the note of the ticket", () => {
+    const { ticket, ticketHistoryEntry } = transition(
+      ticketIn("resolved", "Fatura reenviada"),
+      "open",
+      { reopenReason: "Voltou a falhar" },
+    );
+
+    expect(ticket.status).toBe("open");
+    expect(ticket.resolutionNote).toBeNull();
+    expect(Object.values(ticket)).not.toContain("Voltou a falhar");
+    expect(ticketHistoryEntry.reopenReason).toBe("Voltou a falhar");
+    expect(ticketHistoryEntry.resolutionNote).toBeNull();
+  });
+
+  it("writes the new note when it resolves again after reopening", () => {
+    const first = transition(ticketIn("in_progress", null), "resolved", {
+      resolutionNote: "Primeira",
+    });
+    const reopened = transition(first.ticket, "open", {
+      reopenReason: "Voltou",
+    });
+    const progress = transition(reopened.ticket, "in_progress");
+    const second = transition(progress.ticket, "resolved", {
+      resolutionNote: "Segunda",
+    });
+
+    expect(second.ticket.resolutionNote).toBe("Segunda");
+    expect(second.ticketHistoryEntry.resolutionNote).toBe("Segunda");
+  });
+
+  it.each(
+    STATUSES.flatMap((from) =>
+      STATUSES.filter(
+        (to) => !VALID_PAIRS.some(([f, t]) => f === from && t === to),
+      ).map((to) => ({ from, to })),
+    ),
+  )("refuses $from to $to as an invalid transition", ({ from, to }) => {
+    expect(() =>
+      transition(ticketIn(from, null), to, {
+        resolutionNote: "Fatura reenviada",
+        reopenReason: "Voltou",
+      }),
+    ).toThrow(InvalidTransitionError);
+  });
+
+  it.each(["closed", "", "OPEN", "in-progress"])(
+    "refuses the destination %j that is not a status",
+    (to) => {
+      // @ts-expect-error the destination is not a TicketStatus on purpose
+      expect(() => transition(ticketIn("open", null), to)).toThrow(
+        InvalidTransitionError,
+      );
+    },
+  );
+
+  it.each([null, "", "   ", "\t\n"])(
+    "refuses to resolve with the note %j as missing",
+    (resolutionNote) => {
+      expect(() =>
+        transition(ticketIn("in_progress", null), "resolved", {
+          resolutionNote,
+        }),
+      ).toThrow(MissingResolutionNoteError);
+    },
+  );
+
+  it.each(["😀", "custo $10", "a".repeat(2001)])(
+    "refuses to resolve with the invalid note %j",
+    (resolutionNote) => {
+      expect(() =>
+        transition(ticketIn("in_progress", null), "resolved", {
+          resolutionNote,
+        }),
+      ).toThrow(InvalidResolutionNoteError);
+    },
+  );
+
+  it("accepts a note of 1 and of 2000 characters on the ticket and on the entry", () => {
+    for (const note of ["a", "a".repeat(2000)]) {
+      const { ticket, ticketHistoryEntry } = transition(
+        ticketIn("in_progress", null),
+        "resolved",
+        { resolutionNote: note },
+      );
+
+      expect(ticket.resolutionNote).toBe(note);
+      expect(ticketHistoryEntry.resolutionNote).toBe(note);
+    }
+  });
+
+  it("cuts the ends and reduces each block of whitespace in the note, on the ticket and on the entry", () => {
+    const { ticket, ticketHistoryEntry } = transition(
+      ticketIn("in_progress", null),
+      "resolved",
+      { resolutionNote: "  linha   um\n\nlinha dois \t" },
+    );
+
+    expect(ticket.resolutionNote).toBe("linha um linha dois");
+    expect(ticketHistoryEntry.resolutionNote).toBe("linha um linha dois");
+  });
+
+  it.each([null, "", "   ", "\t\n"])(
+    "refuses to reopen with the reason %j as missing",
+    (reopenReason) => {
+      expect(() =>
+        transition(ticketIn("resolved", "Fatura reenviada"), "open", {
+          reopenReason,
+        }),
+      ).toThrow(MissingReopenReasonError);
+    },
+  );
+
+  it.each(["😀", "custo $10", "a".repeat(501)])(
+    "refuses to reopen with the invalid reason %j",
+    (reopenReason) => {
+      expect(() =>
+        transition(ticketIn("resolved", "Fatura reenviada"), "open", {
+          reopenReason,
+        }),
+      ).toThrow(InvalidReopenReasonError);
+    },
+  );
+
+  it("accepts a reason of 1 and of 500 characters only on the entry", () => {
+    for (const reason of ["a", "a".repeat(500)]) {
+      const { ticket, ticketHistoryEntry } = transition(
+        ticketIn("resolved", "Fatura reenviada"),
+        "open",
+        { reopenReason: reason },
+      );
+
+      expect(ticketHistoryEntry.reopenReason).toBe(reason);
+      expect(ticketHistoryEntry.resolutionNote).toBeNull();
+      expect(Object.values(ticket)).not.toContain(reason);
+    }
+  });
+
+  it("cuts the ends and reduces each block of whitespace in the reason", () => {
+    const { ticketHistoryEntry } = transition(
+      ticketIn("resolved", "Fatura reenviada"),
+      "open",
+      { reopenReason: "  voltou   a\n\nfalhar \t" },
+    );
+
+    expect(ticketHistoryEntry.reopenReason).toBe("voltou a falhar");
+  });
+
+  it.each(["Fatura reenviada", "", "😀"])(
+    "refuses a note %j outside the resolution",
+    (resolutionNote) => {
+      expect(() =>
+        transition(ticketIn("open", null), "in_progress", { resolutionNote }),
+      ).toThrow(UnexpectedResolutionNoteError);
+    },
+  );
+
+  it.each(["Voltou", "", "😀"])(
+    "refuses a reason %j outside the reopening",
+    (reopenReason) => {
+      expect(() =>
+        transition(ticketIn("open", null), "in_progress", { reopenReason }),
+      ).toThrow(UnexpectedReopenReasonError);
+    },
+  );
+
+  it("refuses a reason when resolving and a note when reopening", () => {
+    expect(() =>
+      transition(ticketIn("in_progress", null), "resolved", {
+        resolutionNote: "Fatura reenviada",
+        reopenReason: "Voltou",
+      }),
+    ).toThrow(UnexpectedReopenReasonError);
+    expect(() =>
+      transition(ticketIn("resolved", "Fatura reenviada"), "open", {
+        resolutionNote: "Fatura reenviada",
+        reopenReason: "Voltou",
+      }),
+    ).toThrow(UnexpectedResolutionNoteError);
+  });
+
+  it("moves to in_progress with no note and no reason, and records none", () => {
+    const { ticket, ticketHistoryEntry } = transition(
+      ticketIn("open", null),
+      "in_progress",
+    );
+
+    expect(ticket.resolutionNote).toBeNull();
+    expect(ticketHistoryEntry.resolutionNote).toBeNull();
+    expect(ticketHistoryEntry.reopenReason).toBeNull();
+  });
+
+  it("fails first on the instant, then on the pair, then on the unexpected text, then on the missing text, then on the invalid text", () => {
+    const invalid = new Date(Number.NaN);
+
+    expect(() =>
+      transition(ticketIn("open", null), "resolved", {}, invalid),
+    ).toThrow(InvalidInstantError);
+    expect(() =>
+      transition(ticketIn("open", null), "resolved", {
+        resolutionNote: "😀",
+      }),
+    ).toThrow(InvalidTransitionError);
+    expect(() =>
+      transition(ticketIn("in_progress", null), "resolved", {
+        reopenReason: "Voltou",
+      }),
+    ).toThrow(UnexpectedReopenReasonError);
+    expect(() =>
+      transition(ticketIn("in_progress", null), "resolved", {
+        resolutionNote: "😀",
+        reopenReason: "Voltou",
+      }),
+    ).toThrow(UnexpectedReopenReasonError);
+    expect(() =>
+      transition(ticketIn("in_progress", null), "resolved", {}, invalid),
+    ).toThrow(InvalidInstantError);
+  });
+
+  it("throws a DomainError", () => {
+    expect(() => transition(ticketIn("open", null), "resolved")).toThrow(
+      DomainError,
+    );
+  });
+
+  it("does not change the received ticket, even frozen", () => {
+    const input = Object.freeze(ticketIn("in_progress", null));
+    const before = JSON.stringify(input);
+
+    transition(input, "resolved", { resolutionNote: "Fatura reenviada" });
+
+    expect(JSON.stringify(input)).toBe(before);
+  });
+
+  it("keeps the entry when the received instant changes afterwards", () => {
+    const received = new Date(AT.getTime());
+    const { ticketHistoryEntry } = transition(
+      ticketIn("open", null),
+      "in_progress",
+      {},
+      received,
+    );
+
+    received.setUTCFullYear(2000);
+
+    expect(ticketHistoryEntry.at).toEqual(AT);
+  });
+
+  it("keeps createdAt and does not share its Date object with the received ticket", () => {
+    const input = ticketIn("open", null);
+    const { ticket } = transition(input, "in_progress");
+
+    expect(ticket.createdAt).toEqual(CREATED_AT);
+    expect(ticket.createdAt).not.toBe(input.createdAt);
+  });
+
+  it("keeps the customer name, description, channel and priority", () => {
+    const { ticket } = transition(ticketIn("open", null), "in_progress");
+
+    expect(ticket).toMatchObject({
+      customerName: "Maria Souza",
+      description: "Não consigo acessar a fatura",
+      channel: "email",
+      priority: "medium",
+    });
   });
 });
