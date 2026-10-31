@@ -27,6 +27,7 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   revisou antes do commit. Prompt relevante: "é um dicionário de movimentos permitidos, certo? cada status é uma chave,
   com um set de valores dos status 'para' permitidos [...] assim, o custo fica O(1), sem complexidade e sem ifs
   condicionais".
+- `spec: 00004`, passo 1: a IA escreveu os corpos dos testes das classes de erro, a partir dos casos da spec.
 
 ## O que validei
 
@@ -79,6 +80,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00002`, passo 1: a IA mediu o `docs-auditor` novo com clones do repositório, um defeito por clone. Dos 8 clones
   rodados, 5 trouxeram a categoria e a gravidade esperadas, e 3 trouxeram a categoria com gravidade alta em vez de
   média, o que levou à correção da regra de gravidade no agente. Os outros 8 casos da spec ficaram sem medir, por custo.
+- `spec: 00004`, passo 1: a IA rodou os testes das classes de erro com `vitest` e conferiu `tsc`, `eslint` e
+  `prettier --check`, cada ferramenta sozinha. O `check` não foi rodado.
 
 ## Um erro da IA
 
@@ -129,6 +132,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   spec trazia o contrato desse código como assinaturas e classes. Interrompi, mandei apagar tudo o que a IA escreveu
   nesses arquivos e exigi que a spec fixe só nomes públicos, tipos e invariantes; a regra entrou na skill `docs` e no
   `CLAUDE.md`.
+- `spec: 00004`: no passo 1, a IA respondeu mais de uma vez sem reler o arquivo que eu tinha acabado de salvar, e eu
+  precisei repetir o pedido. Percebi pela demora e cobrei a leitura do arquivo antes de cada resposta.
 
 ## Uma decisão minha
 
@@ -173,6 +178,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00004`: renomeei os campos `note` e `reason` da entrada do histórico para `resolutionNote` e `reopenReason`,
   para os nomes dizerem a que se referem. É um desvio da spec congelada, que a IA me apresentou como pergunta; aceitei o
   desvio e o commit o registra num parágrafo próprio.
+- `spec: 00004`: os erros do domínio como uma `DomainError` abstrata e uma classe filha por código, cada uma com o
+  `code` e a mensagem fixos, e não uma classe única que recebe o código na hora de lançar. A IA recomendou a classe
+  única; decidi pelas filhas para a mensagem ter um dono só e o ponto de lançamento não repetir código nem texto,
+  aceitando uma classe pequena por código no lugar de uma só.
 
 ## Onde a IA não entrou
 
@@ -187,3 +196,5 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00003`: o texto do rascunho foi redigido pela IA a partir das minhas respostas. O pino de Node, a absorção da
   00001, o `check` rodando uma vez no CI e o canário por ferramenta no lugar de uma suíte de linter são decisões minhas,
   e revisei o texto antes do commit.
+- `spec: 00004`: os tipos de `ticket.ts`, o conjunto de códigos e a união `DomainErrorCode` de `errors.ts`, a
+  `DomainError` abstrata e a primeira classe filha, em que a IA só corrigiu a declaração do `code`, são meus.
