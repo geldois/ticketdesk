@@ -27,7 +27,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   revisou antes do commit. Prompt relevante: "é um dicionário de movimentos permitidos, certo? cada status é uma chave,
   com um set de valores dos status 'para' permitidos [...] assim, o custo fica O(1), sem complexidade e sem ifs
   condicionais".
-- `spec: 00004`, passo 1: a IA escreveu os corpos dos testes das classes de erro, a partir dos casos da spec.
+- `spec: 00004`, passo 1: a IA escreveu os corpos dos testes das classes de erro e da normalização de texto, a partir
+  dos casos da spec.
 
 ## O que validei
 
@@ -80,8 +81,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00002`, passo 1: a IA mediu o `docs-auditor` novo com clones do repositório, um defeito por clone. Dos 8 clones
   rodados, 5 trouxeram a categoria e a gravidade esperadas, e 3 trouxeram a categoria com gravidade alta em vez de
   média, o que levou à correção da regra de gravidade no agente. Os outros 8 casos da spec ficaram sem medir, por custo.
-- `spec: 00004`, passo 1: a IA rodou os testes das classes de erro com `vitest` e conferiu `tsc`, `eslint` e
-  `prettier --check`, cada ferramenta sozinha. O `check` não foi rodado.
+- `spec: 00004`, passo 1: a IA rodou os testes das classes de erro e da normalização com `vitest` e conferiu `tsc`,
+  `eslint` e `prettier --check`, cada ferramenta sozinha. O `check` não foi rodado.
+- `spec: 00004`, passo 1: a meu pedido, a IA rodou uma tabela de 12 casos, entre aceitos e recusados pela etapa 2 da
+  spec, sobre cada tentativa do meu regex dos campos de texto livre; a cada rodada apontou os casos que ainda passavam,
+  e o regex final passa os 12.
 
 ## Um erro da IA
 
@@ -182,6 +186,17 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   `code` e a mensagem fixos, e não uma classe única que recebe o código na hora de lançar. A IA recomendou a classe
   única; decidi pelas filhas para a mensagem ter um dono só e o ponto de lançamento não repetir código nem texto,
   aceitando uma classe pequena por código no lugar de uma só.
+- `spec: 00004`: o regex, o máximo e as duas classes de erro de cada campo de texto viajam juntos numa constante por
+  campo, e `normalizeText` recebe o texto e essa constante. Eu tinha parâmetros soltos e apontei que o máximo podia
+  chegar errado; a IA recomendou a constante por campo, no lugar de validar o número em execução, e aceitei o custo de
+  um tipo a mais.
+- `spec: 00004`: as constantes dos campos moram em `invariants.ts`, separadas do algoritmo (`text.ts`) e dos tipos
+  (`ticket.ts`). Eu queria a normalização dentro de `ticket.ts`; a IA recomendou mover só as constantes para lá; propus
+  o `invariants.ts` e aceitei um arquivo a mais para o `ticket.ts` ficar só com tipos.
+- `spec: 00004`: o nome do cliente aceita só letras, números, espaço, apóstrofo e hífen, mais restrito que a etapa 2 da
+  spec, que aceita toda pontuação. A IA apontou o desvio e recomendou o mesmo regex dos outros campos; mantive o mais
+  restrito porque um nome só precisa de apóstrofo e hífen, aceitando recusar nomes com outra pontuação, e o commit
+  registra o desvio.
 
 ## Onde a IA não entrou
 
@@ -198,3 +213,5 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   e revisei o texto antes do commit.
 - `spec: 00004`: os tipos de `ticket.ts`, o conjunto de códigos e a união `DomainErrorCode` de `errors.ts`, a
   `DomainError` abstrata e a primeira classe filha, em que a IA só corrigiu a declaração do `code`, são meus.
+- `spec: 00004`, passo 1: as etapas de normalização do `text.ts` (NFC, espaço em branco, corte) e os regex de categorias
+  aceitas de cada campo são meus.
