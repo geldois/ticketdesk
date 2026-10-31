@@ -30,6 +30,36 @@ export default defineConfig([
       "@typescript-eslint/switch-exhaustiveness-check": "error",
     },
   },
+  {
+    files: ["apps/api/src/domain/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: ["pg", "fastify", "zod"].map((name) => ({
+            name,
+            message: "The domain imports nothing from outside itself.",
+          })),
+          patterns: [
+            {
+              group: [
+                "**/application",
+                "**/application/**",
+                "**/infrastructure",
+                "**/infrastructure/**",
+                "**/interface",
+                "**/interface/**",
+                "pg/**",
+                "fastify/**",
+                "zod/**",
+              ],
+              message: "The domain imports nothing from outside itself.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   { files: ["**/*.js"], extends: [tseslint.configs.disableTypeChecked] },
   { files: ["**/*.test.ts"], extends: [vitest.configs.recommended] },
   prettier,

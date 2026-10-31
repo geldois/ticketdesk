@@ -32,6 +32,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00004`, passo 2: a IA escreveu os corpos dos testes do `transitionTicketChange`, da tabela de transições e do
   normalizador de status, e, a meu pedido, as duas classes de erro de texto fora do destino e a troca, no meu
   `validateTransitionUnexpected`, dos dois erros que ele lançava por elas.
+- `spec: 00004`, passo 3: a IA escreveu a regra de isolamento do domínio no `eslint.config.js` e os arquivos de
+  provocação descartáveis, um por fonte recusada.
 
 ## O que validei
 
@@ -96,6 +98,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   termina toda verde sobre o meu `transitionTicketChange`. Uma linha dela apontou, no meu código, que o `createdAt` do
   ticket devolvido dividia o objeto `Date` com o ticket recebido; corrigi, e um teste agora trava o caso. O
   `npm run check` passou, com 100% de cobertura nas quatro métricas do domínio.
+- `spec: 00004`, passo 3: a IA rodou o ESLint real num clone descartável, com um arquivo de provocação em
+  `apps/api/src/domain/` para cada fonte recusada (`application`, `infrastructure`, `interface`, `pg`, `fastify` e
+  `zod`). Cada um saiu com código 1 e a saída trouxe o arquivo e a regra `no-restricted-imports`; sobre a árvore sem
+  provocação, saiu com 0. O critério 15, do CI, só se prova depois do push.
 
 ## Um erro da IA
 
