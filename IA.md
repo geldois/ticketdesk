@@ -27,8 +27,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   revisou antes do commit. Prompt relevante: "é um dicionário de movimentos permitidos, certo? cada status é uma chave,
   com um set de valores dos status 'para' permitidos [...] assim, o custo fica O(1), sem complexidade e sem ifs
   condicionais".
-- `spec: 00004`, passo 1: a IA escreveu os corpos dos testes das classes de erro e da normalização de texto, a partir
-  dos casos da spec.
+- `spec: 00004`, passo 1: a IA escreveu os corpos dos testes das classes de erro, da normalização, dos predicados, dos
+  normalizadores de canal e prioridade, do instante e do `createTicketChange`, a partir dos casos da spec.
 
 ## O que validei
 
@@ -86,6 +86,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00004`, passo 1: a meu pedido, a IA rodou uma tabela de 12 casos, entre aceitos e recusados pela etapa 2 da
   spec, sobre cada tentativa do meu regex dos campos de texto livre; a cada rodada apontou os casos que ainda passavam,
   e o regex final passa os 12.
+- `spec: 00004`, passo 1: a IA escreveu fora do repositório uma sonda com os casos do passo, que parte vermelha e
+  termina com as 31 linhas verdes sobre o meu `createTicketChange`, e rodou os testes com cobertura de 100% nas quatro
+  métricas do domínio, além de `tsc`, `eslint` e `prettier`, cada ferramenta sozinha. O `check` não foi rodado.
 
 ## Um erro da IA
 
@@ -132,12 +135,15 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: none (tweak)`: a IA propôs ligar o `check` obrigatório no ruleset `protect-branches`, que cobre também a `dev`,
   o que travaria o meu push direto nela, porque o GitHub exige o check antes de aceitar o push. Percebi ao ver a tela do
   ruleset e perguntei; o check obrigatório ficou num ruleset à parte, o `protect-main`, só para a `main`.
-- `spec: 00004`: a IA escreveu os tipos, os erros e um esqueleto de `createTicket` no domínio, que eu escrevo à mão, e a
-  spec trazia o contrato desse código como assinaturas e classes. Interrompi, mandei apagar tudo o que a IA escreveu
+- `spec: 00004`: a IA escreveu os tipos, os erros e um esqueleto da criação do ticket no domínio, que eu escrevo à mão,
+  e a spec trazia o contrato desse código como assinaturas e classes. Interrompi, mandei apagar tudo o que a IA escreveu
   nesses arquivos e exigi que a spec fixe só nomes públicos, tipos e invariantes; a regra entrou na skill `docs` e no
   `CLAUDE.md`.
 - `spec: 00004`: no passo 1, a IA respondeu mais de uma vez sem reler o arquivo que eu tinha acabado de salvar, e eu
   precisei repetir o pedido. Percebi pela demora e cobrei a leitura do arquivo antes de cada resposta.
+- `spec: 00004`, passo 1: a IA apontou imports inexistentes no meu `lifecycle.ts` porque leu uma versão antiga do
+  `ticket.ts`, em que eu já tinha renomeado os tipos, e renomeou `createTicketChange` para `createTicket` sem eu pedir.
+  Percebi ao ler a resposta e pedi para manter o nome; a IA voltou o nome e passou a reler o arquivo antes de apontar.
 
 ## Uma decisão minha
 
@@ -187,12 +193,22 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   única; decidi pelas filhas para a mensagem ter um dono só e o ponto de lançamento não repetir código nem texto,
   aceitando uma classe pequena por código no lugar de uma só.
 - `spec: 00004`: o regex, o máximo e as duas classes de erro de cada campo de texto viajam juntos numa constante por
-  campo, e `normalizeText` recebe o texto e essa constante. Eu tinha parâmetros soltos e apontei que o máximo podia
-  chegar errado; a IA recomendou a constante por campo, no lugar de validar o número em execução, e aceitei o custo de
-  um tipo a mais.
-- `spec: 00004`: as constantes dos campos moram em `invariants.ts`, separadas do algoritmo (`text.ts`) e dos tipos
-  (`ticket.ts`). Eu queria a normalização dentro de `ticket.ts`; a IA recomendou mover só as constantes para lá; propus
-  o `invariants.ts` e aceitei um arquivo a mais para o `ticket.ts` ficar só com tipos.
+  campo, e `normalizeInvariantField` recebe o texto e essa constante. Eu tinha parâmetros soltos e apontei que o máximo
+  podia chegar errado; a IA recomendou a constante por campo, no lugar de validar o número em execução, e aceitei o
+  custo de um tipo a mais.
+- `spec: 00004`: as constantes dos campos moram em `invariants.ts`, fora de `ticket.ts`, que fica só com tipos. Eu
+  queria a normalização dentro de `ticket.ts`; a IA recomendou mover só as constantes para lá; propus o `invariants.ts`
+  e aceitei um arquivo a mais para o `ticket.ts` ficar só com tipos.
+- `spec: 00004`: fundi o arquivo da normalização de texto no `invariants.ts`, porque a normalização é a parte da
+  invariante que a faz valer e separá-las criava um ciclo de importação. A IA ofereceu um `normalization.ts` com o tipo
+  movido para o `invariants.ts`; escolhi a fusão e aceitei um arquivo maior no lugar da separação entre dado e
+  algoritmo.
+- `spec: 00004`: os nomes do domínio seguem um vocabulário só: o prefixo `Ticket` nos tipos, nas listas e nos erros de
+  canal e prioridade, os erros e códigos de nota e motivo pelo nome do campo (`resolution_note`, `reopen_reason`) e
+  `TicketHistoryEntry` no lugar de `HistoryEntry`. A IA tinha nomeado `MissingNoteError` e `CHANNELS`; apontei a
+  inconsistência e mandei trocar todos. É um desvio da spec congelada, que fixa os códigos e `HistoryEntry`, e o commit
+  o registra num parágrafo próprio. Mantive `at` como nome do valor do instante, o mesmo da spec, e `instante` como o
+  nome do conceito, apesar de o auditor ter apontado os dois nomes.
 - `spec: 00004`: o nome do cliente aceita só letras, números, espaço, apóstrofo e hífen, mais restrito que a etapa 2 da
   spec, que aceita toda pontuação. A IA apontou o desvio e recomendou o mesmo regex dos outros campos; mantive o mais
   restrito porque um nome só precisa de apóstrofo e hífen, aceitando recusar nomes com outra pontuação, e o commit
@@ -213,5 +229,7 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   e revisei o texto antes do commit.
 - `spec: 00004`: os tipos de `ticket.ts`, o conjunto de códigos e a união `DomainErrorCode` de `errors.ts`, a
   `DomainError` abstrata e a primeira classe filha, em que a IA só corrigiu a declaração do `code`, são meus.
-- `spec: 00004`, passo 1: as etapas de normalização do `text.ts` (NFC, espaço em branco, corte) e os regex de categorias
-  aceitas de cada campo são meus.
+- `spec: 00004`, passo 1: as etapas de normalização do `invariants.ts` (NFC, espaço em branco, corte) e os regex de
+  categorias aceitas de cada campo são meus.
+- `spec: 00004`, passo 1: o `createTicketChange` com a ordem das checagens e as cópias do instante, o `validateInstant`,
+  os predicados `isTicket…` e os normalizadores de canal e prioridade são meus.

@@ -1,13 +1,13 @@
 export const DOMAIN_ERROR_CODES = [
   "invalid_customer_name",
   "invalid_description",
-  "invalid_channel",
-  "invalid_priority",
+  "invalid_ticket_channel",
+  "invalid_ticket_priority",
   "invalid_instant",
-  "missing_note",
-  "invalid_note",
-  "missing_reason",
-  "invalid_reason",
+  "missing_resolution_note",
+  "invalid_resolution_note",
+  "missing_reopen_reason",
+  "invalid_reopen_reason",
   "invalid_transition",
 ] as const;
 
@@ -33,19 +33,19 @@ export class InvalidDescriptionError extends DomainError {
   }
 }
 
-export class InvalidChannelError extends DomainError {
-  readonly code = "invalid_channel";
+export class InvalidTicketChannelError extends DomainError {
+  readonly code = "invalid_ticket_channel";
 
   constructor() {
-    super("channel must be email, chat or phone");
+    super("ticket channel must be email, chat or phone");
   }
 }
 
-export class InvalidPriorityError extends DomainError {
-  readonly code = "invalid_priority";
+export class InvalidTicketPriorityError extends DomainError {
+  readonly code = "invalid_ticket_priority";
 
   constructor() {
-    super("priority must be low, medium or high");
+    super("ticket priority must be low, medium or high");
   }
 }
 
@@ -57,35 +57,35 @@ export class InvalidInstantError extends DomainError {
   }
 }
 
-export class MissingNoteError extends DomainError {
-  readonly code = "missing_note";
+export class MissingResolutionNoteError extends DomainError {
+  readonly code = "missing_resolution_note";
 
   constructor() {
     super("a resolution note is required to resolve a ticket");
   }
 }
 
-export class InvalidNoteError extends DomainError {
-  readonly code = "invalid_note";
+export class InvalidResolutionNoteError extends DomainError {
+  readonly code = "invalid_resolution_note";
 
   constructor() {
     super("resolution note must have 1 to 2000 valid characters");
   }
 }
 
-export class MissingReasonError extends DomainError {
-  readonly code = "missing_reason";
+export class MissingReopenReasonError extends DomainError {
+  readonly code = "missing_reopen_reason";
 
   constructor() {
-    super("a reason is required to reopen a ticket");
+    super("a reopen reason is required to reopen a ticket");
   }
 }
 
-export class InvalidReasonError extends DomainError {
-  readonly code = "invalid_reason";
+export class InvalidReopenReasonError extends DomainError {
+  readonly code = "invalid_reopen_reason";
 
   constructor() {
-    super("reason must have 1 to 500 valid characters");
+    super("reopen reason must have 1 to 500 valid characters");
   }
 }
 
