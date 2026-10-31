@@ -79,10 +79,10 @@ aponta para ele.
   registro nunca é inventado para preencher o arquivo.
 - Quando o commit de uma IA toca documento (`README.md`, `IA.md`, `CLAUDE.md`, `AGENTS.md`, specs, a skill ou os
   agentes), ela roda antes o agente `docs-auditor` uma vez sobre o diff e sobre tudo que o tangencia, inclusive sobre o
-  rascunho de uma spec antes do commit `spec(...)`. Corrige os achados de gravidade alta ou média pela skill `docs` e
-  roda o agente uma segunda vez só se uma correção mudou documento; achado baixo é registrado e não abre outra rodada.
-  Commit que só toca código, commit manual e commit só de formatação não precisam dele. A auditoria do repositório
-  inteiro só acontece quando o usuário a pede.
+  rascunho de uma spec antes do commit `spec(...)`. Corrige os achados de gravidade alta ou média pela skill `docs`, sem
+  rodar o agente de novo; achado baixo é registrado. O agente roda uma única vez por commit. Commit que só toca código,
+  commit manual e commit só de formatação não precisam dele. A auditoria do repositório inteiro só acontece quando o
+  usuário a pede.
 - Antes de todo commit de IA, ela roda o `npm run fix` e depois o `npm run check`, nessa ordem e uma vez cada, e só
   então o `docs-auditor`, para ele auditar o documento já formatado. Se o `check` reprovar, ela reporta ao usuário e
   pergunta antes de commitar, sem rodar de novo. Fora desse momento, só os roda quando o usuário pedir.

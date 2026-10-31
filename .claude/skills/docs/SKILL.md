@@ -117,7 +117,9 @@ dígitos em sequência sem buracos, slug em inglês e minúsculo.
 - O limite é explícito: a spec termina antes do ponto em que o futuro vira nebuloso, impossível de provar ou pouco
   determinístico. O que depende de algo ainda não provado fica para uma spec posterior, escrita depois que a dependência
   for provada, por exemplo por um experimento descartável fora do repositório.
-- Não existe número alvo de specs: nascem tantas quantas forem necessárias.
+- Não existe número alvo de specs: nascem tantas quantas forem necessárias. Ao fim de toda spec, enquanto houver uma
+  fatia seguinte do projeto a provar e dentro do limite acima, o autor abre a seguinte, com o número seguinte da
+  sequência; a regra de `CLAUDE.md` sobre quando uma spec é obrigatória continua valendo.
 - Cada passo termina em um ou mais commits.
 
 ### Campos
@@ -144,10 +146,13 @@ motivo diz por que o campo não cabe nesta fatia e não repete o que `IA.md`, `R
 - Respeita a Filosofia do `README.md`: para o que ela reserva à mão, a spec fixa só nomes públicos, tipos, invariantes e
   comportamento observável, em tabelas. Nunca traz código, assinatura, classe, função auxiliar nem organização em
   arquivos dessa parte, porque a forma é de quem a escreve.
-- A spec é congelada no conteúdo a partir do commit que a introduz: não tem status nem registro, e só a formatação pode
-  mudar depois, com o commit `spec: none (format)`. Corrigir ou mudar uma decisão é abrir uma spec nova. Um commit que
-  diverge da spec que cita, por erro ou falta de clareza nela, declara o desvio no próprio commit (regra de
-  `CLAUDE.md`), sem editar a spec.
+- A spec é a fonte da verdade do norte a seguir, que é o Objetivo e o Contrato dela, e é congelada no conteúdo a partir
+  do commit que a introduz: não tem status nem registro, e só a formatação pode mudar depois, com o commit
+  `spec: none (format)`. Spec e commit pontual coexistem: a spec fixa o rumo, e o commit o executa e o ajusta.
+- Um desvio pontual, por erro ou falta de clareza na spec, é declarado no parágrafo do commit, que continua citando a
+  spec (regra de `CLAUDE.md`), sem editar a spec. O norte quebra em substância quando o desvio muda o Objetivo ou um
+  contrato que outra spec já consome; então a mudança abre uma spec que substitui a anterior. Renomear, reordenar
+  checagens ou ajustar um caso não o quebra.
 - A spec que substitui outra se chama `0000N-nome-replaces-0000M.md` e traz a linha `Substitui: 0000M` logo abaixo do
   H1. A substituta sempre absorve a substituída: tudo o que continua valendo, incluindo o que ainda não foi feito, passa
   a morar nela, e a substituída deixa de ser fonte de qualquer passo. Ela fica só como registro: o auditor confere só a
