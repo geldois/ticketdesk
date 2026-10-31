@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import vitest from "@vitest/eslint-plugin";
 import prettier from "eslint-config-prettier/flat";
 import { defineConfig } from "eslint/config";
+import importX from "eslint-plugin-import-x";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
@@ -32,27 +33,22 @@ export default defineConfig([
   },
   {
     files: ["apps/api/src/domain/**/*.ts"],
+    plugins: { "import-x": importX },
     rules: {
-      "no-restricted-imports": [
+      "import-x/no-nodejs-modules": "error",
+      "import-x/no-restricted-paths": [
         "error",
         {
-          paths: ["pg", "fastify", "zod"].map((name) => ({
-            name,
-            message: "The domain imports nothing from outside itself.",
-          })),
-          patterns: [
+          zones: [
             {
-              group: [
-                "**/application",
-                "**/application/**",
-                "**/infrastructure",
-                "**/infrastructure/**",
-                "**/interface",
-                "**/interface/**",
-                "pg/**",
-                "fastify/**",
-                "zod/**",
-              ],
+              target: "./apps/api/src/domain/**/!(*.test).ts",
+              from: "./apps/api/src",
+              except: ["./domain"],
+              message: "The domain imports nothing from outside itself.",
+            },
+            {
+              target: "./apps/api/src/domain/**/!(*.test).ts",
+              from: "./node_modules",
               message: "The domain imports nothing from outside itself.",
             },
           ],

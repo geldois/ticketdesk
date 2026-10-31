@@ -33,7 +33,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   normalizador de status, e, a meu pedido, as duas classes de erro de texto fora do destino e a troca, no meu
   `validateTransitionUnexpected`, dos dois erros que ele lançava por elas.
 - `spec: 00004`, passo 3: a IA escreveu a regra de isolamento do domínio no `eslint.config.js` e os arquivos de
-  provocação descartáveis, um por fonte recusada.
+  provocação descartáveis, um por fonte recusada. Depois, a meu pedido, a IA trocou a lista de fontes proibidas pela
+  regra do `eslint-plugin-import-x` e refez as provocações.
 
 ## O que validei
 
@@ -102,6 +103,13 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   `apps/api/src/domain/` para cada fonte recusada (`application`, `infrastructure`, `interface`, `pg`, `fastify` e
   `zod`). Cada um saiu com código 1 e a saída trouxe o arquivo e a regra `no-restricted-imports`; sobre a árvore sem
   provocação, saiu com 0. O critério 15, do CI, só se prova depois do push.
+- `spec: 00004`, passo 3: antes de adotar o `eslint-plugin-import-x`, a IA pesquisou a versão ao vivo, conferiu que o
+  `peerDependencies` dele aceita o ESLint em uso e o provou num clone descartável: um `import` de `../infrastructure`,
+  de `../` fora do domínio e de um pacote instalado saíram com código 1 apontando o arquivo e a regra
+  `import-x/no-restricted-paths`; um de `node:fs` saiu com código 1 pela `import-x/no-nodejs-modules`; um de subpasta do
+  domínio, com `../` de volta para dentro dele, saiu com 0. A IA também mostrou que o plugin não barra um pacote ainda
+  não instalado (quem reprova é o `tsc`), e que os testes do domínio importam o `vitest`, o que moveu a regra para fora
+  dos `*.test.ts`.
 
 ## Um erro da IA
 
