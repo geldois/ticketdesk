@@ -40,12 +40,17 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   "se o banco nunca persistir antes de virar entidade de domínio [...] isso garante que a persistência sempre refletirá
   a invariante de construção dos textos e a mesma normalização. correto?".
 - `spec: 00005`, passo 1: a IA pesquisou as versões ao vivo, instalou as dependências e escreveu o `compose.yaml` com o
-  serviço `db`, a função `migrate`, o auxiliar de banco (menos o `createTestDatabase`, que é meu) e os corpos dos testes
-  de banco e o prefixo do script `check`. A checagem do container runtime, que a IA escreveu primeiro, eu reescrevi à
-  mão depois, e a IA só trocou uma palavra da mensagem.
+  serviço `db`, a função `migrate`, o auxiliar de banco (menos a criação do banco de teste, que é minha) e os corpos dos
+  testes de banco e o prefixo do script `check`. A checagem do container runtime, que a IA escreveu primeiro, eu
+  reescrevi à mão depois, e a IA só trocou uma palavra da mensagem.
 - `spec: none (tweak)`, lint e formato do SQL: a IA pesquisou as ferramentas, instalou o Postgres Language Server,
   escreveu o `postgres-language-server.jsonc`, os passos do `check` e do `fix`, a porta do `db` no compose e a seção do
   `README.md`. Pedi a cobertura máxima do servidor num arquivo versionado, sem senha, e a IA propôs o `--disable-db`.
+- `spec: 00005`, passo 2: a IA escreveu fora do repositório a sonda com os casos dos critérios 1, 3 a 6, 10 e 11 e, como
+  tutora, apontou o sintoma de cada erro até ela ficar toda verde. O SQL das tabelas é meu. A IA acrescentou a cláusula
+  opcional do `TEMPLATE` na criação do banco de teste, trocou o nome da função nos testes que a chamam e escreveu os
+  corpos dos testes de integração do esquema, a partir das linhas da sonda e derivando do domínio os conjuntos, os
+  tamanhos e os pares.
 
 ## O que validei
 
@@ -143,6 +148,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   e que um segundo `format` sai com 0. Sem `--disable-db` e sem banco, o `check` espera o tempo de conexão, e com a
   opção termina na hora. Numa pasta sem nenhum `.sql`, os dois comandos saem com erro, por isso os passos olham
   `apps/api`, que tem a fixture de migration dos testes.
+- `spec: 00005`, passo 2: a sonda de 26 linhas partiu toda vermelha e terminou toda verde com as duas migrations. Ela
+  confere o catálogo (tabelas, colunas, tipos e obrigatoriedade), os conjuntos, o tamanho em pontos de código com letras
+  fora do plano básico, a nota e o motivo, os quatro pares aceitos e os oito recusados, a chave estrangeira sem cascata
+  e o `id` do histórico crescente. Os testes de integração do esquema, que afirmam também o nome da constraint que
+  recusa, e o de aplicar, reverter e aplicar as migrations reais passam no `check`.
 
 ## Um erro da IA
 
@@ -198,6 +208,13 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00004`, passo 1: a IA apontou imports inexistentes no meu `lifecycle.ts` porque leu uma versão antiga do
   `ticket.ts`, em que eu já tinha renomeado os tipos, e renomeou `createTicketChange` para `createTicket` sem eu pedir.
   Percebi ao ler a resposta e pedi para manter o nome; a IA voltou o nome e passou a reler o arquivo antes de apontar.
+- `spec: 00005`, passo 2: a sonda aceitava como recusa do histórico um erro do `INSERT` do ticket que ela mesma montava,
+  e duas linhas (versão 0 e `created_at` ausente) passavam por engano, porque a recusa vinha do `NOT NULL` de outra
+  coluna. A IA percebeu ao ler a própria saída com o esquema ainda incompleto e corrigiu a sonda antes de eu escrever o
+  histórico: a montagem do ticket virou uma falha à parte, e cada linha ganhou um caso válido de controle. Depois, o
+  `docs-auditor`, ao conferir o `IA.md` contra o SQL, apontou dois buracos no meu SQL que a sonda não cobria, um par com
+  os dois status desconhecidos e um motivo de reabertura na entrada de criação; a IA os confirmou, acrescentou as duas
+  linhas à sonda e eu corrigi as restrições.
 
 ## Uma decisão minha
 
@@ -278,6 +295,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   recomendou espelhar só o que dá para espelhar exato e manter no banco um `CHECK` contra caractere de controle e quebra
   de linha. Mantive o primeiro corte e tirei também o controle, porque confio no domínio como único dono dos caracteres,
   e aceitei que o banco admita um texto que o domínio recusaria.
+- `spec: 00005`, passo 2: a IA criou as migrations como `001_create-ticket.sql`, e mandei renomear para
+  `00001-create-ticket.sql`, sem underline e com cinco dígitos, como os números das specs. Para os testes do `migrate`,
+  que trazem as próprias migrations, a IA recomendou um banco vazio no lugar de uma tabela de controle à parte, e
+  aceitei; o parâmetro da função comum é uma união de texto em vez do `bool` que eu tinha proposto.
 
 ## Onde a IA não entrou
 
@@ -301,5 +322,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00004`, passo 2: a tabela `TRANSITION_TICKET_STATUSES`, o `transitTicketChange` com a ordem das checagens e as
   cópias dos instantes, e as funções `validateTransition…` são meus, exceto a troca dos dois erros do
   `validateTransitionUnexpected`.
-- `spec: 00005`, passo 1: a checagem do container runtime, reescrita à mão, e o `createTestDatabase` são meus. No
-  `createTestDatabase` a IA, como tutora, só apontou o sintoma de cada erro até os testes passarem.
+- `spec: 00005`, passo 1: a checagem do container runtime, reescrita à mão, e a criação do banco de teste, hoje
+  `createMigratedTestDatabase` e `createEmptyTestDatabase`, são meus, exceto a cláusula do `TEMPLATE`. Nelas a IA, como
+  tutora, só apontou o sintoma de cada erro até os testes passarem.
+- `spec: 00005`, passo 2: o SQL das tabelas `ticket` e `ticket_history_entry`, com os `CHECK`, as chaves e as partes que
+  revertem, é meu. A IA, como tutora, só apontou o sintoma de cada erro, e acrescentou o comentário `pgls-ignore` do
+  `DROP TABLE` de cada reversão.

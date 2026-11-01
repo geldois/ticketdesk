@@ -27,16 +27,23 @@ export function buildDatabaseUrl(
   return parsedUrl.toString();
 }
 
-export async function createTestDatabase(): Promise<string> {
+async function createTestDatabase(
+  databaseContent: "empty" | "migrated",
+): Promise<string> {
   const containerUrl = inject("containerUrl");
   const adminClient = new Client({ connectionString: containerUrl });
   const databaseName = randomUUID();
 
   await adminClient.connect();
 
+  const templateClause =
+    databaseContent === "migrated"
+      ? ` TEMPLATE "${TEMPLATE_DATABASE_NAME}"`
+      : "";
+
   try {
     await adminClient.query(
-      `CREATE DATABASE "${databaseName}" TEMPLATE "${TEMPLATE_DATABASE_NAME}"`,
+      `CREATE DATABASE "${databaseName}"${templateClause}`,
     );
   } finally {
     await adminClient.end();
@@ -45,16 +52,27 @@ export async function createTestDatabase(): Promise<string> {
   return buildDatabaseUrl(containerUrl, databaseName);
 }
 
+export async function createEmptyTestDatabase(): Promise<string> {
+  return createTestDatabase("empty");
+}
+
+export async function createMigratedTestDatabase(): Promise<string> {
+  return createTestDatabase("migrated");
+}
+
 export async function queryRows(
   databaseUrl: string,
   sql: string,
+  params: readonly unknown[] = [],
 ): Promise<Record<string, unknown>[]> {
   const client = new Client({ connectionString: databaseUrl });
 
   await client.connect();
 
   try {
-    const result = await client.query<Record<string, unknown>>(sql);
+    const result = await client.query<Record<string, unknown>>(sql, [
+      ...params,
+    ]);
 
     return result.rows;
   } finally {

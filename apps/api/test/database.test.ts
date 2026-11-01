@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { createTestDatabase, queryRows } from "./database.ts";
+import { createMigratedTestDatabase, queryRows } from "./database.ts";
 
-describe("createTestDatabase", () => {
+describe("createMigratedTestDatabase", () => {
   it("gives each test its own database, isolated from the others", async () => {
-    const first = await createTestDatabase();
-    const second = await createTestDatabase();
+    const first = await createMigratedTestDatabase();
+    const second = await createMigratedTestDatabase();
 
     await queryRows(first, "CREATE TABLE marker (id integer)");
 
