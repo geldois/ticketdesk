@@ -43,6 +43,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   serviço `db`, a função `migrate`, o auxiliar de banco (menos o `createTestDatabase`, que é meu) e os corpos dos testes
   de banco e o prefixo do script `check`. A checagem do container runtime, que a IA escreveu primeiro, eu reescrevi à
   mão depois, e a IA só trocou uma palavra da mensagem.
+- `spec: none (tweak)`, lint e formato do SQL: a IA pesquisou as ferramentas, instalou o Postgres Language Server,
+  escreveu o `postgres-language-server.jsonc`, os passos do `check` e do `fix`, a porta do `db` no compose e a seção do
+  `README.md`. Pedi a cobertura máxima do servidor num arquivo versionado, sem senha, e a IA propôs o `--disable-db`.
 
 ## O que validei
 
@@ -134,6 +137,12 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00005`, passo 1: a IA tentou fechar a leitura de `.env*` menos o `.env.example` com padrões de glob (`!(...)`,
   `[^e]` e `[!e]`) e provou, com arquivos descartáveis, que a permissão do Claude Code não aceita nenhum deles; só `?*`
   funciona. A negação voltou a `.env*` sem commit.
+- `spec: none (tweak)`, lint e formato do SQL: a IA instalou o pacote num diretório descartável, com `ignore-scripts`, e
+  provou que o binário roda; provou numa cópia das migrations que o `check` acusa o `DROP TABLE` e que o comentário
+  `pgls-ignore` com o motivo cala o aviso, que o `format` falha com o SQL fora do estilo, que `format --write` o corrige
+  e que um segundo `format` sai com 0. Sem `--disable-db` e sem banco, o `check` espera o tempo de conexão, e com a
+  opção termina na hora. Numa pasta sem nenhum `.sql`, os dois comandos saem com erro, por isso os passos olham
+  `apps/api`, que tem a fixture de migration dos testes.
 
 ## Um erro da IA
 

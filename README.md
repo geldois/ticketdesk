@@ -48,10 +48,25 @@ Comandos, executados na raiz:
 | Comando | O que faz |
 | --- | --- |
 | `npm ci` | Instala as dependências exatas do lockfile |
-| `npm run check` | Confere antes de tudo que há um container runtime e, sem ele, para com uma mensagem, sem rodar mais nada; com ele, roda todas as verificações do repositório, mesmo que uma falhe, e sai com erro se qualquer uma falhou; é o que o CI roda a cada push |
-| `npm run fix` | Corrige o que o lint e os formatadores sabem corrigir |
+| `npm run check` | Confere antes de tudo que há um container runtime e, sem ele, para com uma mensagem, sem rodar mais nada; com ele, roda todas as verificações do repositório, o lint e o formato do SQL de `apps/api` inclusos, mesmo que uma falhe, e sai com erro se qualquer uma falhou; é o que o CI roda a cada push |
+| `npm run fix` | Corrige o que o lint e os formatadores sabem corrigir, o do SQL incluso |
 
 O que o CI roda, incluindo a auditoria de dependências, está em [.github/workflows/](.github/workflows/).
+
+### Editor com SQL (opcional)
+
+O `postgres-language-server.jsonc`, na raiz, guarda as regras de lint e de formato do SQL. O `npm run check` as aplica
+sem banco, e o editor as lê pelo servidor de linguagem do mesmo pacote (`npx postgres-language-server lsp-proxy`), então
+as regras de lint e de formato são as mesmas. Sem mais nada, o editor mostra erros de sintaxe e os avisos de lint; com
+um banco acessível, soma as verificações que dependem dele.
+
+Para completar tabelas e colunas, o servidor precisa de um banco acessível e de mais dois passos:
+
+1. Defina `PGPASSWORD` no ambiente com o mesmo valor de `POSTGRES_PASSWORD`. A senha nunca entra no repositório.
+2. Suba o serviço `db` com o comando de compose do seu container runtime. Ele publica a porta só no endereço de
+   loopback, em `127.0.0.1:55432`, e é nessa porta que a configuração aponta.
+
+O banco começa sem tabelas, e o servidor só completa o que as migrations aplicadas criaram.
 
 ## Visão geral da arquitetura
 
@@ -85,3 +100,4 @@ Só as decisões de alto ROI, da mais antiga para a mais recente.
 | O isolamento do domínio provado por regras do ESLint (`eslint-plugin-import-x`) que só deixam o código do domínio importar de dentro de `apps/api/src/domain/`, sem lista de fontes proibidas | Uma lista de pastas e pacotes proibidos no `no-restricted-imports`, ou uma ferramenta de grafo de dependências | Um pacote de desenvolvimento a mais para manter; o pacote só é barrado depois de instalado (antes disso quem reprova é o `tsc`), e os testes do domínio podem importar pacotes |
 | Os testes de banco rodam num PostgreSQL real, num contêiner por execução, com cada caso de teste num banco clonado de um modelo já migrado | Um banco simulado em memória, ou uma transação revertida por teste | Os testes exigem um container runtime e cada execução paga a subida do contêiner; em troca o banco é o de produção, com seus `CHECK` e triggers, e o isolamento vale também para DDL |
 | O `check` começa por uma checagem do container runtime que, se falhar, trava todo o resto | Deixar os testes de banco falharem com o erro cru da biblioteca, ou pular os testes de banco quando não há container runtime | Quem não tem container runtime não roda nem os linters, e todo `check` paga a checagem; em troca a falha é uma mensagem clara e nenhum teste de banco é pulado em silêncio |
+| O lint e o formato do SQL pelo Postgres Language Server, um pacote do npm que também é o servidor de linguagem do editor, com um arquivo de configuração versionado e o `check` rodando sem banco | `sqlfluff` ou `sqruff`, que não vêm pelo npm e ficariam fora do lockfile, ou nenhum linter de SQL | Um projeto ainda jovem, com o formatador reescrevendo o SQL (`integer` vira `int`); em troca o editor e o CI usam as mesmas regras e a ferramenta entra pelo lockfile, com versão exata |

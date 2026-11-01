@@ -1,0 +1,46 @@
+{
+  "$schema": "https://pg-language-server.com/latest/schema.json",
+  "migrations": {
+    "migrationsDir": "apps/api/migrations",
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "all": true,
+      "preferRobustStmts": "off",
+      "preferBigInt": "off",
+      "requireStatementTimeout": "off",
+      "requireIdleInTransactionTimeout": "off",
+    },
+  },
+  "format": {
+    "enabled": true,
+    "keywordCase": "upper",
+    "constantCase": "upper",
+    "typeCase": "lower",
+    "lineWidth": 120,
+  },
+  "splinter": {
+    "enabled": true,
+  },
+  "typecheck": {
+    "enabled": true,
+  },
+  "plpgsqlCheck": {
+    "enabled": true,
+  },
+  "pglinter": {
+    "enabled": false,
+  },
+  "db": {
+    "host": "127.0.0.1",
+    "port": 55432,
+    "username": "postgres",
+    "database": "postgres",
+  },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true,
+  },
+}
