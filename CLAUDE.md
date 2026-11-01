@@ -63,6 +63,9 @@ aponta para ele.
   decisão que outras specs consumam) ou `scaffold` (estrutura do repositório criada antes de existir a primeira spec;
   depois dela, nunca mais).
 - Commits pequenos e focados: um passo termina em um ou mais commits, todos com o rodapé da spec.
+- Todo commit que muda comportamento sobe com os testes que o provam, no mesmo commit; para ele não há exceção. Não
+  mudam comportamento, e por isso não levam teste: documentação, formatação, `typo`, `spec`, `deps-bump`, `revert`,
+  `scaffold` e ferramental ou configuração cujo efeito o próprio `check` exercita. Gatilho: fechar o commit de um passo.
 - Duas branches: todo commit e todo push vão para `dev`; a `main` só recebe o merge de `dev` e nunca um commit direto. A
   IA nunca pusha a `main` nem faz o merge para ela: é ordem do usuário.
 - O CI é o único portão do push para `dev`: o `check` roda nele a cada push, sem hook local, e um commit quebrado pode
@@ -84,6 +87,11 @@ aponta para ele.
      nome do projeto.
   4. Antes de commitar, varre-se o diff atrás de dois nomes para um conceito e de um nome para dois, e corrige-se no
      mesmo commit.
+- Uma operação se nomeia por um verbo (`createTicketChange`, `transitTicketChange`, `validateTransition`), e o
+  substantivo nomeia o conceito (`InvalidTransitionError`, `TRANSITION_TICKET_STATUSES`). Gatilho: nomear uma função.
+- Uma constraint do banco se nomeia `<tabela>_<coluna>[_<regra>]_<tipo>`, com o tipo `pkey`, `fkey` ou `check`, como o
+  próprio PostgreSQL nomeia, e uma palavra por regra: `length`, `set`, `presence`, `pair` ou `min`. Uma regra nova
+  reaproveita a palavra que já existe. Gatilho: escrever uma migration.
 - Comentário é permitido quando atômico, enxuto e capaz de provar o próprio valor; nunca repete o que o código já diz. O
   código é a fonte da verdade.
 

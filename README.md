@@ -13,18 +13,23 @@ alteração de outra operadora.
 ## Como este projeto é desenvolvido
 
 Desenvolvimento orientado por especificação: cada fatia nasce como uma spec congelada em [docs/specs/](docs/specs/), e
-cada passo dela vira um commit que cita a spec. As regras de trabalho estão em [CLAUDE.md](CLAUDE.md) e o uso de IA está
-relatado, por spec, em [IA.md](IA.md).
+cada passo dela vira um ou mais commits que citam a spec. As regras de trabalho, entre elas a de que todo commit que
+muda comportamento sobe com os seus testes, estão em [CLAUDE.md](CLAUDE.md). A prova de cada passo e o uso de IA estão
+relatados, por spec, em [IA.md](IA.md).
 
 ## Filosofia
 
-Este repositório é estudo e trabalho ao mesmo tempo. A spec vem antes do código, e cada trade-off dela é decidido em
-entrevista, nunca assumido; a IA pesquisa, aponta alternativas e revisa, mas nunca decide o domínio. A regra de autoria:
-o que exige raciocínio sobre estado e falha é escrito à mão, e o que é encanamento é delegado à IA e revisado.
+Este repositório é construído com o máximo rigor e a produtividade de uma engenharia real. A spec vem antes do código, e
+cada trade-off dela é decidido em entrevista, nunca assumido; a IA pesquisa, aponta alternativas e revisa, mas nunca
+decide o domínio. A regra de autoria: o que exige raciocínio sobre estado e falha é escrito à mão, e o que é encanamento
+é delegado à IA e revisado.
 
 | À mão | Delegado à IA, revisado |
 | --- | --- |
-| O núcleo: regras do domínio, concorrência e tratamento de erros | Ferramentas e CI, rotas, front-end, corpos de teste, documentação |
+| As regras do domínio | Ferramentas e CI |
+| O esquema do banco: o SQL das migrations, as constraints e os gatilhos | As rotas |
+| A concorrência: o `UPDATE` condicional e a unidade de trabalho | O front-end |
+| O tratamento de erros | Os corpos de teste e a documentação |
 
 O que a IA de fato fez em cada spec está em [IA.md](IA.md).
 
