@@ -16,6 +16,7 @@ aponta para ele.
 | O comportamento da IA: prompts relevantes, erros pegos, divergências do autor, validações e o que o autor escreveu | `IA.md` | specs, `README.md` |
 | Versões e dependências | os manifestos | qualquer documento |
 | As regras de processo: dependências e gatilhos de commit e de documentação | `CLAUDE.md` | a skill `docs`, `README.md` |
+| Como um teste é escrito | `CLAUDE.md` | a skill `docs` |
 | Como cada documento é escrito | a skill `docs` | `CLAUDE.md` |
 | O que o sistema faz hoje | o código | qualquer documento |
 
@@ -38,6 +39,13 @@ aponta para ele.
 - Dependência nova ou atualizada: a versão é pesquisada ao vivo, a compatibilidade é provada fora do repositório, a
   versão exata mora só no manifesto e no lockfile, nunca em spec ou documento, a prova entra no `IA.md`, em "O que
   validei", quando a IA a faz, e a atualização é um commit `deps-bump`.
+- Todo teste afirma comportamento, nunca detalhe de implementação: afirma o que quem usa a interface pública do que está
+  sob teste observa, de forma específica (o valor devolvido, o estado ou efeito visível, o erro com o seu `code`), e
+  nunca só a presença de texto, só um código de saída ou só uma contagem. Uma refatoração que preserva o comportamento
+  não quebra teste algum. Vale em todo nível, que só muda onde fica essa interface: a função exportada no unitário, a
+  fronteira real (banco, HTTP) na integração e o sintoma original do defeito na regressão. Dublê só na fronteira que o
+  projeto não controla (relógio, rede), nunca num colaborador interno. A cobertura é piso do `check`, não prova de
+  comportamento. Gatilho: escrever ou revisar qualquer teste.
 
 ## Commits
 

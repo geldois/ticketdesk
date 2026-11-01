@@ -1,6 +1,6 @@
 ---
 name: docs
-description: "Governa toda a documentação do repositório e do seu harness local: README.md, IA.md, CLAUDE.md, AGENTS.md, as specs, esta skill e os agentes. Define o formato, o dono de cada contexto, a completude e a prova por comportamento. Invocar antes de criar, editar ou revisar qualquer um deles."
+description: "Governa toda a documentação do repositório e do seu harness local: README.md, IA.md, CLAUDE.md, AGENTS.md, as specs, esta skill e os agentes. Define o formato, o dono de cada contexto, a completude e como a documentação se prova. Invocar antes de criar, editar ou revisar qualquer um deles."
 ---
 
 # docs
@@ -20,6 +20,8 @@ Esta skill governa toda a documentação do repositório e do seu harness local:
 | Specs | `docs/specs/` |
 | A própria lei | `.claude/skills/docs/` |
 | Os agentes | `.claude/agents/` |
+
+Só documentação. Como o código e os testes são escritos, e quando cada regra de processo vale, é do `CLAUDE.md`.
 
 ## Princípios
 
@@ -167,8 +169,6 @@ motivo diz por que o campo não cabe nesta fatia e não repete o que `IA.md`, `R
 
 ## Prova
 
-- Um teste mede comportamento: afirma o resultado observável e específico, como o diagnóstico exato de uma falha, a
-  saída ou o estado produzido. Nunca afirma só a presença de texto, só um código de saída ou só uma contagem.
 - Uma instrução para a IA (skill, agente, `CLAUDE.md`, hook) não tem teste de texto: a IA é medida pelas ferramentas da
   própria IA.
 - Numa spec de harness, o Contrato são as regras em prosa de cada arquivo, os casos descrevem o comportamento da
