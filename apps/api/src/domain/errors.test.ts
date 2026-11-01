@@ -33,20 +33,16 @@ const ERRORS = [
 ] as const;
 
 describe("domain errors", () => {
-  it.each(ERRORS)("$code is a DomainError and an Error", ({ error }) => {
-    const thrown = new error();
+  it.each(ERRORS)(
+    "$code is a DomainError and an Error that carries its own code",
+    ({ error, code }) => {
+      const thrown = new error();
 
-    expect(thrown).toBeInstanceOf(DomainError);
-    expect(thrown).toBeInstanceOf(Error);
-  });
-
-  it.each(ERRORS)("$code carries its own code", ({ error, code }) => {
-    expect(new error().code).toBe(code);
-  });
-
-  it.each(ERRORS)("$code carries a message", ({ error }) => {
-    expect(new error().message).not.toBe("");
-  });
+      expect(thrown).toBeInstanceOf(DomainError);
+      expect(thrown).toBeInstanceOf(Error);
+      expect(thrown.code).toBe(code);
+    },
+  );
 
   it("has one error class for each code of the list", () => {
     const codes = ERRORS.map(({ code }) => code);

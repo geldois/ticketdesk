@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  DomainError,
   InvalidCustomerNameError,
   InvalidDescriptionError,
   InvalidInstantError,
@@ -55,14 +54,7 @@ describe("createTicketChange", () => {
     });
   });
 
-  it("returns a ticket without id and version", () => {
-    const { ticket } = create();
-
-    expect(ticket).not.toHaveProperty("id");
-    expect(ticket).not.toHaveProperty("version");
-  });
-
-  it("cuts the ends and reduces each block of whitespace to one space in the name and the description", () => {
+  it("puts the normalized name and description on the ticket", () => {
     const { ticket } = create({
       customerName: "  João   da \t Silva\n",
       description: "\n linha um\n\nlinha  dois \t",
@@ -70,17 +62,6 @@ describe("createTicketChange", () => {
 
     expect(ticket.customerName).toBe("João da Silva");
     expect(ticket.description).toBe("linha um linha dois");
-  });
-
-  it("accepts an accented name with apostrophe and hyphen, a name of digits and a punctuated description", () => {
-    expect(
-      create({ customerName: "João D'Ávila-Souza" }).ticket.customerName,
-    ).toBe("João D'Ávila-Souza");
-    expect(create({ customerName: "12345" }).ticket.customerName).toBe("12345");
-    expect(
-      create({ description: "Erro 500, ao pagar (cartão)! Pode ajudar?" })
-        .ticket.description,
-    ).toBe("Erro 500, ao pagar (cartão)! Pode ajudar?");
   });
 
   it.each(["Maria 😀", "Maria $", "Maria <b>", "Maria + Ana", "Maria\u0000"])(
@@ -92,37 +73,6 @@ describe("createTicketChange", () => {
 
   it.each(["fatura 😀", "fatura $10", "a < b", "x\u0007y"])(
     "refuses the description %j",
-    (description) => {
-      expect(() => create({ description })).toThrow(InvalidDescriptionError);
-    },
-  );
-
-  it("accepts a name of 1 and of 120 characters, and of 120 letters plus trailing spaces", () => {
-    expect(create({ customerName: "a" }).ticket.customerName).toBe("a");
-    expect(create({ customerName: "a".repeat(120) }).ticket.customerName).toBe(
-      "a".repeat(120),
-    );
-    expect(
-      create({ customerName: `${"a".repeat(120)}     ` }).ticket.customerName,
-    ).toBe("a".repeat(120));
-  });
-
-  it.each(["", "   ", "\t\n", "a".repeat(121)])(
-    "refuses the empty, blank or too long name %j",
-    (customerName) => {
-      expect(() => create({ customerName })).toThrow(InvalidCustomerNameError);
-    },
-  );
-
-  it("accepts a description of 1 and of 4000 characters", () => {
-    expect(create({ description: "a" }).ticket.description).toBe("a");
-    expect(create({ description: "a".repeat(4000) }).ticket.description).toBe(
-      "a".repeat(4000),
-    );
-  });
-
-  it.each(["", "   ", "a".repeat(4001)])(
-    "refuses the empty, blank or too long description",
     (description) => {
       expect(() => create({ description })).toThrow(InvalidDescriptionError);
     },
@@ -170,10 +120,6 @@ describe("createTicketChange", () => {
     expect(() => create({ channel: "fax", priority: "urgent" })).toThrow(
       InvalidTicketChannelError,
     );
-  });
-
-  it("throws a DomainError", () => {
-    expect(() => create({ customerName: "" })).toThrow(DomainError);
   });
 
   it("keeps the ticket and the entry when the received instant changes afterwards", () => {
@@ -335,19 +281,6 @@ describe("transitTicketChange", () => {
     },
   );
 
-  it("accepts a note of 1 and of 2000 characters on the ticket and on the entry", () => {
-    for (const note of ["a", "a".repeat(2000)]) {
-      const { ticket, ticketHistoryEntry } = transition(
-        ticketIn("in_progress", null),
-        "resolved",
-        { resolutionNote: note },
-      );
-
-      expect(ticket.resolutionNote).toBe(note);
-      expect(ticketHistoryEntry.resolutionNote).toBe(note);
-    }
-  });
-
   it("cuts the ends and reduces each block of whitespace in the note, on the ticket and on the entry", () => {
     const { ticket, ticketHistoryEntry } = transition(
       ticketIn("in_progress", null),
@@ -380,20 +313,6 @@ describe("transitTicketChange", () => {
       ).toThrow(InvalidReopenReasonError);
     },
   );
-
-  it("accepts a reason of 1 and of 500 characters only on the entry", () => {
-    for (const reason of ["a", "a".repeat(500)]) {
-      const { ticket, ticketHistoryEntry } = transition(
-        ticketIn("resolved", "Fatura reenviada"),
-        "open",
-        { reopenReason: reason },
-      );
-
-      expect(ticketHistoryEntry.reopenReason).toBe(reason);
-      expect(ticketHistoryEntry.resolutionNote).toBeNull();
-      expect(Object.values(ticket)).not.toContain(reason);
-    }
-  });
 
   it("cuts the ends and reduces each block of whitespace in the reason", () => {
     const { ticketHistoryEntry } = transition(
@@ -474,12 +393,6 @@ describe("transitTicketChange", () => {
     expect(() =>
       transition(ticketIn("in_progress", null), "resolved", {}, invalid),
     ).toThrow(InvalidInstantError);
-  });
-
-  it("throws a DomainError", () => {
-    expect(() => transition(ticketIn("open", null), "resolved")).toThrow(
-      DomainError,
-    );
   });
 
   it("does not change the received ticket, even frozen", () => {

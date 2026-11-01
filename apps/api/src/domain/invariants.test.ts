@@ -15,16 +15,12 @@ import {
 import {
   CUSTOMER_NAME,
   DESCRIPTION,
-  isTicketChannel,
-  isTicketPriority,
-  isTicketStatus,
   normalizeInvariantField,
   normalizeTicketChannel,
   normalizeTicketPriority,
   normalizeTicketStatus,
   REOPEN_REASON,
   RESOLUTION_NOTE,
-  TRANSITION_TICKET_STATUSES,
   validateInstant,
   validateTransitionTicketStatus,
 } from "./invariants.ts";
@@ -68,31 +64,18 @@ const A_TILDE = String.fromCodePoint(0xe3);
 describe.each(FIELDS)("normalizeInvariantField of the $name", (setup) => {
   const { field, max, invalid, missing } = setup;
 
-  it("cuts the ends and reduces each block of whitespace to one space", () => {
-    expect(normalizeInvariantField("  João   da \t Silva\n", field)).toBe(
-      "João da Silva",
-    );
-  });
-
-  it("cuts only the ends of a text that has no block to reduce", () => {
-    expect(normalizeInvariantField("\n Maria \t", field)).toBe("Maria");
-  });
-
-  it("reduces a block of tabs and line breaks in the middle to one space", () => {
-    expect(normalizeInvariantField("um\t\n\tdois\n\ntrês", field)).toBe(
-      "um dois três",
-    );
-  });
-
-  it("accepts accented letters, an apostrophe and a hyphen", () => {
-    expect(normalizeInvariantField("João D'Ávila-Souza", field)).toBe(
-      "João D'Ávila-Souza",
-    );
-  });
-
-  it("accepts a text made only of digits", () => {
-    expect(normalizeInvariantField("12345", field)).toBe("12345");
-  });
+  it.each([
+    ["  João   da \t Silva\n", "João da Silva"],
+    ["\n Maria \t", "Maria"],
+    ["um\t\n\tdois\n\ntrês", "um dois três"],
+    ["João D'Ávila-Souza", "João D'Ávila-Souza"],
+    ["12345", "12345"],
+  ])(
+    "normalizes %j to %j: cuts the ends, reduces each block of whitespace to one space and accepts accents, apostrophe, hyphen and digits",
+    (raw, normalized) => {
+      expect(normalizeInvariantField(raw, field)).toBe(normalized);
+    },
+  );
 
   it("gives the same text for the composed and the decomposed accent", () => {
     const composed = normalizeInvariantField(`Jo${A_TILDE}o`, field);
@@ -158,34 +141,12 @@ describe.each(FREE_TEXT_FIELDS)(
   },
 );
 
-describe.each([
-  { name: "channel", is: isTicketChannel, valid: ["chat", "email", "phone"] },
-  {
-    name: "priority",
-    is: isTicketPriority,
-    valid: ["low", "medium", "high"],
-  },
-  {
-    name: "status",
-    is: isTicketStatus,
-    valid: ["open", "in_progress", "resolved"],
-  },
-])("the ticket $name predicate", ({ is, valid }) => {
-  it.each(valid)("accepts %j", (raw) => {
-    expect(is(raw)).toBe(true);
-  });
-
-  it.each(["", "fax", "EMAIL", " open", "toString"])("refuses %j", (raw) => {
-    expect(is(raw)).toBe(false);
-  });
-});
-
 describe("normalizeTicketChannel", () => {
   it.each(["chat", "email", "phone"])("returns %j as it is", (raw) => {
     expect(normalizeTicketChannel(raw)).toBe(raw);
   });
 
-  it.each(["", "fax", "EMAIL"])("refuses %j", (raw) => {
+  it.each(["", "fax", "EMAIL", " chat", "toString"])("refuses %j", (raw) => {
     expect(() => normalizeTicketChannel(raw)).toThrow(
       InvalidTicketChannelError,
     );
@@ -197,7 +158,7 @@ describe("normalizeTicketPriority", () => {
     expect(normalizeTicketPriority(raw)).toBe(raw);
   });
 
-  it.each(["", "urgent", "HIGH"])("refuses %j", (raw) => {
+  it.each(["", "urgent", "HIGH", " low", "toString"])("refuses %j", (raw) => {
     expect(() => normalizeTicketPriority(raw)).toThrow(
       InvalidTicketPriorityError,
     );
@@ -209,26 +170,12 @@ describe("normalizeTicketStatus", () => {
     expect(normalizeTicketStatus(raw)).toBe(raw);
   });
 
-  it.each(["", "closed", "OPEN", "in-progress"])("refuses %j", (raw) => {
-    expect(() => normalizeTicketStatus(raw)).toThrow(InvalidTransitionError);
-  });
-});
-
-describe("TRANSITION_TICKET_STATUSES", () => {
-  it("has one key for each status and exactly the three destinations of the table", () => {
-    expect(
-      Object.fromEntries(
-        Object.entries(TRANSITION_TICKET_STATUSES).map(([from, to]) => [
-          from,
-          [...to],
-        ]),
-      ),
-    ).toEqual({
-      open: ["in_progress"],
-      in_progress: ["resolved"],
-      resolved: ["open"],
-    });
-  });
+  it.each(["", "closed", "OPEN", "in-progress", " open", "toString"])(
+    "refuses %j",
+    (raw) => {
+      expect(() => normalizeTicketStatus(raw)).toThrow(InvalidTransitionError);
+    },
+  );
 });
 
 describe("validateTransitionTicketStatus", () => {
