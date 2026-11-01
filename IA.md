@@ -39,6 +39,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   equivalência dos regex e redigiu o rascunho da spec, que o `docs-auditor` revisou antes do commit. Prompt relevante:
   "se o banco nunca persistir antes de virar entidade de domínio [...] isso garante que a persistência sempre refletirá
   a invariante de construção dos textos e a mesma normalização. correto?".
+- `spec: 00005`, passo 1: a IA pesquisou as versões ao vivo, instalou as dependências e escreveu o `compose.yaml` com o
+  serviço `db`, a função `migrate`, o auxiliar de banco (menos o `createTestDatabase`, que é meu) e os corpos dos testes
+  de banco e o prefixo do script `check`. A checagem do container runtime, que a IA escreveu primeiro, eu reescrevi à
+  mão depois, e a IA só trocou uma palavra da mensagem.
 
 ## O que validei
 
@@ -120,6 +124,16 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   conta é 4.658 e 148.652. O resultado tirou o formato de caractere do que o banco espelha e entrou na spec.
 - `spec: 00005`: a IA conferiu no código do pacote do `node-pg-migrate` que ele carrega migrations em SQL puro com os
   marcadores de aplicar e reverter, antes de a spec nomear a ferramenta.
+- `spec: 00005`, passo 1: a IA escreveu fora do repositório uma sonda com treze casos (dependências exatas, `npm ci` sem
+  alterar o lockfile, o compose, o `.env.example`, o `.env` ignorado, a forma do script `check`, a suíte com cobertura,
+  os dois testes nomeados, o README e a checagem do container runtime), que partiu com nove falhas e terminou toda
+  verde. Num clone com uma violação de lint, o `check` com container runtime mostrou o diagnóstico do lint e, com o
+  socket do container runtime escondido num namespace de montagem, parou na hora com a mensagem, sem rodar linter nem
+  teste. Uma linha da sonda tinha um regex errado, que tratava `${POSTGRES_PASSWORD:?...}` como valor; corrigi a sonda e
+  não o compose.
+- `spec: 00005`, passo 1: a IA tentou fechar a leitura de `.env*` menos o `.env.example` com padrões de glob (`!(...)`,
+  `[^e]` e `[!e]`) e provou, com arquivos descartáveis, que a permissão do Claude Code não aceita nenhum deles; só `?*`
+  funciona. A negação voltou a `.env*` sem commit.
 
 ## Um erro da IA
 
@@ -278,3 +292,5 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00004`, passo 2: a tabela `TRANSITION_TICKET_STATUSES`, o `transitionTicketChange` com a ordem das checagens e
   as cópias dos instantes, e as funções `validateTransition…` são meus, exceto a troca dos dois erros do
   `validateTransitionUnexpected`.
+- `spec: 00005`, passo 1: a checagem do container runtime, reescrita à mão, e o `createTestDatabase` são meus. No
+  `createTestDatabase` a IA, como tutora, só apontou o sintoma de cada erro até os testes passarem.

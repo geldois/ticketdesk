@@ -3,6 +3,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   cacheDir: ".cache/vitest",
   test: {
+    globalSetup: ["apps/api/test/global-setup.ts"],
     coverage: {
       provider: "v8",
       include: ["apps/*/src/**", "packages/*/src/**"],

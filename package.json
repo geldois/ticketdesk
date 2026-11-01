@@ -6,7 +6,7 @@
     "node": "26.13.0"
   },
   "scripts": {
-    "check": "rc=0; tsc --noEmit || rc=1; eslint . --quiet --max-warnings 0 --cache --cache-strategy content --cache-location .cache/eslint/ || rc=1; prettier --check . --log-level warn --cache --cache-strategy content --cache-location .cache/prettier/cache || rc=1; rumdl check . --quiet || rc=1; lockfile-lint --path package-lock.json --type npm --allowed-hosts npm --validate-https --validate-integrity || rc=1; action-validator .github/workflows/check.yml || rc=1; action-validator .github/workflows/audit.yml || rc=1; vitest run --coverage --silent --reporter=dot || rc=1; exit $rc",
+    "check": "node apps/api/scripts/check-container-runtime.ts && { rc=0; tsc --noEmit || rc=1; eslint . --quiet --max-warnings 0 --cache --cache-strategy content --cache-location .cache/eslint/ || rc=1; prettier --check . --log-level warn --cache --cache-strategy content --cache-location .cache/prettier/cache || rc=1; rumdl check . --quiet || rc=1; lockfile-lint --path package-lock.json --type npm --allowed-hosts npm --validate-https --validate-integrity || rc=1; action-validator .github/workflows/check.yml || rc=1; action-validator .github/workflows/audit.yml || rc=1; vitest run --coverage --silent --reporter=dot || rc=1; exit $rc; }",
     "fix": "rc=0; eslint --fix . --quiet --cache --cache-strategy content --cache-location .cache/eslint/ || rc=1; prettier --write . --log-level warn --cache --cache-strategy content --cache-location .cache/prettier/cache || rc=1; rumdl fmt . --quiet || rc=1; exit $rc"
   },
   "workspaces": [

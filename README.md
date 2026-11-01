@@ -39,12 +39,16 @@ O projeto usa uma única versão de Node, exata, declarada em [.node-version](.n
 Para ter essa versão no `PATH`, use um gerenciador de versões configurado para ler o `.node-version` ou instale a versão
 direto. O repositório não depende de nenhum gerenciador específico.
 
+Os testes de banco sobem um PostgreSQL num contêiner, então o desenvolvimento exige um container runtime acessível. Um
+container runtime com o socket no lugar padrão não pede configuração. Com o socket em outro lugar, a variável de
+ambiente `DOCKER_HOST` aponta para ele, como a documentação do `testcontainers` descreve.
+
 Comandos, executados na raiz:
 
 | Comando | O que faz |
 | --- | --- |
 | `npm ci` | Instala as dependências exatas do lockfile |
-| `npm run check` | Roda todas as verificações do repositório, mesmo que uma falhe, e sai com erro se qualquer uma falhou; é o que o CI roda a cada push |
+| `npm run check` | Confere antes de tudo que há um container runtime e, sem ele, para com uma mensagem, sem rodar mais nada; com ele, roda todas as verificações do repositório, mesmo que uma falhe, e sai com erro se qualquer uma falhou; é o que o CI roda a cada push |
 | `npm run fix` | Corrige o que o lint e os formatadores sabem corrigir |
 
 O que o CI roda, incluindo a auditoria de dependências, está em [.github/workflows/](.github/workflows/).
@@ -79,3 +83,5 @@ Só as decisões de alto ROI, da mais antiga para a mais recente.
 | As transições permitidas como um dicionário que liga cada status ao conjunto de destinos | Uma cadeia de `if` ou `switch` por par de status | Uma regra nova é uma linha na tabela e a consulta custa O(1); em troca o `Record` exige uma chave para cada status e o compilador recusa o status que faltar |
 | Uma transição que recebe texto fora do destino, ou sem o texto do destino, falha com erro próprio, e o domínio nunca descarta um dado em silêncio | Ignorar a nota ou o motivo que não pertencem ao destino | Quem chama monta o corpo conforme o destino; em troca nenhum dado enviado some sem aviso |
 | O isolamento do domínio provado por regras do ESLint (`eslint-plugin-import-x`) que só deixam o código do domínio importar de dentro de `apps/api/src/domain/`, sem lista de fontes proibidas | Uma lista de pastas e pacotes proibidos no `no-restricted-imports`, ou uma ferramenta de grafo de dependências | Um pacote de desenvolvimento a mais para manter; o pacote só é barrado depois de instalado (antes disso quem reprova é o `tsc`), e os testes do domínio podem importar pacotes |
+| Os testes de banco rodam num PostgreSQL real, num contêiner por execução, com cada caso de teste num banco clonado de um modelo já migrado | Um banco simulado em memória, ou uma transação revertida por teste | Os testes exigem um container runtime e cada execução paga a subida do contêiner; em troca o banco é o de produção, com seus `CHECK` e triggers, e o isolamento vale também para DDL |
+| O `check` começa por uma checagem do container runtime que, se falhar, trava todo o resto | Deixar os testes de banco falharem com o erro cru da biblioteca, ou pular os testes de banco quando não há container runtime | Quem não tem container runtime não roda nem os linters, e todo `check` paga a checagem; em troca a falha é uma mensagem clara e nenhum teste de banco é pulado em silêncio |
