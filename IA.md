@@ -35,6 +35,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00004`, passo 3: a IA escreveu a regra de isolamento do domínio no `eslint.config.js` e os arquivos de
   provocação descartáveis, um por fonte recusada. Depois, a meu pedido, a IA trocou a lista de fontes proibidas pela
   regra do `eslint-plugin-import-x` e refez as provocações.
+- `spec: 00005`: a IA me entrevistou sobre o esquema do banco e as migrations, rodou um experimento descartável sobre a
+  equivalência dos regex e redigiu o rascunho da spec, que o `docs-auditor` revisou antes do commit. Prompt relevante:
+  "se o banco nunca persistir antes de virar entidade de domínio [...] isso garante que a persistência sempre refletirá
+  a invariante de construção dos textos e a mesma normalização. correto?".
 
 ## O que validei
 
@@ -110,6 +114,12 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   domínio, com `../` de volta para dentro dele, saiu com 0. A IA também mostrou que o plugin não barra um pacote ainda
   não instalado (quem reprova é o `tsc`), e que os testes do domínio importam o `vitest`, o que moveu a regra para fora
   dos `*.test.ts`.
+- `spec: 00005`: a meu pedido, a IA subiu um PostgreSQL de teste num contêiner descartável e comparou, para cada ponto
+  de código, o regex do domínio com o melhor regex equivalente do banco. Os dois divergem nos dois sentidos: no nome, o
+  banco recusaria 5.576 pontos de código que o domínio aceita e aceitaria 1.495 que o domínio recusa; no texto livre, a
+  conta é 4.658 e 148.652. O resultado tirou o formato de caractere do que o banco espelha e entrou na spec.
+- `spec: 00005`: a IA conferiu no código do pacote do `node-pg-migrate` que ele carrega migrations em SQL puro com os
+  marcadores de aplicar e reverter, antes de a spec nomear a ferramenta.
 
 ## Um erro da IA
 
@@ -240,6 +250,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   perder um dado em silêncio é pior que recusar a chamada; aceitei que quem chama monte o corpo conforme o destino. O
   desvio vai declarado no parágrafo do commit. A IA recomendou a ordem em que o texto sobrando vem antes do faltando, e
   aceitei.
+- `spec: 00005`: o banco espelha estrutura, tamanho, transições e presença de nota e motivo, e não espelha formato de
+  caractere nem caractere de controle. Pedi o espelho total com testes de divergência; depois do experimento, a IA
+  recomendou espelhar só o que dá para espelhar exato e manter no banco um `CHECK` contra caractere de controle e quebra
+  de linha. Mantive o primeiro corte e tirei também o controle, porque confio no domínio como único dono dos caracteres,
+  e aceitei que o banco admita um texto que o domínio recusaria.
 
 ## Onde a IA não entrou
 
