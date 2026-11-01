@@ -70,7 +70,7 @@ export function createTicketChange(
   return { ticketHistoryEntry, ticket };
 }
 
-export function transitionTicketChange(
+export function transitTicketChange(
   ticket: Ticket,
   {
     to,

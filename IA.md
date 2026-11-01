@@ -29,7 +29,7 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   condicionais".
 - `spec: 00004`, passo 1: a IA escreveu os corpos dos testes das classes de erro, da normalização, dos predicados, dos
   normalizadores de canal e prioridade, do instante e do `createTicketChange`, a partir dos casos da spec.
-- `spec: 00004`, passo 2: a IA escreveu os corpos dos testes do `transitionTicketChange`, da tabela de transições e do
+- `spec: 00004`, passo 2: a IA escreveu os corpos dos testes do `transitTicketChange`, da tabela de transições e do
   normalizador de status, e, a meu pedido, as duas classes de erro de texto fora do destino e a troca, no meu
   `validateTransitionUnexpected`, dos dois erros que ele lançava por elas.
 - `spec: 00004`, passo 3: a IA escreveu a regra de isolamento do domínio no `eslint.config.js` e os arquivos de
@@ -107,7 +107,7 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   termina com as 31 linhas verdes sobre o meu `createTicketChange`, e rodou os testes com cobertura de 100% nas quatro
   métricas do domínio, além de `tsc`, `eslint` e `prettier`, cada ferramenta sozinha. O `check` não foi rodado.
 - `spec: 00004`, passo 2: a IA escreveu fora do repositório uma sonda com os casos do passo, que parte vermelha e
-  termina toda verde sobre o meu `transitionTicketChange`. Uma linha dela apontou, no meu código, que o `createdAt` do
+  termina toda verde sobre o meu `transitTicketChange`. Uma linha dela apontou, no meu código, que o `createdAt` do
   ticket devolvido dividia o objeto `Date` com o ticket recebido; corrigi, e um teste agora trava o caso. O
   `npm run check` passou, com 100% de cobertura nas quatro métricas do domínio.
 - `spec: 00004`, passo 3: a IA rodou o ESLint real num clone descartável, com um arquivo de provocação em
@@ -298,8 +298,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   categorias aceitas de cada campo são meus.
 - `spec: 00004`, passo 1: o `createTicketChange` com a ordem das checagens e as cópias do instante, o `validateInstant`,
   os predicados `isTicket…` e os normalizadores de canal e prioridade são meus.
-- `spec: 00004`, passo 2: a tabela `TRANSITION_TICKET_STATUSES`, o `transitionTicketChange` com a ordem das checagens e
-  as cópias dos instantes, e as funções `validateTransition…` são meus, exceto a troca dos dois erros do
+- `spec: 00004`, passo 2: a tabela `TRANSITION_TICKET_STATUSES`, o `transitTicketChange` com a ordem das checagens e as
+  cópias dos instantes, e as funções `validateTransition…` são meus, exceto a troca dos dois erros do
   `validateTransitionUnexpected`.
 - `spec: 00005`, passo 1: a checagem do container runtime, reescrita à mão, e o `createTestDatabase` são meus. No
   `createTestDatabase` a IA, como tutora, só apontou o sintoma de cada erro até os testes passarem.

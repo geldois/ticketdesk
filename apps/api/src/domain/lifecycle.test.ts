@@ -15,7 +15,7 @@ import {
   UnexpectedReopenReasonError,
   UnexpectedResolutionNoteError,
 } from "./errors.ts";
-import { createTicketChange, transitionTicketChange } from "./lifecycle.ts";
+import { createTicketChange, transitTicketChange } from "./lifecycle.ts";
 import type { Ticket, TicketStatus } from "./ticket.ts";
 
 const AT = new Date("2026-03-01T12:00:00.000Z");
@@ -211,7 +211,7 @@ function transition(
   over: { resolutionNote?: string | null; reopenReason?: string | null } = {},
   at: Date = AT,
 ) {
-  return transitionTicketChange(
+  return transitTicketChange(
     ticket,
     { to, resolutionNote: null, reopenReason: null, ...over },
     at,
@@ -226,7 +226,7 @@ const VALID_PAIRS = [
 
 const STATUSES = ["open", "in_progress", "resolved"] as const;
 
-describe("transitionTicketChange", () => {
+describe("transitTicketChange", () => {
   it("moves open to in_progress and records the entry at the instant", () => {
     const { ticket, ticketHistoryEntry } = transition(
       ticketIn("open", null),
