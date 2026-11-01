@@ -67,7 +67,8 @@ um banco acessível, soma as verificações que dependem dele.
 
 Para completar tabelas e colunas, o servidor precisa de um banco acessível e de mais dois passos:
 
-1. Defina `PGPASSWORD` no ambiente com o mesmo valor de `POSTGRES_PASSWORD`. A senha nunca entra no repositório.
+1. Tenha `PGPASSWORD` no ambiente do editor, a mesma variável que o `compose.yaml` exige para o serviço `db`. A senha
+   nunca entra no repositório.
 2. Suba o serviço `db` com o comando de compose do seu container runtime. Ele publica a porta só no endereço de
    loopback, em `127.0.0.1:55432`, e é nessa porta que a configuração aponta.
 
