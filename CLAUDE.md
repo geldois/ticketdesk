@@ -75,7 +75,15 @@ aponta para ele.
 - O vocabulário é um só em todo o projeto: o mesmo conceito tem o mesmo nome em parâmetros, funções, classes, tipos,
   interfaces, valores, constantes, códigos de erro e testes. Antes de nomear algo, procure como o conceito já se chama e
   reuse; um nome novo para um conceito que já tem nome é um defeito, e renomear tudo de uma vez custa menos que conviver
-  com dois.
+  com dois. Gatilho: escrever, renomear ou revisar qualquer identificador, de parâmetro a constante. O procedimento tem
+  quatro passos:
+  1. Antes de nomear, `grep` do conceito no repositório; o que já existe vence.
+  2. O nome carrega o conceito inteiro e o mesmo qualificador em toda parte: `databaseUrl` em todo lugar, nunca `url`
+     num e `databaseUrl` noutro, nem um mesmo nome para dois conceitos (uma função e um parâmetro `databaseUrl`).
+  3. O nome que uma biblioteca impõe (`connectionString`, `dir`) fica só na linha que a chama; o resto do código usa o
+     nome do projeto.
+  4. Antes de commitar, varre-se o diff atrás de dois nomes para um conceito e de um nome para dois, e corrige-se no
+     mesmo commit.
 - Comentário é permitido quando atômico, enxuto e capaz de provar o próprio valor; nunca repete o que o código já diz. O
   código é a fonte da verdade.
 
