@@ -51,6 +51,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   opcional do `TEMPLATE` na criação do banco de teste, trocou o nome da função nos testes que a chamam e escreveu os
   corpos dos testes de integração do esquema, a partir das linhas da sonda e derivando do domínio os conjuntos, os
   tamanhos e os pares.
+- `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
+  afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
 ## O que validei
 
@@ -153,6 +155,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   fora do plano básico, a nota e o motivo, os quatro pares aceitos e os oito recusados, a chave estrangeira sem cascata
   e o `id` do histórico crescente. Os testes de integração do esquema, que afirmam também o nome da constraint que
   recusa, e o de aplicar, reverter e aplicar as migrations reais passam no `check`.
+- `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
+  de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
+  cobrem o que os removidos cobriam.
 
 ## Um erro da IA
 
