@@ -51,6 +51,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   opcional do `TEMPLATE` na criação do banco de teste, trocou o nome da função nos testes que a chamam e escreveu os
   corpos dos testes de integração do esquema, a partir das linhas da sonda e derivando do domínio os conjuntos, os
   tamanhos e os pares.
+- `spec: 00005`, passo 3: a IA escreveu fora do repositório a sonda com os casos dos critérios 7 e 8 e, como tutora, deu
+  o caminho (função de gatilho e gatilho) e um exemplo de sintaxe sobre outra tabela. O SQL é meu. Por ordem minha, a IA
+  escreveu os corpos dos testes de integração, no mesmo commit, e rodou o linter para explicar os avisos dos gatilhos.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -155,6 +158,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   fora do plano básico, a nota e o motivo, os quatro pares aceitos e os oito recusados, a chave estrangeira sem cascata
   e o `id` do histórico crescente. Os testes de integração do esquema, que afirmam também o nome da constraint que
   recusa, e o de aplicar, reverter e aplicar as migrations reais passam no `check`.
+- `spec: 00005`, passo 3: a sonda de onze linhas partiu com seis vermelhas (o `UPDATE` e o `DELETE` aceitos) e terminou
+  toda verde com o meu `00003`. Os testes de integração afirmam o erro do gatilho (código e mensagem) e a linha igual
+  depois do `UPDATE` e do `DELETE`, em uma linha e em todas, e depois do `TRUNCATE` da tabela e do `TRUNCATE` do
+  `ticket` em cascata, além da ordem por `id`. A reversão do `00003` roda no teste de aplicar, reverter e aplicar.
 - `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
   de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
   cobrem o que os removidos cobriam.
@@ -220,6 +227,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   `docs-auditor`, ao conferir o `IA.md` contra o SQL, apontou dois buracos no meu SQL que a sonda não cobria, um par com
   os dois status desconhecidos e um motivo de reabertura na entrada de criação; a IA os confirmou, acrescentou as duas
   linhas à sonda e eu corrigi as restrições.
+- `spec: 00005`, passo 3: a IA recomendou `ticket_history_entry_immutable_trigger` para o gatilho de `UPDATE` e `DELETE`
+  e, ao eu decidir bloquear também o `TRUNCATE`, sugeriu um segundo gatilho com outro nome, o que deixava o primeiro com
+  um nome que prometia a imutabilidade inteira. Percebi pelo nome e apontei; a IA concordou e propôs nomear os dois pelo
+  nível em que atuam, `row` e `table`. Também escreveu no motivo do `pgls-ignore` que a tabela era nova e vazia, o que
+  só vale no primeiro deploy; apontei e a IA tirou essa parte.
 
 ## Uma decisão minha
 
@@ -333,3 +345,6 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00005`, passo 2: o SQL das tabelas `ticket` e `ticket_history_entry`, com os `CHECK`, as chaves e as partes que
   revertem, é meu. A IA, como tutora, só apontou o sintoma de cada erro, e acrescentou o comentário `pgls-ignore` do
   `DROP TABLE` de cada reversão.
+- `spec: 00005`, passo 3: o SQL do `00003` (a função de gatilho, os dois gatilhos e a reversão) e a mensagem de erro são
+  meus. A IA, como tutora, só apontou o sintoma de cada erro e acrescentou os comentários `pgls-ignore`. Decidi também
+  bloquear o `TRUNCATE`, que a spec não pede.

@@ -46,6 +46,11 @@ const TICKET_HISTORY_ENTRY_TICKET_ID_FKEY = {
   constraint: "ticket_history_entry_ticket_id_fkey",
 };
 
+const IMMUTABLE_VIOLATION = {
+  code: "P0001",
+  message: "ticket history entries are immutable",
+};
+
 const VALID_TICKET_INPUT = {
   customerName: "Ana",
   description: "Printer is down",
@@ -141,6 +146,17 @@ async function insertTicketHistoryEntry(
   );
 
   return referencedTicketId;
+}
+
+async function ticketHistoryEntriesOf(
+  databaseUrl: string,
+  ticketId: string,
+): Promise<Record<string, unknown>[]> {
+  return queryRows(
+    databaseUrl,
+    "SELECT * FROM ticket_history_entry WHERE ticket_id = $1 ORDER BY id",
+    [ticketId],
+  );
 }
 
 function ticketIn(status: TicketStatus): Ticket {
@@ -600,5 +616,81 @@ describe("ticket_history_entry", () => {
     await expect(
       queryRows(databaseUrl, "DELETE FROM ticket WHERE id = $1", [ticketId]),
     ).rejects.toMatchObject(TICKET_HISTORY_ENTRY_TICKET_ID_FKEY);
+  });
+
+  it.each([
+    [
+      "one entry",
+      "UPDATE ticket_history_entry SET at = at + interval '1 day' WHERE ticket_id = $1",
+    ],
+    [
+      "every entry",
+      "UPDATE ticket_history_entry SET at = at + interval '1 day'",
+    ],
+    ...[
+      "ticket_id",
+      "from_status",
+      "to_status",
+      "resolution_note",
+      "reopen_reason",
+    ].map((column) => [
+      `the column ${column} of an entry`,
+      `UPDATE ticket_history_entry SET ${column} = ${column} WHERE ticket_id = $1`,
+    ]),
+    ["one entry", "DELETE FROM ticket_history_entry WHERE ticket_id = $1"],
+    ["every entry", "DELETE FROM ticket_history_entry"],
+    ["the whole table", "TRUNCATE ticket_history_entry"],
+    ["the whole table, through the ticket table", "TRUNCATE ticket CASCADE"],
+  ])(
+    "refuses to change %s and leaves the entries as they were: %s",
+    async (_target, sql) => {
+      const ticketId = await insertTicketHistoryEntry(databaseUrl);
+      const before = await ticketHistoryEntriesOf(databaseUrl, ticketId);
+
+      await expect(
+        queryRows(databaseUrl, sql, sql.includes("$1") ? [ticketId] : []),
+      ).rejects.toMatchObject(IMMUTABLE_VIOLATION);
+
+      expect(await ticketHistoryEntriesOf(databaseUrl, ticketId)).toEqual(
+        before,
+      );
+      await expect(
+        insertTicketHistoryEntry(databaseUrl, {}, ticketId),
+      ).resolves.toBe(ticketId);
+    },
+  );
+
+  it("returns the entries of a ticket in the order they were inserted", async () => {
+    const ticketId = await insertTicketHistoryEntry(databaseUrl);
+
+    await insertTicketHistoryEntry(
+      databaseUrl,
+      {
+        from: "open",
+        to: "in_progress",
+        at: new Date("2026-01-02T00:00:00.000Z"),
+      },
+      ticketId,
+    );
+    await insertTicketHistoryEntry(
+      databaseUrl,
+      {
+        from: "in_progress",
+        to: "resolved",
+        resolutionNote: "done",
+        at: new Date("2026-01-03T00:00:00.000Z"),
+      },
+      ticketId,
+    );
+    const rows = await ticketHistoryEntriesOf(databaseUrl, ticketId);
+    const ids = rows.map((row) => BigInt(String(row["id"])));
+
+    expect(rows.map((row) => row["to_status"])).toEqual([
+      "open",
+      "in_progress",
+      "resolved",
+    ]);
+    expect(ids[0]).toBeLessThan(ids[1] ?? 0n);
+    expect(ids[1]).toBeLessThan(ids[2] ?? 0n);
   });
 });
