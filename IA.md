@@ -65,6 +65,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   spec antes de congelá-la.
 - `spec: 00006`, passo 1: a IA pesquisou ao vivo as versões do `fastify` e do `zod` e as instalou como dependências
   exatas de `apps/api`, explicando cada passo.
+- `spec: 00006`, passo 2: a IA escreveu fora do repositório a sonda com os casos dos critérios 1 a 3 e deu exemplos de
+  sintaxe de TypeScript sobre outros domínios (interface, classe que a implementa, consulta parametrizada, `map` e
+  transação). A IA escreveu o `pool.ts` e os corpos dos testes de integração do pool e do repositório, a partir das
+  linhas da sonda.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -186,6 +190,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   o mapeador de erros do passo 4 precisa cobrir esse caso. O `npm ci` não alterou o lockfile e o `check` passou. O
   `npm audit` listava os mesmos avisos moderados antes e depois da instalação, nenhum dos pacotes novos, e o CI só
   reprova de `high` para cima.
+- `spec: 00006`, passo 2: a sonda de dez linhas partiu com uma falha (o arquivo do repositório não existia) e terminou
+  toda verde com o repositório que escrevi. Os testes de integração do pool e do repositório, que afirmam a gravação
+  atômica (nenhum ticket fica quando o banco recusa a entrada), a ordem do histórico, a ausência do identificador do
+  banco na entrada e o instante igual ao milissegundo, passam no `check`.
 - `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
   de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
   cobrem o que os removidos cobriam.
@@ -359,6 +367,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   que a IA recomendou. Pedi que o identificador numérico das entradas do histórico nunca saia numa resposta, por
   segurança; a IA corrigiu que o `id` do ticket é um UUID v7 e que o `bigint` é o da entrada, e o critério 10 ficou com
   isso. Confirmei que o Zod recuse campo desconhecido e que a gravação das transições fique para a spec da concorrência.
+- `spec: 00006`, passo 2: a IA recomendou três funções que recebem o pool, e escolhi uma classe com o pool no
+  construtor, atrás de uma interface na camada de aplicação. Para o retorno do `insertTicketChange`, a IA recomendou o
+  `StoredTicket` nos dois métodos de leitura e escrita, e escolhi devolver só a referência (`id` e `version`) no
+  `insert`, com `StoredTicket` aninhando `ref` e `ticket`.
 
 ## Onde a IA não entrou
 
@@ -391,3 +403,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00005`, passo 3: o SQL do `00003` (a função de gatilho, os dois gatilhos e a reversão) e a mensagem de erro são
   meus. A IA, como tutora, só apontou o sintoma de cada erro e acrescentou os comentários `pgls-ignore`. Decidi também
   bloquear o `TRUNCATE`, que a spec não pede.
+- `spec: 00006`, passo 2: o contrato `TicketRepository`, os tipos `StoredTicket` e `StoredTicketRef`, as linhas
+  `InsertedTicketRow`, `TicketRow` e `TicketHistoryEntryRow` e os três métodos de `PgTicketRepository`
+  (`findTicketById`, `insertTicketChange`, com a transação, e `listTicketHistoryEntries`) são meus. A IA deu exemplos de
+  sintaxe de TypeScript, escreveu a mensagem de um erro e, por pedido meu, renomeou os membros da `TicketRow` e o
+  `clientPool` para `client`.
