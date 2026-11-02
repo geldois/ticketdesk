@@ -63,6 +63,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00006`: a IA me entrevistou sobre o escopo da fatia, o status de cada falha e o formato das respostas, e
   redigiu o rascunho da spec, que o `docs-auditor` revisou antes do commit; os oito achados médios foram corrigidos na
   spec antes de congelá-la.
+- `spec: 00006`, passo 1: a IA pesquisou ao vivo as versões do `fastify` e do `zod` e as instalou como dependências
+  exatas de `apps/api`, explicando cada passo.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -178,6 +180,12 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   um `.mts` leu a imagem do `db` de um compose com outro serviço escrito antes do `db`. Os testes novos do leitor
   afirmam a imagem do `db` em qualquer posição e a recusa de um `db` sem imagem, de outro nome de serviço, de um arquivo
   sem `services` e de um arquivo vazio.
+- `spec: 00006`, passo 1: a IA provou o `fastify` e o `zod` fora do repositório, com o Node do projeto: uma rota `POST`
+  com `inject` respondeu 201 a um corpo válido e 400 `application/problem+json` a um corpo com campo a mais
+  (`strictObject`), e o `fastify` respondeu 400 sozinho a um JSON com sintaxe inválida, com o corpo de erro dele, então
+  o mapeador de erros do passo 4 precisa cobrir esse caso. O `npm ci` não alterou o lockfile e o `check` passou. O
+  `npm audit` listava os mesmos avisos moderados antes e depois da instalação, nenhum dos pacotes novos, e o CI só
+  reprova de `high` para cima.
 - `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
   de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
   cobrem o que os removidos cobriam.
