@@ -10,6 +10,7 @@ RUN npm ci --omit=dev --workspace apps/api
 
 COPY apps/api/migrations apps/api/migrations
 COPY apps/api/scripts/migrate.ts apps/api/scripts/
+COPY apps/api/src/config/errors.ts apps/api/src/config/settings.ts apps/api/src/config/
 COPY apps/api/src/infrastructure/migrations.ts apps/api/src/infrastructure/
 
 USER node
