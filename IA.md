@@ -60,6 +60,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   vivo que a tag da imagem do Node existe.
 - `spec: 00005`, passo 1, reaberto: a meu pedido, a IA trocou o leitor da imagem do `compose.yaml` por um parser de
   YAML, pesquisou a versão do pacote `yaml` ao vivo e reescreveu os testes do leitor.
+- `spec: 00006`: a IA me entrevistou sobre o escopo da fatia, o status de cada falha e o formato das respostas, e
+  redigiu o rascunho da spec, que o `docs-auditor` revisou antes do commit; os oito achados médios foram corrigidos na
+  spec antes de congelá-la.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -343,6 +346,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   fixar a versão do PostgreSQL numa variável do `.env.example`. A IA recomendou contra (o `.env` é por máquina, o CI não
   o tem e o `compose.yaml` deixaria de ser dono da imagem) e propôs ler o serviço `db` pelo nome. Aceitei e escolhi o
   parser de YAML em vez de uma regex presa ao bloco do `db`.
+- `spec: 00006`: escolhi a fatia fina (repositório, criar e ler) e o repositório à mão, 400 para corpo malformado e 422
+  para regra do domínio, 400 para um `:id` que não é UUID e 404 para um que não existe, e o histórico em rota própria,
+  que a IA recomendou. Pedi que o identificador numérico das entradas do histórico nunca saia numa resposta, por
+  segurança; a IA corrigiu que o `id` do ticket é um UUID v7 e que o `bigint` é o da entrada, e o critério 10 ficou com
+  isso. Confirmei que o Zod recuse campo desconhecido e que a gravação das transições fique para a spec da concorrência.
 
 ## Onde a IA não entrou
 
