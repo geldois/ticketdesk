@@ -3,10 +3,7 @@ import type {
   TicketChange,
   TicketHistoryEntry,
 } from "../../../domain/ticket.ts";
-import type {
-  StoredTicket,
-  StoredTicketRef,
-} from "../wrappers/stored-ticket.ts";
+import type { StoredTicket, StoredTicketRef } from "../../stored-ticket.ts";
 
 export interface TicketRepository {
   findTicketById(ticketId: UUID): Promise<StoredTicket | null>;

@@ -1,5 +1,5 @@
 import type { UUID } from "node:crypto";
-import type { Ticket } from "../../../domain/ticket.ts";
+import type { Ticket } from "../domain/ticket.ts";
 
 export interface StoredTicket {
   readonly ref: StoredTicketRef;

@@ -3,7 +3,7 @@ import type { TicketRepository } from "../../application/contracts/repositories/
 import type {
   StoredTicket,
   StoredTicketRef,
-} from "../../application/contracts/wrappers/stored-ticket.ts";
+} from "../../application/stored-ticket.ts";
 import type {
   Ticket,
   TicketChange,

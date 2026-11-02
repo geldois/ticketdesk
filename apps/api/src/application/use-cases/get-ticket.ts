@@ -1,6 +1,6 @@
 import type { UUID } from "node:crypto";
 import type { TicketRepository } from "../contracts/repositories/ticket-repository.ts";
-import type { StoredTicket } from "../contracts/wrappers/stored-ticket.ts";
+import type { StoredTicket } from "../stored-ticket.ts";
 import { TicketNotFoundError } from "../errors.ts";
 
 export class GetTicketUseCase {
