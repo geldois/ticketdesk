@@ -35,6 +35,19 @@ O que a IA de fato fez em cada spec está em [IA.md](IA.md).
 
 ## Como rodar
 
+### Só rodar
+
+Precisa apenas de um container runtime, sem Node e sem `npm ci`. Na raiz, um comando por vez (`docker compose` é o
+comando de compose do seu container runtime):
+
+```sh
+cp .env.example .env
+docker compose up -d
+```
+
+O `cp` cria o `.env` com a variável que o compose exige, e o `docker compose up -d` sobe o `db`, constrói a imagem do
+`migrate` e aplica as migrations. Os detalhes do banco estão em "Banco e migrations".
+
 ### Para quem desenvolve
 
 O projeto usa uma única versão de Node, exata, declarada em [.node-version](.node-version) e em `engines.node` do
@@ -48,8 +61,7 @@ Os testes de banco sobem um PostgreSQL num contêiner, então o desenvolvimento 
 container runtime com o socket no lugar padrão não pede configuração. Com o socket em outro lugar, a variável de
 ambiente `DOCKER_HOST` aponta para ele, como a documentação do `testcontainers` descreve.
 
-Do clone ao banco com as migrations aplicadas, na raiz, um comando por vez e nesta ordem (`docker compose` é o comando
-de compose do seu container runtime):
+Do clone ao repositório conferido, com o banco migrado, na raiz, um comando por vez e nesta ordem:
 
 ```sh
 npm ci
