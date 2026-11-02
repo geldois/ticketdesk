@@ -1,0 +1,9 @@
+**
+!.npmrc
+!package.json
+!package-lock.json
+!apps/api/package.json
+!apps/api/migrations
+!apps/api/scripts/migrate.ts
+!apps/api/src/infrastructure/migrations.ts
+!packages/contract/package.json

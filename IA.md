@@ -54,6 +54,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00005`, passo 3: a IA escreveu fora do repositório a sonda com os casos dos critérios 7 e 8 e, como tutora, deu
   o caminho (função de gatilho e gatilho) e um exemplo de sintaxe sobre outra tabela. O SQL é meu. Por ordem minha, a IA
   escreveu os corpos dos testes de integração, no mesmo commit, e rodou o linter para explicar os avisos dos gatilhos.
+- `spec: 00005`, passo 5: por ordem minha, a IA escreveu o serviço `migrate` passo a passo, explicando cada peça: a
+  sonda fora do repositório com os casos do critério 14, o script de entrada `migrate.ts`, o `apps/api/Dockerfile`, o
+  `.dockerignore`, o serviço no `compose.yaml`, os corpos dos testes do script e as seções do `README.md`. Conferiu ao
+  vivo que a tag da imagem do Node existe.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -162,6 +166,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   toda verde com o meu `00003`. Os testes de integração afirmam o erro do gatilho (código e mensagem) e a linha igual
   depois do `UPDATE` e do `DELETE`, em uma linha e em todas, e depois do `TRUNCATE` da tabela e do `TRUNCATE` do
   `ticket` em cascata, além da ordem por `id`. A reversão do `00003` roda no teste de aplicar, reverter e aplicar.
+- `spec: 00005`, passo 5: a sonda do critério 14 partiu com cinco linhas vermelhas e terminou toda verde, com o compose
+  de verdade: a recusa sem a senha, a saída 0 e as duas tabelas num banco novo, a repetição sem mudar o esquema e a
+  saída diferente de 0 com o banco parado. Os testes do script, que o rodam como processo, passam no `check`.
 - `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
   de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
   cobrem o que os removidos cobriam.
@@ -232,6 +239,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   um nome que prometia a imutabilidade inteira. Percebi pelo nome e apontei; a IA concordou e propôs nomear os dois pelo
   nível em que atuam, `row` e `table`. Também escreveu no motivo do `pgls-ignore` que a tabela era nova e vazia, o que
   só vale no primeiro deploy; apontei e a IA tirou essa parte.
+- `spec: 00005`, passo 5: a sonda do critério 14 reprovou a recusa sem a senha por culpa dela e não do compose: o
+  compose lê o `.env` da pasta sozinho, e o parâmetro com valor padrão trocava o `undefined` pela senha de teste. A IA
+  percebeu ao rodar o compose cru, que recusava e nomeava a variável, e corrigiu a sonda sem mudar o caso. Antes disso,
+  a primeira versão do script de entrada lia uma `DATABASE_URL` que o compose montaria com a senha, e uma senha com `@`
+  ou `/` a quebraria; a IA trocou por variáveis `PG*` separadas antes de eu pedir.
 
 ## Uma decisão minha
 
@@ -316,6 +328,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   `00001-create-ticket.sql`, sem underline e com cinco dígitos, como os números das specs. Para os testes do `migrate`,
   que trazem as próprias migrations, a IA recomendou um banco vazio no lugar de uma tabela de controle à parte, e
   aceitei; o parâmetro da função comum é uma união de texto em vez do `bool` que eu tinha proposto.
+- `spec: 00005`, passo 5: a IA recomendava uma imagem do Node com o repositório montado, e escolhi o `Dockerfile`
+  próprio, porque quero que quem clonar rode o comando sem nada instalado além do container runtime, e aceitei o custo
+  de um build. O caminho `apps/api/Dockerfile`, com o contexto na raiz, também é decisão minha. Mantive
+  `PGPASSWORD=postgres` no `.env.example` por ergonomia, contra o critério 15 da spec, e tirei o teste que o provava,
+  por frágil; a IA tinha escrito esse teste e o apontou como reprovado.
 
 ## Onde a IA não entrou
 

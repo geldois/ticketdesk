@@ -58,6 +58,18 @@ Comandos, executados na raiz:
 
 O que o CI roda, incluindo a auditoria de dependências, está em [.github/workflows/](.github/workflows/).
 
+### Banco e migrations
+
+O serviço `migrate` do `compose.yaml` aplica as migrations de `apps/api/migrations/` e sai. Ele sobe o `db`, espera o
+banco ficar saudável, aplica o que falta e termina com 0; rodar de novo não muda nada; com o banco inalcançável, termina
+com código diferente de 0. A imagem dele é construída por `apps/api/Dockerfile`, então não pede `npm ci` na máquina.
+
+O compose exige `PGPASSWORD` no ambiente, sem valor padrão, para o `db` e para o `migrate`; sem ela, recusa subir. Para
+desenvolver, copie o `.env.example` para `.env`, que o git ignora e o compose lê sozinho; a senha dele é só de
+desenvolvimento e não protege nada. Com a variável definida, o comando, na raiz, é `docker compose run --rm migrate`, no
+comando de compose do seu container runtime. O `npm run check` não precisa do compose nem da variável: os testes de
+banco sobem o próprio contêiner, numa porta livre.
+
 ### Editor com SQL (opcional)
 
 O `postgres-language-server.jsonc`, na raiz, guarda as regras de lint e de formato do SQL. O `npm run check` as aplica
@@ -67,8 +79,8 @@ um banco acessível, soma as verificações que dependem dele.
 
 Para completar tabelas e colunas, o servidor precisa de um banco acessível e de mais dois passos:
 
-1. Tenha `PGPASSWORD` no ambiente do editor, a mesma variável que o `compose.yaml` exige para o serviço `db`. A senha
-   nunca entra no repositório.
+1. Tenha `PGPASSWORD` no ambiente do editor, a mesma variável que o `compose.yaml` exige para o serviço `db`. A do
+   `.env.example` é só de desenvolvimento; uma senha de verdade nunca entra no repositório.
 2. Suba o serviço `db` com o comando de compose do seu container runtime. Ele publica a porta só no endereço de
    loopback, em `127.0.0.1:55432`, e é nessa porta que a configuração aponta.
 
@@ -109,3 +121,4 @@ Só as decisões de alto ROI, da mais antiga para a mais recente.
 | O lint e o formato do SQL pelo Postgres Language Server, um pacote do npm que também é o servidor de linguagem do editor, com um arquivo de configuração versionado e o `check` rodando sem banco | `sqlfluff` ou `sqruff`, que não vêm pelo npm e ficariam fora do lockfile, ou nenhum linter de SQL | Um projeto ainda jovem, com o formatador reescrevendo o SQL (`integer` vira `int`); em troca o editor e o CI usam as mesmas regras e a ferramenta entra pelo lockfile, com versão exata |
 | O banco espelha a estrutura, o tamanho, as transições aceitas e a presença de nota e motivo, e deixa o formato de caractere para o domínio | Espelhar também o formato e os caracteres de controle no banco | Um texto com caractere que o domínio recusa pode entrar no banco; em troca o banco e o domínio não divergem em regex que o PostgreSQL não equipara, e o domínio fica como único dono dos caracteres |
 | A imutabilidade do histórico pelo próprio banco, com gatilhos que recusam `UPDATE`, `DELETE` e `TRUNCATE` em `ticket_history_entry` | Recusar na aplicação, ou revogar as permissões do papel da aplicação | O linter avisa dos gatilhos e das reversões, e cada um leva um `pgls-ignore`; em troca nenhum cliente do banco, nem um `psql`, altera o histórico, e o dono da tabela só o altera derrubando o gatilho |
+| O `migrate` como serviço de execução única do compose, com imagem própria e a conexão em variáveis `PG*` separadas | Migrar na subida da API, uma imagem do Node com o repositório montado (exige `npm ci` no host) ou uma `DATABASE_URL` única | Um Dockerfile e um build a manter, e o esquema nunca muda como efeito colateral de subir a API; em troca roda em qualquer máquina sem instalar nada além do container runtime, e a senha nunca precisa de escape de URL |

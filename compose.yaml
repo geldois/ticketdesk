@@ -13,5 +13,20 @@ services:
       timeout: 2s
       retries: 30
 
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      PGHOST: db
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: ${PGPASSWORD:?set PGPASSWORD in the environment}
+      PGDATABASE: postgres
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
 volumes:
   db-data:
