@@ -48,6 +48,19 @@ Os testes de banco sobem um PostgreSQL num contêiner, então o desenvolvimento 
 container runtime com o socket no lugar padrão não pede configuração. Com o socket em outro lugar, a variável de
 ambiente `DOCKER_HOST` aponta para ele, como a documentação do `testcontainers` descreve.
 
+Do clone ao banco com as migrations aplicadas, na raiz, um comando por vez e nesta ordem (`docker compose` é o comando
+de compose do seu container runtime):
+
+```sh
+npm ci
+cp .env.example .env
+docker compose up -d
+npm run check
+```
+
+O `npm ci` instala as dependências, o `cp` cria o `.env` com a variável que o compose exige, o `docker compose up -d`
+sobe o `db`, constrói a imagem do `migrate` e aplica as migrations, e o `npm run check` confere o repositório.
+
 Comandos, executados na raiz:
 
 | Comando | O que faz |
@@ -66,9 +79,9 @@ com código diferente de 0. A imagem dele é construída por `apps/api/Dockerfil
 
 O compose exige `PGPASSWORD` no ambiente, sem valor padrão, para o `db` e para o `migrate`; sem ela, recusa subir. Para
 desenvolver, copie o `.env.example` para `.env`, que o git ignora e o compose lê sozinho; a senha dele é só de
-desenvolvimento e não protege nada. Com a variável definida, o comando, na raiz, é `docker compose run --rm migrate`, no
-comando de compose do seu container runtime. O `npm run check` não precisa do compose nem da variável: os testes de
-banco sobem o próprio contêiner, numa porta livre.
+desenvolvimento e não protege nada. Para aplicar as migrations de novo, com o `db` no ar, o comando, na raiz, é
+`docker compose run --rm migrate`. O `npm run check` não precisa do compose nem da variável: os testes de banco sobem o
+próprio contêiner, numa porta livre.
 
 ### Editor com SQL (opcional)
 
