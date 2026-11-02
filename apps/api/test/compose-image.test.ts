@@ -5,29 +5,35 @@ import { describe, expect, it, inject } from "vitest";
 import { parseDatabaseImage, readDatabaseImage } from "./compose-image.ts";
 
 describe("readDatabaseImage", () => {
-  it("uses the image declared in compose.yaml", () => {
-    const compose = readFileSync(
+  it("reads the image that compose.yaml declares for the db service and hands it to the containers", () => {
+    const composeText = readFileSync(
       new URL("../../../compose.yaml", import.meta.url),
       "utf8",
     );
-    const declared = /image:\s*(\S+)/.exec(compose)?.[1];
+    const image = readDatabaseImage();
 
-    expect(declared).toBeDefined();
-    expect(readDatabaseImage()).toBe(declared);
-    expect(inject("databaseImage")).toBe(declared);
+    expect(composeText).toContain(`    image: ${image}\n`);
+    expect(inject("databaseImage")).toBe(image);
   });
 });
 
 describe("parseDatabaseImage", () => {
-  it("returns the image of the first service that declares one", () => {
+  it("returns the image of the db service, whatever its position among the services", () => {
     expect(
-      parseDatabaseImage("services:\n  db:\n    image: postgres:1.2\n"),
+      parseDatabaseImage(
+        "services:\n  api:\n    image: node:1.0\n  db:\n    image: postgres:1.2\n",
+      ),
     ).toBe("postgres:1.2");
   });
 
-  it("refuses a compose file that declares no image", () => {
-    expect(() => parseDatabaseImage("services:\n  db: {}\n")).toThrow(
-      "compose.yaml declares no image",
+  it.each([
+    ["a db service without an image", "services:\n  db: {}\n"],
+    ["a service that is not named db", "services:\n  api:\n    image: x:1\n"],
+    ["no services", "name: empty\n"],
+    ["an empty file", ""],
+  ])("refuses a compose file with %s", (_description, composeText) => {
+    expect(() => parseDatabaseImage(composeText)).toThrow(
+      "compose.yaml declares no image for the db service",
     );
   });
 });

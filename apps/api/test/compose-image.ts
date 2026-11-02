@@ -1,11 +1,22 @@
 import { readFileSync } from "node:fs";
 
+import { parse } from "yaml";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
 export function parseDatabaseImage(composeText: string): string {
-  const match = /^\s*image:\s*(\S+)\s*$/m.exec(composeText);
-  if (match?.[1] === undefined) {
-    throw new Error("compose.yaml declares no image");
+  const compose: unknown = parse(composeText);
+  const services = isRecord(compose) ? compose["services"] : undefined;
+  const database = isRecord(services) ? services["db"] : undefined;
+  const image = isRecord(database) ? database["image"] : undefined;
+
+  if (typeof image !== "string") {
+    throw new Error("compose.yaml declares no image for the db service");
   }
-  return match[1];
+
+  return image;
 }
 
 export function readDatabaseImage(): string {

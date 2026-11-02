@@ -58,6 +58,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   sonda fora do repositório com os casos do critério 14, o script de entrada `migrate.ts`, o `apps/api/Dockerfile`, o
   `.dockerignore`, o serviço no `compose.yaml`, os corpos dos testes do script e as seções do `README.md`. Conferiu ao
   vivo que a tag da imagem do Node existe.
+- `spec: 00005`, passo 1, reaberto: a meu pedido, a IA trocou o leitor da imagem do `compose.yaml` por um parser de
+  YAML, pesquisou a versão do pacote `yaml` ao vivo e reescreveu os testes do leitor.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -169,6 +171,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00005`, passo 5: a sonda do critério 14 partiu com cinco linhas vermelhas e terminou toda verde, com o compose
   de verdade: a recusa sem a senha, a saída 0 e as duas tabelas num banco novo, a repetição sem mudar o esquema e a
   saída diferente de 0 com o banco parado. Os testes do script, que o rodam como processo, passam no `check`.
+- `spec: 00005`, passo 1, reaberto: a IA provou o `yaml` fora do repositório, com o Node do projeto: um `import` ESM de
+  um `.mts` leu a imagem do `db` de um compose com outro serviço escrito antes do `db`. Os testes novos do leitor
+  afirmam a imagem do `db` em qualquer posição e a recusa de um `db` sem imagem, de outro nome de serviço, de um arquivo
+  sem `services` e de um arquivo vazio.
 - `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
   de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
   cobrem o que os removidos cobriam.
@@ -333,6 +339,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   de um build. O caminho `apps/api/Dockerfile`, com o contexto na raiz, também é decisão minha. Mantive
   `PGPASSWORD=postgres` no `.env.example` por ergonomia, contra o critério 15 da spec, e tirei o teste que o provava,
   por frágil; a IA tinha escrito esse teste e o apontou como reprovado.
+- `spec: 00005`, passo 1, reaberto: apontei que o leitor da imagem dependia de o `db` vir primeiro no arquivo e propus
+  fixar a versão do PostgreSQL numa variável do `.env.example`. A IA recomendou contra (o `.env` é por máquina, o CI não
+  o tem e o `compose.yaml` deixaria de ser dono da imagem) e propôs ler o serviço `db` pelo nome. Aceitei e escolhi o
+  parser de YAML em vez de uma regex presa ao bloco do `db`.
 
 ## Onde a IA não entrou
 
