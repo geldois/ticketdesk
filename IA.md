@@ -69,6 +69,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   sintaxe de TypeScript sobre outros domínios (interface, classe que a implementa, consulta parametrizada, `map` e
   transação). A IA escreveu o `pool.ts` e os corpos dos testes de integração do pool e do repositório, a partir das
   linhas da sonda.
+- `spec: 00006`, passo 3: a IA escreveu fora do repositório a sonda do passo e orientou a sintaxe de TypeScript enquanto
+  eu escrevia os casos de uso. A IA escreveu o `application/errors.ts` e os testes dos erros e dos três casos de uso,
+  contra o PostgreSQL real e com o relógio por argumento.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -194,6 +197,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   toda verde com o repositório que escrevi. Os testes de integração do pool e do repositório, que afirmam a gravação
   atômica (nenhum ticket fica quando o banco recusa a entrada), a ordem do histórico, a ausência do identificador do
   banco na entrada e o instante igual ao milissegundo, passam no `check`.
+- `spec: 00006`, passo 3: a sonda partiu vermelha (os casos de uso não existiam) e terminou verde com os que escrevi. Os
+  testes afirmam o 404 de um `id` inexistente no `GetTicketUseCase` e no histórico, e a recusa do domínio saindo como
+  erro do domínio pela criação; o `check` passou.
 - `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
   de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
   cobrem o que os removidos cobriam.
@@ -371,6 +377,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   construtor, atrás de uma interface na camada de aplicação. Para o retorno do `insertTicketChange`, a IA recomendou o
   `StoredTicket` nos dois métodos de leitura e escrita, e escolhi devolver só a referência (`id` e `version`) no
   `insert`, com `StoredTicket` aninhando `ref` e `ticket`.
+- `spec: 00006`, passo 3: a IA escreveu cinco casos de recusa do domínio nos testes da criação; mandei reduzir a um,
+  porque os outros repetiam regras que a suíte do domínio já cobre.
 
 ## Onde a IA não entrou
 
@@ -408,3 +416,6 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   (`findTicketById`, `insertTicketChange`, com a transação, e `listTicketHistoryEntries`) são meus. A IA deu exemplos de
   sintaxe de TypeScript, escreveu a mensagem de um erro e, por pedido meu, renomeou os membros da `TicketRow` e o
   `clientPool` para `client`.
+- `spec: 00006`, passo 3: `CreateTicketUseCase`, `GetTicketUseCase` e `ListTicketHistoryEntriesUseCase` são meus, com o
+  repositório no construtor e o 404 decidido no caso de uso. A IA orientou a sintaxe de TypeScript e escreveu o
+  `application/errors.ts` e os testes.
