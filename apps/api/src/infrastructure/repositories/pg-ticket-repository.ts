@@ -40,14 +40,14 @@ interface TicketHistoryEntryRow {
 }
 
 export class PgTicketRepository implements TicketRepository {
-  readonly #pool: Pool;
+  readonly #pgPool: Pool;
 
-  constructor(pool: Pool) {
-    this.#pool = pool;
+  constructor(pgPool: Pool) {
+    this.#pgPool = pgPool;
   }
 
   async findTicketById(ticketId: UUID): Promise<StoredTicket | null> {
-    const result = await this.#pool.query<TicketRow>(
+    const result = await this.#pgPool.query<TicketRow>(
       `SELECT id, customer_name, description, channel, priority, status, resolution_note, version, created_at FROM ticket WHERE id = $1`,
       [ticketId],
     );
@@ -78,7 +78,7 @@ export class PgTicketRepository implements TicketRepository {
   async insertTicketChange(
     ticketChange: TicketChange,
   ): Promise<StoredTicketRef> {
-    const client = await this.#pool.connect();
+    const client = await this.#pgPool.connect();
 
     try {
       await client.query(`BEGIN`);
@@ -139,7 +139,7 @@ export class PgTicketRepository implements TicketRepository {
   async listTicketHistoryEntries(
     ticketId: UUID,
   ): Promise<TicketHistoryEntry[]> {
-    const result = await this.#pool.query<TicketHistoryEntryRow>(
+    const result = await this.#pgPool.query<TicketHistoryEntryRow>(
       `SELECT from_status, to_status, resolution_note, reopen_reason, at FROM ticket_history_entry WHERE ticket_id = $1 ORDER BY id`,
       [ticketId],
     );

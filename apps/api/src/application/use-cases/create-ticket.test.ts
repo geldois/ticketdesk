@@ -7,7 +7,7 @@ import {
 } from "../../../test/database.ts";
 import { DomainError } from "../../domain/errors.ts";
 import { PgTicketRepository } from "../../infrastructure/repositories/pg-ticket-repository.ts";
-import { createPool } from "../../infrastructure/pool.ts";
+import { createPgPool } from "../../infrastructure/pool.ts";
 import { CreateTicketUseCase } from "./create-ticket.ts";
 import type { CreateTicketInput } from "./create-ticket.ts";
 
@@ -24,7 +24,7 @@ const INPUT: CreateTicketInput = {
 
 describe("CreateTicketUseCase", () => {
   let databaseUrl: string;
-  let pool: Pool;
+  let pgPool: Pool;
   let repository: PgTicketRepository;
   let createTicket: CreateTicketUseCase;
 
@@ -38,13 +38,13 @@ describe("CreateTicketUseCase", () => {
 
   beforeAll(async () => {
     databaseUrl = await createMigratedTestDatabase();
-    pool = createPool(databaseUrl);
-    repository = new PgTicketRepository(pool);
+    pgPool = createPgPool(databaseUrl);
+    repository = new PgTicketRepository(pgPool);
     createTicket = new CreateTicketUseCase(repository);
   });
 
   afterAll(async () => {
-    await pool.end();
+    await pgPool.end();
   });
 
   it("returns the stored ticket: a generated id, version 1 and an open ticket with the normalized text", async () => {

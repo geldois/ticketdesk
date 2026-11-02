@@ -5,7 +5,7 @@ import {
   createMigratedTestDatabase,
   queryRows,
 } from "../../../test/database.ts";
-import { createPool } from "../../infrastructure/pool.ts";
+import { createPgPool } from "../../infrastructure/pool.ts";
 import { PgTicketRepository } from "../../infrastructure/repositories/pg-ticket-repository.ts";
 import { TicketNotFoundError } from "../errors.ts";
 import type { CreateTicketInput } from "./create-ticket.ts";
@@ -25,20 +25,20 @@ const INPUT: CreateTicketInput = {
 
 describe("ListTicketHistoryEntriesUseCase", () => {
   let databaseUrl: string;
-  let pool: Pool;
+  let pgPool: Pool;
   let createTicket: CreateTicketUseCase;
   let listTicketHistoryEntries: ListTicketHistoryEntriesUseCase;
 
   beforeAll(async () => {
     databaseUrl = await createMigratedTestDatabase();
-    pool = createPool(databaseUrl);
-    const repository = new PgTicketRepository(pool);
+    pgPool = createPgPool(databaseUrl);
+    const repository = new PgTicketRepository(pgPool);
     createTicket = new CreateTicketUseCase(repository);
     listTicketHistoryEntries = new ListTicketHistoryEntriesUseCase(repository);
   });
 
   afterAll(async () => {
-    await pool.end();
+    await pgPool.end();
   });
 
   it("returns the creation entry of a new ticket", async () => {

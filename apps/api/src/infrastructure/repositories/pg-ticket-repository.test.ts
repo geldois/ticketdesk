@@ -7,7 +7,7 @@ import {
 } from "../../../test/database.ts";
 import { createTicketChange } from "../../domain/lifecycle.ts";
 import type { TicketChange } from "../../domain/ticket.ts";
-import { createPool } from "../pool.ts";
+import { createPgPool } from "../pool.ts";
 import { PgTicketRepository } from "./pg-ticket-repository.ts";
 
 const INSTANT = new Date("2026-01-01T10:20:30.123Z");
@@ -30,17 +30,17 @@ function newTicketChange(customerName = "Ana"): TicketChange {
 
 describe("PgTicketRepository", () => {
   let databaseUrl: string;
-  let pool: Pool;
+  let pgPool: Pool;
   let repository: PgTicketRepository;
 
   beforeAll(async () => {
     databaseUrl = await createMigratedTestDatabase();
-    pool = createPool(databaseUrl);
-    repository = new PgTicketRepository(pool);
+    pgPool = createPgPool(databaseUrl);
+    repository = new PgTicketRepository(pgPool);
   });
 
   afterAll(async () => {
-    await pool.end();
+    await pgPool.end();
   });
 
   describe("insertTicketChange", () => {

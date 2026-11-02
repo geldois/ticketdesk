@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createMigratedTestDatabase } from "../../../test/database.ts";
 import { DomainError } from "../../domain/errors.ts";
-import { createPool } from "../../infrastructure/pool.ts";
+import { createPgPool } from "../../infrastructure/pool.ts";
 import { PgTicketRepository } from "../../infrastructure/repositories/pg-ticket-repository.ts";
 import { ApplicationError, TicketNotFoundError } from "../errors.ts";
 import { CreateTicketUseCase } from "./create-ticket.ts";
@@ -13,20 +13,20 @@ const INSTANT = new Date("2026-01-01T10:20:30.123Z");
 const UNKNOWN_TICKET_ID = "019a0000-0000-7000-8000-000000000000";
 
 describe("GetTicketUseCase", () => {
-  let pool: Pool;
+  let pgPool: Pool;
   let createTicket: CreateTicketUseCase;
   let getTicket: GetTicketUseCase;
 
   beforeAll(async () => {
     const databaseUrl = await createMigratedTestDatabase();
-    pool = createPool(databaseUrl);
-    const repository = new PgTicketRepository(pool);
+    pgPool = createPgPool(databaseUrl);
+    const repository = new PgTicketRepository(pgPool);
     createTicket = new CreateTicketUseCase(repository);
     getTicket = new GetTicketUseCase(repository);
   });
 
   afterAll(async () => {
-    await pool.end();
+    await pgPool.end();
   });
 
   it("returns the stored ticket that creating returned", async () => {
