@@ -9,6 +9,12 @@ export interface CreateTicketRequest {
   readonly priority: TicketPriority;
 }
 
+export interface TransitTicketRequest {
+  readonly to: string;
+  readonly resolutionNote: string | null;
+  readonly reopenReason: string | null;
+}
+
 export interface TicketResponse {
   readonly id: string;
   readonly customerName: string;
@@ -19,6 +25,15 @@ export interface TicketResponse {
   readonly resolutionNote: string | null;
   readonly version: number;
   readonly createdAt: string;
+}
+
+export interface VersionConflictResponse {
+  readonly type: string;
+  readonly title: string;
+  readonly status: 409;
+  readonly code: "version_conflict";
+  readonly detail: string;
+  readonly ticket: TicketResponse;
 }
 
 export interface TicketHistoryEntryResponse {

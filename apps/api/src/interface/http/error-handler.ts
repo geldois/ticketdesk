@@ -4,8 +4,10 @@ import { DomainError, type DomainErrorCode } from "../../domain/errors.ts";
 import {
   ApplicationError,
   type ApplicationErrorCode,
+  VersionConflictError,
 } from "../../application/errors.ts";
 import { InterfaceError, type InterfaceErrorCode } from "../errors.ts";
+import { presentTicket } from "./presenters.ts";
 
 const ERROR_RESPONSE_TYPE = "application/problem+json";
 const ERROR_TYPE = "about:blank";
@@ -32,6 +34,8 @@ const STATUS_BY_FAMILY_ERROR_CODE = {
   version_conflict: 409,
   invalid_request: 400,
   invalid_ticket_id: 400,
+  missing_if_match: 428,
+  invalid_if_match: 400,
 } as const satisfies Record<FamilyErrorCode, number>;
 
 export function handleError(
@@ -39,6 +43,16 @@ export function handleError(
   request: FastifyRequest,
   response: FastifyReply,
 ): FastifyReply {
+  if (error instanceof VersionConflictError) {
+    return sendError(
+      response,
+      STATUS_BY_FAMILY_ERROR_CODE[error.code],
+      error.code,
+      error.message,
+      { ticket: presentTicket(error.currentStoredTicket) },
+    );
+  }
+
   if (
     error instanceof DomainError ||
     error instanceof ApplicationError ||
@@ -81,6 +95,7 @@ function sendError(
   status: number,
   code: ErrorCode,
   detail: string,
+  members: Record<string, unknown> = {},
 ): FastifyReply {
   return response
     .code(status)
@@ -91,5 +106,6 @@ function sendError(
       status,
       code,
       detail,
+      ...members,
     });
 }

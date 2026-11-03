@@ -1,6 +1,8 @@
 export const INTERFACE_ERROR_CODES = [
   "invalid_request",
   "invalid_ticket_id",
+  "missing_if_match",
+  "invalid_if_match",
 ] as const;
 
 export type InterfaceErrorCode = (typeof INTERFACE_ERROR_CODES)[number];
@@ -12,10 +14,10 @@ export abstract class InterfaceError extends Error {
 export class InvalidRequestError extends InterfaceError {
   readonly code = "invalid_request";
 
-  constructor() {
-    super(
-      "request body must be an object with customerName, description, channel and priority as text",
-    );
+  constructor(
+    message = "request body must be an object with customerName, description, channel and priority as text",
+  ) {
+    super(message);
   }
 }
 
@@ -24,5 +26,21 @@ export class InvalidTicketIdError extends InterfaceError {
 
   constructor() {
     super("ticket id must be a UUID");
+  }
+}
+
+export class MissingIfMatchError extends InterfaceError {
+  readonly code = "missing_if_match";
+
+  constructor() {
+    super("If-Match header with the expected version is required");
+  }
+}
+
+export class InvalidIfMatchError extends InterfaceError {
+  readonly code = "invalid_if_match";
+
+  constructor() {
+    super("If-Match must be a positive integer between double quotes");
   }
 }

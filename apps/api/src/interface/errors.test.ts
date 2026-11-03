@@ -5,13 +5,17 @@ import { DomainError } from "../domain/errors.ts";
 import {
   INTERFACE_ERROR_CODES,
   InterfaceError,
+  InvalidIfMatchError,
   InvalidRequestError,
   InvalidTicketIdError,
+  MissingIfMatchError,
 } from "./errors.ts";
 
 const ERRORS = [
   { error: InvalidRequestError, code: "invalid_request" },
   { error: InvalidTicketIdError, code: "invalid_ticket_id" },
+  { error: MissingIfMatchError, code: "missing_if_match" },
+  { error: InvalidIfMatchError, code: "invalid_if_match" },
 ] as const;
 
 describe("interface errors", () => {

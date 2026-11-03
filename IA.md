@@ -84,6 +84,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   privado de leitura do `TransitTicketUseCase` também veio dela, por ordem minha.
 - `spec: 00007`, passo 3: a IA escreveu fora do repositório a sonda do critério 3 e completou as asserções do estado
   final do teste de conflito do repositório.
+- `spec: 00007`, passo 4: a IA escreveu fora do repositório a sonda dos critérios 5 a 9 e 11 e, por delegação minha, a
+  rota `POST /tickets/:id/transitions`, a leitura do `If-Match`, o `ETag`, os dois erros novos, o membro `ticket` do
+  409, os tipos do contrato e os testes do servidor, explicando cada peça.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -220,6 +223,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00006`, passo 4, "Como rodar": a IA provou num projeto descartável que `docker compose run --rm migrate` só
   devolve o controle depois da migração e que `docker compose up -d migrate` não espera por ela, e que um segundo
   `up -d` reconstrói a imagem da `api`. O README usa o primeiro no caminho de quem desenvolve.
+- `spec: 00007`, passo 4: a sonda dos critérios 5 a 9 e 11 ficou vermelha antes da rota, com 16 casos reprovados, e
+  verde depois dela, com os 19 casos aprovados; os testes do servidor repetem esses casos e o `check` passou com a
+  cobertura mínima.
 - `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
   de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
   cobrem o que os removidos cobriam.
@@ -304,6 +310,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   existe: o `from` vem da mesma leitura que passou na comparação da `version`, e a `version` só sobe, então um `null`
   sempre vem com uma `version` diferente. A IA concordou, retirou a sugestão e ficou o `version_conflict` simples da
   spec, sem desvio.
+- `spec: 00007`, passo 4: o caso de ordem das checagens da sonda mandava um JSON quebrado sem `If-Match` e esperava 428,
+  mas o Fastify recusa o JSON antes de a rota rodar, e a resposta é 400. A sonda mostrou o caso vermelho com o código
+  pronto, a IA apresentou as duas saídas e eu aceitei o desvio: o caso passou a usar um JSON válido de forma errada, e o
+  desvio fica declarado no parágrafo do commit.
 
 ## Uma decisão minha
 

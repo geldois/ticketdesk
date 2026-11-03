@@ -21,6 +21,10 @@ export function presentTicket(storedTicket: StoredTicket): TicketResponse {
   };
 }
 
+export function presentETag(storedTicket: StoredTicket): string {
+  return `"${storedTicket.ref.version.toString()}"`;
+}
+
 export function presentTicketHistoryEntry(
   entry: TicketHistoryEntry,
 ): TicketHistoryEntryResponse {
