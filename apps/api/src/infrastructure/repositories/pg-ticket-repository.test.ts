@@ -320,6 +320,56 @@ describe("PgTicketRepository", () => {
       );
       expect(openTransactions).toEqual([]);
     });
+
+    it("ends two concurrent updates at the same version with one winner, the next version and only the winner's entry", async () => {
+      for (let i = 0; i < 20; i++) {
+        const { change, stored } = await storeTicket(
+          `Concurrent Ana ${i.toString()}`,
+        );
+
+        const transitedTicketChange = transitTicketChange(
+          change.ticket,
+          { to: "in_progress", resolutionNote: null, reopenReason: null },
+          INSTANT,
+        );
+        const transitedTicketChangeLater = transitTicketChange(
+          change.ticket,
+          { to: "in_progress", resolutionNote: null, reopenReason: null },
+          LATER_INSTANT,
+        );
+
+        const results = await Promise.all([
+          repository.updateTicketChange(
+            stored.id,
+            stored.version,
+            transitedTicketChange,
+          ),
+          repository.updateTicketChange(
+            stored.id,
+            stored.version,
+            transitedTicketChangeLater,
+          ),
+        ]);
+
+        const winnerAt = results[0] === null ? LATER_INSTANT : INSTANT;
+        expect(results.filter((result) => result === null)).toHaveLength(1);
+        expect(results.find((result) => result !== null)).toEqual({
+          id: stored.id,
+          version: 2,
+        });
+        await expect(
+          repository.findTicketById(stored.id),
+        ).resolves.toMatchObject({
+          ref: { id: stored.id, version: 2 },
+        });
+        const entries = await repository.listTicketHistoryEntries(stored.id);
+        expect(entries.map((entry) => entry.to)).toEqual([
+          "open",
+          "in_progress",
+        ]);
+        expect(entries[1]?.at).toEqual(winnerAt);
+      }
+    });
   });
 
   describe("findTicketById", () => {

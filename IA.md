@@ -82,6 +82,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00007`, passo 2: a IA escreveu fora do repositório a sonda com os casos do critério 4, a classe
   `VersionConflictError`, a entrada 409 do mapeador e, a partir da sonda, os corpos dos testes do caso de uso; o método
   privado de leitura do `TransitTicketUseCase` também veio dela, por ordem minha.
+- `spec: 00007`, passo 3: a IA escreveu fora do repositório a sonda do critério 3 e completou as asserções do estado
+  final do teste de conflito do repositório.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -468,3 +470,5 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   `application/errors.ts` e os testes.
 - `spec: 00006`, passo 4: o `main.ts`, a raiz de composição que monta o contêiner, sobe o servidor e encerra o pool nos
   sinais, é meu.
+- `spec: 00007`, passo 3: escrevi a estrutura do teste de conflito do repositório: as rodadas com um ticket novo cada,
+  as duas gravações disparadas juntas no `Promise.all` com instantes diferentes e a contagem de quem perde.
