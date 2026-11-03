@@ -74,6 +74,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   contra o PostgreSQL real e com o relógio por argumento.
 - `spec: 00006`, passo 4: a IA escreveu o servidor Fastify, as três rotas, os esquemas do Zod, o mapeador de erros em
   `problem+json` e os tipos do contrato, explicando cada peça antes de seguir, e os testes do servidor.
+- `spec: 00007`: a IA me entrevistou sobre o fatiamento da fatia, o formato do `If-Match` e do `ETag`, o que o
+  repositório devolve quando a condição falha e a ordem das checagens, e redigiu o rascunho da spec, que o
+  `docs-auditor` revisou antes do commit; os seis achados médios foram corrigidos na spec antes de congelá-la.
+- `spec: 00007`, passo 1: a IA escreveu fora do repositório a sonda com os casos dos critérios 1 e 2 e, a partir das
+  linhas dela, os corpos dos testes do `updateTicketChange`.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -405,6 +410,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   mapeador preserva o status de qualquer 4xx que o Fastify devolve (por exemplo, o 413 de um corpo grande) sob
   `invalid_request` e colapsa todo 5xx em `internal_error`, em vez de dobrar tudo em 400. Escolhi também a classe
   `Settings`, que lê as variáveis de ambiente num lugar só, no lugar de o pool ler as `PG*` direto.
+- `spec: 00007`, passo 1: pedi para extrair o `INSERT` da entrada do histórico para um método só, usado pelo
+  `insertTicketChange` e pelo `updateTicketChange`, e a IA mostrou que ele não podia entrar na interface da camada de
+  aplicação, porque receberia o `client` do `pg`; ficou como método privado da classe. Mandei também verificar se a
+  entrada foi gravada (`rowCount`), que eu não verificava.
 
 ## Onde a IA não entrou
 

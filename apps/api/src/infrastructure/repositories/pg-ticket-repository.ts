@@ -12,7 +12,7 @@ import type {
   TicketPriority,
   TicketStatus,
 } from "../../domain/ticket.ts";
-import type { Pool } from "pg";
+import type { Pool, PoolClient } from "pg";
 
 interface InsertedTicketRow {
   id: UUID;
@@ -37,6 +37,10 @@ interface TicketHistoryEntryRow {
   readonly resolution_note: string | null;
   readonly reopen_reason: string | null;
   readonly at: Date;
+}
+
+interface UpdatedTicketRow {
+  readonly version: number;
 }
 
 export class PgTicketRepository implements TicketRepository {
@@ -107,16 +111,10 @@ export class PgTicketRepository implements TicketRepository {
       const ticketId = row.id;
       const ticketVersion = row.version;
 
-      await client.query(
-        `INSERT INTO ticket_history_entry (ticket_id, from_status, to_status, resolution_note, reopen_reason, at) VALUES ($1, $2, $3, $4, $5, $6)`,
-        [
-          ticketId,
-          ticketHistoryEntry.from,
-          ticketHistoryEntry.to,
-          ticketHistoryEntry.resolutionNote,
-          ticketHistoryEntry.reopenReason,
-          ticketHistoryEntry.at,
-        ],
+      await this.#insertTicketHistoryEntry(
+        client,
+        ticketId,
+        ticketHistoryEntry,
       );
 
       const storedTicketRef: StoredTicketRef = {
@@ -133,6 +131,28 @@ export class PgTicketRepository implements TicketRepository {
       throw error;
     } finally {
       client.release();
+    }
+  }
+
+  async #insertTicketHistoryEntry(
+    client: PoolClient,
+    ticketId: UUID,
+    ticketHistoryEntry: TicketHistoryEntry,
+  ): Promise<void> {
+    const result = await client.query(
+      `INSERT INTO ticket_history_entry (ticket_id, from_status, to_status, resolution_note, reopen_reason, at) VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        ticketId,
+        ticketHistoryEntry.from,
+        ticketHistoryEntry.to,
+        ticketHistoryEntry.resolutionNote,
+        ticketHistoryEntry.reopenReason,
+        ticketHistoryEntry.at,
+      ],
+    );
+
+    if (result.rowCount !== 1) {
+      throw new Error("ticket history entry insert wrote no row");
     }
   }
 
@@ -154,5 +174,59 @@ export class PgTicketRepository implements TicketRepository {
     }));
 
     return ticketHistoryEntries;
+  }
+
+  async updateTicketChange(
+    ticketId: UUID,
+    expectedVersion: number,
+    ticketChange: TicketChange,
+  ): Promise<StoredTicketRef | null> {
+    const ticket = ticketChange.ticket;
+    const ticketHistoryEntry = ticketChange.ticketHistoryEntry;
+
+    const client = await this.#pgPool.connect();
+
+    try {
+      await client.query(`BEGIN`);
+
+      const result = await client.query<UpdatedTicketRow>(
+        `UPDATE ticket SET status = $1, resolution_note = $2, version = version + 1 WHERE (id = $3 AND status = $4 AND version = $5) RETURNING version`,
+        [
+          ticket.status,
+          ticket.resolutionNote,
+          ticketId,
+          ticketHistoryEntry.from,
+          expectedVersion,
+        ],
+      );
+      const row = result.rows[0];
+
+      if (row === undefined) {
+        await client.query(`ROLLBACK`);
+
+        return null;
+      }
+
+      await this.#insertTicketHistoryEntry(
+        client,
+        ticketId,
+        ticketHistoryEntry,
+      );
+
+      const storedTicketRef: StoredTicketRef = {
+        id: ticketId,
+        version: row.version,
+      };
+
+      await client.query(`COMMIT`);
+
+      return storedTicketRef;
+    } catch (error) {
+      await client.query(`ROLLBACK`);
+
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 }

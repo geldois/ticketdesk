@@ -5,7 +5,10 @@ import {
   createMigratedTestDatabase,
   queryRows,
 } from "../../../test/database.ts";
-import { createTicketChange } from "../../domain/lifecycle.ts";
+import {
+  createTicketChange,
+  transitTicketChange,
+} from "../../domain/lifecycle.ts";
 import type { TicketChange } from "../../domain/ticket.ts";
 import { createPgPool } from "../pool.ts";
 import { PgTicketRepository } from "./pg-ticket-repository.ts";
@@ -122,6 +125,200 @@ describe("PgTicketRepository", () => {
       await expect(
         repository.insertTicketChange(change),
       ).resolves.toMatchObject({ version: 1 });
+    });
+  });
+
+  describe("updateTicketChange", () => {
+    async function storeTicket(customerName: string) {
+      const change = newTicketChange(customerName);
+      const stored = await repository.insertTicketChange(change);
+
+      return { change, stored };
+    }
+
+    async function countEntries(ticketId: string): Promise<number> {
+      const rows = await queryRows(
+        databaseUrl,
+        "SELECT id FROM ticket_history_entry WHERE ticket_id = $1",
+        [ticketId],
+      );
+
+      return rows.length;
+    }
+
+    it("stores the new status and the next version, and adds the entry after the creation entry", async () => {
+      const { change, stored } = await storeTicket("Update Ana");
+      const transition = transitTicketChange(
+        change.ticket,
+        { to: "in_progress", resolutionNote: null, reopenReason: null },
+        LATER_INSTANT,
+      );
+
+      const updated = await repository.updateTicketChange(
+        stored.id,
+        1,
+        transition,
+      );
+
+      expect(updated).toEqual({ id: stored.id, version: 2 });
+      await expect(repository.findTicketById(stored.id)).resolves.toEqual({
+        ref: { id: stored.id, version: 2 },
+        ticket: transition.ticket,
+      });
+      await expect(
+        repository.listTicketHistoryEntries(stored.id),
+      ).resolves.toEqual([
+        change.ticketHistoryEntry,
+        transition.ticketHistoryEntry,
+      ]);
+    });
+
+    it("raises the version one by one through resolving and reopening, and moves the note to the resolution entry", async () => {
+      const { change, stored } = await storeTicket("Cycle Ana");
+      const inProgress = transitTicketChange(
+        change.ticket,
+        { to: "in_progress", resolutionNote: null, reopenReason: null },
+        LATER_INSTANT,
+      );
+      const resolved = transitTicketChange(
+        inProgress.ticket,
+        {
+          to: "resolved",
+          resolutionNote: "Replaced the cable",
+          reopenReason: null,
+        },
+        LATER_INSTANT,
+      );
+      const reopened = transitTicketChange(
+        resolved.ticket,
+        { to: "open", resolutionNote: null, reopenReason: "Broke again" },
+        LATER_INSTANT,
+      );
+
+      const versions = [
+        await repository.updateTicketChange(stored.id, 1, inProgress),
+        await repository.updateTicketChange(stored.id, 2, resolved),
+        await repository.updateTicketChange(stored.id, 3, reopened),
+      ].map((ref) => ref?.version);
+
+      expect(versions).toEqual([2, 3, 4]);
+
+      const found = await repository.findTicketById(stored.id);
+      expect(found?.ticket.resolutionNote).toBeNull();
+
+      const entries = await repository.listTicketHistoryEntries(stored.id);
+      expect(entries.map((entry) => entry.to)).toEqual([
+        "open",
+        "in_progress",
+        "resolved",
+        "open",
+      ]);
+      expect(entries[2]?.resolutionNote).toBe("Replaced the cable");
+      expect(entries[3]?.reopenReason).toBe("Broke again");
+    });
+
+    it("leaves the ticket and the history as they were when the entry is refused by the database", async () => {
+      const { change, stored } = await storeTicket("Refused Ana");
+      const refusedChange: TicketChange = {
+        ticket: {
+          ...change.ticket,
+          status: "in_progress",
+        },
+        ticketHistoryEntry: {
+          from: "open",
+          to: "resolved",
+          resolutionNote: "x",
+          reopenReason: null,
+          at: LATER_INSTANT,
+        },
+      };
+
+      await expect(
+        repository.updateTicketChange(stored.id, 1, refusedChange),
+      ).rejects.toMatchObject({ code: "23514" });
+
+      await expect(repository.findTicketById(stored.id)).resolves.toEqual({
+        ref: stored,
+        ticket: change.ticket,
+      });
+      expect(await countEntries(stored.id)).toBe(1);
+    });
+
+    it("returns null and changes nothing when the expected version is not the current one", async () => {
+      const { change, stored } = await storeTicket("Stale Ana");
+      const transition = transitTicketChange(
+        change.ticket,
+        { to: "in_progress", resolutionNote: null, reopenReason: null },
+        LATER_INSTANT,
+      );
+
+      await expect(
+        repository.updateTicketChange(stored.id, 2, transition),
+      ).resolves.toBeNull();
+
+      await expect(repository.findTicketById(stored.id)).resolves.toEqual({
+        ref: stored,
+        ticket: change.ticket,
+      });
+      expect(await countEntries(stored.id)).toBe(1);
+    });
+
+    it("returns null and changes nothing when the version is right but the entry starts from another status", async () => {
+      const { change, stored } = await storeTicket("Origin Ana");
+      const fromOtherStatus: TicketChange = {
+        ticket: {
+          ...change.ticket,
+          status: "resolved",
+          resolutionNote: "Done",
+        },
+        ticketHistoryEntry: {
+          from: "in_progress",
+          to: "resolved",
+          resolutionNote: "Done",
+          reopenReason: null,
+          at: LATER_INSTANT,
+        },
+      };
+
+      await expect(
+        repository.updateTicketChange(stored.id, 1, fromOtherStatus),
+      ).resolves.toBeNull();
+
+      await expect(repository.findTicketById(stored.id)).resolves.toEqual({
+        ref: stored,
+        ticket: change.ticket,
+      });
+      expect(await countEntries(stored.id)).toBe(1);
+    });
+
+    it("returns null for an id that does not exist", async () => {
+      const change = newTicketChange("Unknown Ana");
+      const transition = transitTicketChange(
+        change.ticket,
+        { to: "in_progress", resolutionNote: null, reopenReason: null },
+        LATER_INSTANT,
+      );
+
+      await expect(
+        repository.updateTicketChange(UNKNOWN_TICKET_ID, 1, transition),
+      ).resolves.toBeNull();
+    });
+
+    it("leaves no transaction open on the connection it returns to the pool after a null", async () => {
+      const { change, stored } = await storeTicket("Open Transaction Ana");
+      const transition = transitTicketChange(
+        change.ticket,
+        { to: "in_progress", resolutionNote: null, reopenReason: null },
+        LATER_INSTANT,
+      );
+
+      await repository.updateTicketChange(stored.id, 9, transition);
+
+      const openTransactions = await queryRows(
+        databaseUrl,
+        "SELECT pid FROM pg_stat_activity WHERE datname = current_database() AND state = 'idle in transaction'",
+      );
+      expect(openTransactions).toEqual([]);
     });
   });
 
