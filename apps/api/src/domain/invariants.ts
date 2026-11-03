@@ -36,7 +36,7 @@ export const CUSTOMER_NAME: InvariantField = {
   missingError: null,
 };
 
-const FREE_TEXT_REGEX = RegExp("^[\\p{L}\\p{N}\\p{P}\\s]*$", "u");
+const FREE_TEXT_REGEX = RegExp("^[\\p{L}\\p{N}\\p{P}\\p{S}\\s]*$", "u");
 
 export const DESCRIPTION: InvariantField = {
   regex: FREE_TEXT_REGEX,

@@ -116,12 +116,11 @@ describe.each(FIELDS)("normalizeInvariantField of the $name", (setup) => {
     expect(() => normalizeInvariantField(empty, field)).toThrow(missing);
   });
 
-  it.each(["Maria 😀", "Maria $", "Maria <", "Maria +", "Maria\u0000"])(
-    "refuses the emoji, symbol or control character in %j",
-    (text) => {
-      expect(() => normalizeInvariantField(text, field)).toThrow(invalid);
-    },
-  );
+  it("refuses a control character", () => {
+    expect(() => normalizeInvariantField("Maria\u0000", field)).toThrow(
+      invalid,
+    );
+  });
 
   it("refuses a combining mark left alone after the normalization", () => {
     expect(() => normalizeInvariantField(COMBINING_TILDE, field)).toThrow(
@@ -138,8 +137,26 @@ describe.each(FREE_TEXT_FIELDS)(
 
       expect(normalizeInvariantField(text, setup.field)).toBe(text);
     });
+
+    it.each(["Maria 😀", "R$ 10 + 5 < 20", "100% © ™"])(
+      "accepts the emoji and symbols in %j",
+      (text) => {
+        expect(normalizeInvariantField(text, setup.field)).toBe(text);
+      },
+    );
   },
 );
+
+describe("normalizeInvariantField of the customer name", () => {
+  it.each(["Maria 😀", "Maria $", "Maria <", "Maria +"])(
+    "refuses the emoji or symbol in %j",
+    (text) => {
+      expect(() => normalizeInvariantField(text, CUSTOMER_NAME)).toThrow(
+        InvalidCustomerNameError,
+      );
+    },
+  );
+});
 
 describe("normalizeTicketChannel", () => {
   it.each(["chat", "email", "phone"])("returns %j as it is", (raw) => {

@@ -71,7 +71,14 @@ describe("createTicketChange", () => {
     },
   );
 
-  it.each(["fatura 😀", "fatura $10", "a < b", "x\u0007y"])(
+  it.each(["fatura 😀", "fatura $10", "a < b"])(
+    "accepts the emoji and symbols in the description %j",
+    (description) => {
+      expect(create({ description }).ticket.description).toBe(description);
+    },
+  );
+
+  it.each(["fatura\u0000", "x\u0007y"])(
     "refuses the description %j",
     (description) => {
       expect(() => create({ description })).toThrow(InvalidDescriptionError);
@@ -270,7 +277,21 @@ describe("transitTicketChange", () => {
     },
   );
 
-  it.each(["😀", "custo $10", "a".repeat(2001)])(
+  it.each(["😀", "custo $10"])(
+    "accepts the emoji and symbols in the resolution note %j",
+    (resolutionNote) => {
+      const { ticket, ticketHistoryEntry } = transition(
+        ticketIn("in_progress", null),
+        "resolved",
+        { resolutionNote },
+      );
+
+      expect(ticket.resolutionNote).toBe(resolutionNote);
+      expect(ticketHistoryEntry.resolutionNote).toBe(resolutionNote);
+    },
+  );
+
+  it.each(["\u0007", "custo\u0000", "a".repeat(2001)])(
     "refuses to resolve with the invalid note %j",
     (resolutionNote) => {
       expect(() =>
@@ -303,7 +324,20 @@ describe("transitTicketChange", () => {
     },
   );
 
-  it.each(["😀", "custo $10", "a".repeat(501)])(
+  it.each(["😀", "custo $10"])(
+    "accepts the emoji and symbols in the reopen reason %j",
+    (reopenReason) => {
+      const { ticketHistoryEntry } = transition(
+        ticketIn("resolved", "Fatura reenviada"),
+        "open",
+        { reopenReason },
+      );
+
+      expect(ticketHistoryEntry.reopenReason).toBe(reopenReason);
+    },
+  );
+
+  it.each(["\u0007", "custo\u0000", "a".repeat(501)])(
     "refuses to reopen with the invalid reason %j",
     (reopenReason) => {
       expect(() =>
@@ -324,7 +358,7 @@ describe("transitTicketChange", () => {
     expect(ticketHistoryEntry.reopenReason).toBe("voltou a falhar");
   });
 
-  it.each(["Fatura reenviada", "", "😀"])(
+  it.each(["Fatura reenviada", "", "\u0007"])(
     "refuses a note %j outside the resolution",
     (resolutionNote) => {
       expect(() =>
@@ -333,7 +367,7 @@ describe("transitTicketChange", () => {
     },
   );
 
-  it.each(["Voltou", "", "😀"])(
+  it.each(["Voltou", "", "\u0007"])(
     "refuses a reason %j outside the reopening",
     (reopenReason) => {
       expect(() =>
@@ -376,7 +410,7 @@ describe("transitTicketChange", () => {
     ).toThrow(InvalidInstantError);
     expect(() =>
       transition(ticketIn("open", null), "resolved", {
-        resolutionNote: "😀",
+        resolutionNote: "\u0007",
       }),
     ).toThrow(InvalidTransitionError);
     expect(() =>
@@ -386,7 +420,7 @@ describe("transitTicketChange", () => {
     ).toThrow(UnexpectedReopenReasonError);
     expect(() =>
       transition(ticketIn("in_progress", null), "resolved", {
-        resolutionNote: "😀",
+        resolutionNote: "\u0007",
         reopenReason: "Voltou",
       }),
     ).toThrow(UnexpectedReopenReasonError);
