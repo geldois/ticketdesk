@@ -1,4 +1,4 @@
-FROM node:26.13.0-alpine
+FROM node:26.13.0-alpine AS base
 
 ENV NODE_ENV=production
 WORKDIR /app
@@ -8,6 +8,8 @@ COPY apps/api/package.json apps/api/
 COPY packages/contract/package.json packages/contract/
 RUN npm ci --omit=dev --workspace apps/api
 
+FROM base AS migrate
+
 COPY apps/api/migrations apps/api/migrations
 COPY apps/api/scripts/migrate.ts apps/api/scripts/
 COPY apps/api/src/config/errors.ts apps/api/src/config/settings.ts apps/api/src/config/
@@ -15,3 +17,11 @@ COPY apps/api/src/infrastructure/migrations.ts apps/api/src/infrastructure/
 
 USER node
 CMD ["node", "apps/api/scripts/migrate.ts"]
+
+FROM base AS api
+
+COPY packages/contract/src packages/contract/src
+COPY apps/api/src apps/api/src
+
+USER node
+CMD ["node", "apps/api/src/main.ts"]

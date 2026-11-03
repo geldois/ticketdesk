@@ -19,6 +19,8 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+      target: migrate
+    pull_policy: build
     environment:
       PGHOST: db
       PGPORT: "5432"
@@ -29,6 +31,26 @@ services:
       db:
         condition: service_healthy
     restart: "no"
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: api
+    pull_policy: build
+    environment:
+      API_HOST: 0.0.0.0
+      API_PORT: "3000"
+      PGHOST: db
+      PGPORT: "5432"
+      PGUSER: ${PGUSER:?set PGUSER in .env}
+      PGPASSWORD: ${PGPASSWORD:?set PGPASSWORD in .env}
+      PGDATABASE: ${PGDATABASE:?set PGDATABASE in .env}
+    ports:
+      - "${API_PUBLISH_HOST:?set API_PUBLISH_HOST in .env}:${API_PUBLISH_PORT:?set API_PUBLISH_PORT in .env}:3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   db-data:

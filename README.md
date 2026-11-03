@@ -45,8 +45,8 @@ cp .env.example .env
 docker compose up -d
 ```
 
-O `cp` cria o `.env` com as variáveis que o compose exige, e o `docker compose up -d` sobe o `db`, constrói a imagem do
-`migrate` e aplica as migrations. Os detalhes do banco estão em "Banco e migrations".
+O `cp` cria o `.env` com as variáveis que o compose exige, e o `docker compose up -d` sobe o `db`, constrói as imagens
+do `migrate` e da `api`, aplica as migrations e sobe a API. Os detalhes do banco estão em "Banco e migrations".
 
 ### Para quem desenvolve
 
@@ -71,13 +71,15 @@ npm run check
 ```
 
 O `npm ci` instala as dependências, o `cp` cria o `.env` com as variáveis que o compose exige, o `docker compose up -d`
-sobe o `db`, constrói a imagem do `migrate` e aplica as migrations, e o `npm run check` confere o repositório.
+sobe o `db`, constrói as imagens do `migrate` e da `api`, aplica as migrations e sobe a API, e o `npm run check` confere
+o repositório.
 
 Comandos, executados na raiz:
 
 | Comando | O que faz |
 | --- | --- |
 | `npm ci` | Instala as dependências exatas do lockfile |
+| `npm run dev` | Sobe a API no host, com o `.env` carregado; exige o `db` no ar e migrado, e `Ctrl+C` a encerra fechando o servidor e depois o pool |
 | `npm run check` | Confere antes de tudo que há um container runtime e, sem ele, para com uma mensagem, sem rodar mais nada; com ele, roda todas as verificações do repositório, o lint e o formato do SQL de `apps/api` inclusos, mesmo que uma falhe, e sai com erro se qualquer uma falhou; é o que o CI roda a cada push |
 | `npm run fix` | Corrige o que o lint e os formatadores sabem corrigir, o do SQL incluso |
 
@@ -91,11 +93,21 @@ com código diferente de 0. A imagem dele é construída por `apps/api/Dockerfil
 
 O compose exige `PGUSER`, `PGPASSWORD` e `PGDATABASE` no ambiente, sem valor padrão, para o `db` e para o `migrate`, e
 `PGHOST` e `PGPORT` para o endereço e a porta que o `db` publica; `PGHOST` precisa ser um endereço IP, e o
-`.env.example` traz o de loopback, que mantém o banco fora da rede. Sem alguma delas, o compose recusa subir. Para
-desenvolver, copie o `.env.example` para `.env`, que o git ignora e o compose lê sozinho; a senha dele é só de
-desenvolvimento e não protege nada. Para aplicar as migrations de novo, com o `db` no ar, o comando, na raiz, é
-`docker compose run --rm migrate`. O `npm run check` não precisa do compose nem das variáveis: os testes de banco sobem
-o próprio contêiner, numa porta livre.
+`.env.example` traz o de loopback, que mantém o banco fora da rede. O serviço `api` exige ainda `API_PUBLISH_HOST` e
+`API_PUBLISH_PORT`, o endereço e a porta em que publica a API no host; o `.env.example` traz o de loopback e uma porta
+diferente da do `npm run dev`. O `npm run dev` lê `API_HOST` e `API_PORT` (padrões `127.0.0.1` e `3000`), com o prefixo
+para que um `HOST` ou `PORT` exportado por outra ferramenta nunca mude onde a API escuta. Sem alguma delas, o compose
+recusa subir. Para desenvolver, copie o `.env.example` para `.env`, que o git ignora e o compose lê sozinho; a senha
+dele é só de desenvolvimento e não protege nada. Para aplicar as migrations de novo, com o `db` no ar, o comando, na
+raiz, é `docker compose run --rm migrate`. O `npm run check` não precisa do compose nem das variáveis: os testes de
+banco sobem o próprio contêiner, numa porta livre.
+
+O serviço `api` só sobe depois que o `migrate` termina com 0. Dentro do contêiner ele escuta em `0.0.0.0:3000`, fixo no
+`compose.yaml`, e a conexão com o banco usa o host `db`; a imagem vem do mesmo `apps/api/Dockerfile`, no alvo `api`. O
+`pull_policy: build` faz o `docker compose up -d` reconstruir as imagens do `migrate` e da `api` a cada subida, com o
+cache de camadas, para nunca subir uma imagem de código antigo. Ao receber `SIGTERM`, como no `docker compose stop`, ele
+fecha o servidor, depois o pool, e sai com 0. O `npm run dev` e o serviço `api` usam portas diferentes do host
+(`API_PORT` e `API_PUBLISH_PORT`), então rodam juntos, sobre o mesmo banco.
 
 Duas armadilhas do compose. Uma variável já exportada no shell vence a do `.env`: se `PGUSER` ou `PGDATABASE` no shell
 diferirem do `.env`, o compose usa as do shell, e o banco e o `migrate` podem divergir da API sem aviso. E a imagem do
@@ -156,6 +168,7 @@ Só as decisões de alto ROI, da mais antiga para a mais recente.
 | O banco espelha a estrutura, o tamanho, as transições aceitas e a presença de nota e motivo, e deixa o formato de caractere para o domínio | Espelhar também o formato e os caracteres de controle no banco | Um texto com caractere que o domínio recusa pode entrar no banco; em troca o banco e o domínio não divergem em regex que o PostgreSQL não equipara, e o domínio fica como único dono dos caracteres |
 | A imutabilidade do histórico pelo próprio banco, com gatilhos que recusam `UPDATE`, `DELETE` e `TRUNCATE` em `ticket_history_entry` | Recusar na aplicação, ou revogar as permissões do papel da aplicação | O linter avisa dos gatilhos e das reversões, e cada um leva um `pgls-ignore`; em troca nenhum cliente do banco, nem um `psql`, altera o histórico, e o dono da tabela só o altera derrubando o gatilho |
 | O `migrate` como serviço de execução única do compose, com imagem própria e a conexão em variáveis `PG*` separadas | Migrar na subida da API, uma imagem do Node com o repositório montado (exige `npm ci` no host) ou uma `DATABASE_URL` única | Um Dockerfile e um build a manter, e o esquema nunca muda como efeito colateral de subir a API; em troca roda em qualquer máquina sem instalar nada além do container runtime, e a senha nunca precisa de escape de URL |
+| Um só `apps/api/Dockerfile`, em estágios, com os alvos `migrate` e `api` sobre a mesma base | Um Dockerfile por serviço | Mudar a base ou o `npm ci` afeta os dois serviços de uma vez e o compose precisa nomear o alvo; em troca a versão do Node e a instalação das dependências moram num lugar só |
 | A transação única que grava o ticket e a entrada de criação do histórico, aberta dentro do método do repositório | Uma unidade de trabalho explícita na camada de aplicação, ou duas escritas sem transação | Um caso de uso que precisar combinar várias chamadas de repositório numa transação exigirá refatorar para uma unidade de trabalho; em troca nenhuma escrita parcial e um desenho mais simples |
 | A entrada do histórico devolvida sem o identificador numérico do banco | Devolver a linha inteira, com o `id` da entrada | Quem precisar do identificador da entrada terá de pedir uma operação nova; em troca ele nunca vaza numa resposta, e a ordem fica só dentro do banco |
 | O repositório como uma classe que recebe o pool, atrás de uma interface da camada de aplicação | Funções soltas que recebem o pool, sem interface | Uma interface e uma classe a mais para manter; em troca os casos de uso dependem só da interface, e o teste e a montagem da API escolhem a implementação |

@@ -200,6 +200,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00006`, passo 3: a sonda partiu vermelha (os casos de uso não existiam) e terminou verde com os que escrevi. Os
   testes afirmam o 404 de um `id` inexistente no `GetTicketUseCase` e no histórico, e a recusa do domínio saindo como
   erro do domínio pela criação; o `check` passou.
+- `spec: 00006`, serviço `api` do compose: a IA construiu as duas imagens do `Dockerfile`, uma por alvo, e conferiu que
+  a da `api` importa o código com o Node do projeto e não leva arquivo de teste. Em seguida subiu o compose inteiro num
+  projeto descartável: o `db` ficou saudável, o `migrate` saiu com 0, a `api` respondeu 404 a um `id` inexistente e o
+  `docker compose stop` a encerrou com código 0. O `check` não exercita a imagem nem o compose, então esse é o único
+  teste dessa parte.
 - `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
   de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
   cobrem o que os removidos cobriam.
@@ -379,6 +384,14 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   `insert`, com `StoredTicket` aninhando `ref` e `ticket`.
 - `spec: 00006`, passo 3: a IA escreveu cinco casos de recusa do domínio nos testes da criação; mandei reduzir a um,
   porque os outros repetiam regras que a suíte do domínio já cobre.
+- `spec: 00006`, serviço `api` do compose: a IA criou um segundo Dockerfile para a imagem da `api`, e mandei desfazer e
+  usar um só, em estágios, com um alvo por serviço, para a versão do Node e a instalação das dependências morarem num
+  lugar só. Escolhi também as variáveis `API_PUBLISH_HOST` e `API_PUBLISH_PORT`, no lugar de publicar sempre no
+  loopback, e exigidas sem valor padrão, como `PGHOST` e `PGPORT`. A porta publicada difere da do `npm run dev` por
+  construção: bati na colisão de porta rodando o dev com a `api` do compose no ar, e a IA propôs só uma mensagem melhor;
+  escolhi separar as portas, para o choque deixar de depender de lembrar um comando. Mandei trocar `HOST` e `PORT` por
+  `API_HOST` e `API_PORT`, porque outras ferramentas exportam os nomes soltos e um valor do shell vence o `.env` sem
+  aviso. O commit declara o desvio da spec, que deixava o serviço de fora.
 
 ## Onde a IA não entrou
 

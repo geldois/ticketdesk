@@ -49,8 +49,8 @@ function runMigrateScript(variables: Record<string, string>): {
   return { status, stderr };
 }
 
-describe("the migrate image", () => {
-  it("runs the Node version that .node-version declares", () => {
+describe("the service images", () => {
+  it("run the Node version that .node-version declares", () => {
     const nodeVersion = readFileSync(
       new URL("../../../.node-version", import.meta.url),
       "utf8",
@@ -60,7 +60,7 @@ describe("the migrate image", () => {
       "utf8",
     );
 
-    expect(dockerfile).toContain(`FROM node:${nodeVersion}-alpine\n`);
+    expect(dockerfile).toContain(`FROM node:${nodeVersion}-alpine AS base\n`);
   });
 });
 
