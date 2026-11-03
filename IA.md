@@ -79,6 +79,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   `docs-auditor` revisou antes do commit; os seis achados médios foram corrigidos na spec antes de congelá-la.
 - `spec: 00007`, passo 1: a IA escreveu fora do repositório a sonda com os casos dos critérios 1 e 2 e, a partir das
   linhas dela, os corpos dos testes do `updateTicketChange`.
+- `spec: 00007`, passo 2: a IA escreveu fora do repositório a sonda com os casos do critério 4, a classe
+  `VersionConflictError`, a entrada 409 do mapeador e, a partir da sonda, os corpos dos testes do caso de uso; o método
+  privado de leitura do `TransitTicketUseCase` também veio dela, por ordem minha.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -294,6 +297,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   `errors.ts` que ele importa, e a imagem quebraria ao rodar. A IA achou e corrigiu antes de commitar a configuração;
   nenhum teste constrói essa imagem (o `migrate.test.ts` só lê o texto do `Dockerfile`), e só o `docker build` do commit
   do serviço `api` a construiu de verdade.
+- `spec: 00007`, passo 2: a IA sugeriu que o caso de uso lançasse um erro comum (um 500) quando, depois de um `null`, a
+  `version` relida fosse igual à esperada, como forma de não deixar um defeito silencioso. Percebi que o caso não
+  existe: o `from` vem da mesma leitura que passou na comparação da `version`, e a `version` só sobe, então um `null`
+  sempre vem com uma `version` diferente. A IA concordou, retirou a sugestão e ficou o `version_conflict` simples da
+  spec, sem desvio.
 
 ## Uma decisão minha
 
@@ -414,6 +422,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   `insertTicketChange` e pelo `updateTicketChange`, e a IA mostrou que ele não podia entrar na interface da camada de
   aplicação, porque receberia o `client` do `pg`; ficou como método privado da classe. Mandei também verificar se a
   entrada foi gravada (`rowCount`), que eu não verificava.
+- `spec: 00007`, passo 2: mantive o `version_conflict` simples quando a IA ofereceu um erro de 500 para o `null` com a
+  mesma `version`, mandei a leitura do ticket para um método privado do caso de uso, usado também na releitura depois do
+  `null`, e mantive o `to` no corpo da requisição quando perguntei se o servidor não podia só avançar o status. A IA
+  recomendou manter o `to` pelos dados que cada destino exige (nota e motivo) e pelo contrato estável.
 
 ## Onde a IA não entrou
 

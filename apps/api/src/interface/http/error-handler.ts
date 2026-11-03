@@ -29,6 +29,7 @@ const STATUS_BY_FAMILY_ERROR_CODE = {
   unexpected_reopen_reason: 422,
   invalid_transition: 422,
   ticket_not_found: 404,
+  version_conflict: 409,
   invalid_request: 400,
   invalid_ticket_id: 400,
 } as const satisfies Record<FamilyErrorCode, number>;
