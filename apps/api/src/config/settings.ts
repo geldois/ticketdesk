@@ -7,19 +7,19 @@ const DATABASE_VARIABLES = [
   "PGPASSWORD",
   "PGDATABASE",
 ] as const;
-const DEFAULT_HOST = "127.0.0.1";
-const DEFAULT_PORT = "3000";
+const DEFAULT_API_HOST = "127.0.0.1";
+const DEFAULT_API_PORT = "3000";
 const PORT_PROBLEM = "must be an integer from 1 to 65535";
 
 export class Settings {
   readonly databaseUrl: string;
-  readonly host: string;
-  readonly port: number;
+  readonly apiHost: string;
+  readonly apiPort: number;
 
-  private constructor(databaseUrl: string, host: string, port: number) {
+  private constructor(databaseUrl: string, apiHost: string, apiPort: number) {
     this.databaseUrl = databaseUrl;
-    this.host = host;
-    this.port = port;
+    this.apiHost = apiHost;
+    this.apiPort = apiPort;
   }
 
   static fromEnv(env: NodeJS.ProcessEnv = process.env): Settings {
@@ -36,10 +36,10 @@ export class Settings {
       problems.push(`PGPORT ${PORT_PROBLEM}`);
     }
 
-    const port = env["PORT"] ?? DEFAULT_PORT;
+    const apiPort = env["API_PORT"] ?? DEFAULT_API_PORT;
 
-    if (!isPort(port)) {
-      problems.push(`PORT ${PORT_PROBLEM}`);
+    if (!isPort(apiPort)) {
+      problems.push(`API_PORT ${PORT_PROBLEM}`);
     }
 
     if (problems.length > 0) {
@@ -56,8 +56,8 @@ export class Settings {
 
     return new Settings(
       databaseUrl.toString(),
-      env["HOST"] ?? DEFAULT_HOST,
-      Number(port),
+      env["API_HOST"] ?? DEFAULT_API_HOST,
+      Number(apiPort),
     );
   }
 }

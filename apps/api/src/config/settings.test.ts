@@ -40,16 +40,26 @@ describe("Settings.fromEnv", () => {
     );
   });
 
-  it("listens on 127.0.0.1:3000 unless HOST and PORT say otherwise", () => {
+  it("listens on 127.0.0.1:3000 unless API_HOST and API_PORT say otherwise", () => {
     const defaults = Settings.fromEnv(DATABASE_ENV);
     const overridden = Settings.fromEnv({
+      ...DATABASE_ENV,
+      API_HOST: "0.0.0.0",
+      API_PORT: "8080",
+    });
+
+    expect([defaults.apiHost, defaults.apiPort]).toEqual(["127.0.0.1", 3000]);
+    expect([overridden.apiHost, overridden.apiPort]).toEqual(["0.0.0.0", 8080]);
+  });
+
+  it("ignores HOST and PORT, which other tools export", () => {
+    const settings = Settings.fromEnv({
       ...DATABASE_ENV,
       HOST: "0.0.0.0",
       PORT: "8080",
     });
 
-    expect([defaults.host, defaults.port]).toEqual(["127.0.0.1", 3000]);
-    expect([overridden.host, overridden.port]).toEqual(["0.0.0.0", 8080]);
+    expect([settings.apiHost, settings.apiPort]).toEqual(["127.0.0.1", 3000]);
   });
 
   it.each(Object.keys(DATABASE_ENV))(
@@ -73,21 +83,21 @@ describe("Settings.fromEnv", () => {
   });
 
   it.each(["abc", "0", "65536", "-1", "80.5", " 80"])(
-    "throws when PGPORT or PORT is %j",
+    "throws when PGPORT or API_PORT is %j",
     (value) => {
       expect(problemsOf({ ...DATABASE_ENV, PGPORT: value })).toEqual([
         "PGPORT must be an integer from 1 to 65535",
       ]);
-      expect(problemsOf({ ...DATABASE_ENV, PORT: value })).toEqual([
-        "PORT must be an integer from 1 to 65535",
+      expect(problemsOf({ ...DATABASE_ENV, API_PORT: value })).toEqual([
+        "API_PORT must be an integer from 1 to 65535",
       ]);
     },
   );
 
   it("reports a missing variable and an invalid port together", () => {
-    expect(problemsOf({ ...DATABASE_ENV, PGHOST: "", PORT: "x" })).toEqual([
+    expect(problemsOf({ ...DATABASE_ENV, PGHOST: "", API_PORT: "x" })).toEqual([
       "missing PGHOST",
-      "PORT must be an integer from 1 to 65535",
+      "API_PORT must be an integer from 1 to 65535",
     ]);
   });
 });

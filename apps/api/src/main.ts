@@ -18,7 +18,7 @@ const container = buildContainer({ now: () => new Date(), pgPool });
 const server = buildServer(container);
 
 try {
-  await server.listen({ host: settings.host, port: settings.port });
+  await server.listen({ host: settings.apiHost, port: settings.apiPort });
 } catch (error) {
   await pgPool.end();
 
