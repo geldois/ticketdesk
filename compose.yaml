@@ -2,13 +2,15 @@ services:
   db:
     image: postgres:18.6
     environment:
-      POSTGRES_PASSWORD: ${PGPASSWORD:?set PGPASSWORD in the environment}
+      POSTGRES_USER: ${PGUSER:?set PGUSER in .env}
+      POSTGRES_PASSWORD: ${PGPASSWORD:?set PGPASSWORD in .env}
+      POSTGRES_DB: ${PGDATABASE:?set PGDATABASE in .env}
     ports:
-      - "127.0.0.1:55432:5432"
+      - "127.0.0.1:${PGPORT:?set PGPORT in .env}:5432"
     volumes:
       - db-data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
       interval: 2s
       timeout: 2s
       retries: 30
@@ -20,9 +22,9 @@ services:
     environment:
       PGHOST: db
       PGPORT: "5432"
-      PGUSER: postgres
-      PGPASSWORD: ${PGPASSWORD:?set PGPASSWORD in the environment}
-      PGDATABASE: postgres
+      PGUSER: ${PGUSER:?set PGUSER in .env}
+      PGPASSWORD: ${PGPASSWORD:?set PGPASSWORD in .env}
+      PGDATABASE: ${PGDATABASE:?set PGDATABASE in .env}
     depends_on:
       db:
         condition: service_healthy

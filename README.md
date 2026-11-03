@@ -45,7 +45,7 @@ cp .env.example .env
 docker compose up -d
 ```
 
-O `cp` cria o `.env` com a variável que o compose exige, e o `docker compose up -d` sobe o `db`, constrói a imagem do
+O `cp` cria o `.env` com as variáveis que o compose exige, e o `docker compose up -d` sobe o `db`, constrói a imagem do
 `migrate` e aplica as migrations. Os detalhes do banco estão em "Banco e migrations".
 
 ### Para quem desenvolve
@@ -70,7 +70,7 @@ docker compose up -d
 npm run check
 ```
 
-O `npm ci` instala as dependências, o `cp` cria o `.env` com a variável que o compose exige, o `docker compose up -d`
+O `npm ci` instala as dependências, o `cp` cria o `.env` com as variáveis que o compose exige, o `docker compose up -d`
 sobe o `db`, constrói a imagem do `migrate` e aplica as migrations, e o `npm run check` confere o repositório.
 
 Comandos, executados na raiz:
@@ -89,11 +89,16 @@ O serviço `migrate` do `compose.yaml` aplica as migrations de `apps/api/migrati
 banco ficar saudável, aplica o que falta e termina com 0; rodar de novo não muda nada; com o banco inalcançável, termina
 com código diferente de 0. A imagem dele é construída por `apps/api/Dockerfile`, então não pede `npm ci` na máquina.
 
-O compose exige `PGPASSWORD` no ambiente, sem valor padrão, para o `db` e para o `migrate`; sem ela, recusa subir. Para
-desenvolver, copie o `.env.example` para `.env`, que o git ignora e o compose lê sozinho; a senha dele é só de
-desenvolvimento e não protege nada. Para aplicar as migrations de novo, com o `db` no ar, o comando, na raiz, é
-`docker compose run --rm migrate`. O `npm run check` não precisa do compose nem da variável: os testes de banco sobem o
-próprio contêiner, numa porta livre.
+O compose exige `PGUSER`, `PGPASSWORD` e `PGDATABASE` no ambiente, sem valor padrão, para o `db` e para o `migrate`, e
+`PGPORT` para a porta que o `db` publica; sem alguma delas, recusa subir. Para desenvolver, copie o `.env.example` para
+`.env`, que o git ignora e o compose lê sozinho; a senha dele é só de desenvolvimento e não protege nada. Para aplicar
+as migrations de novo, com o `db` no ar, o comando, na raiz, é `docker compose run --rm migrate`. O `npm run check` não
+precisa do compose nem das variáveis: os testes de banco sobem o próprio contêiner, numa porta livre.
+
+Duas armadilhas do compose. Uma variável já exportada no shell vence a do `.env`: se `PGUSER` ou `PGDATABASE` no shell
+diferirem do `.env`, o compose usa as do shell, e o banco e o `migrate` podem divergir da API sem aviso. E a imagem do
+`db` lê o usuário, a senha e o banco só na primeira inicialização do volume `db-data`: mudá-los depois não altera um
+banco que já existe, e a conexão falha até o volume ser recriado (`docker compose down --volumes` apaga os dados).
 
 ### Editor com SQL (opcional)
 
@@ -102,12 +107,14 @@ sem banco, e o editor as lê pelo servidor de linguagem do mesmo pacote (`npx po
 as regras de lint e de formato são as mesmas. Sem mais nada, o editor mostra erros de sintaxe e os avisos de lint; com
 um banco acessível, soma as verificações que dependem dele.
 
-Para completar tabelas e colunas, o servidor precisa de um banco acessível e de mais dois passos:
+Para completar tabelas e colunas, o servidor precisa de um banco acessível e dos passos a seguir:
 
-1. Tenha `PGPASSWORD` no ambiente do editor, a mesma variável que o `compose.yaml` exige para o serviço `db`. A do
-   `.env.example` é só de desenvolvimento; uma senha de verdade nunca entra no repositório.
-2. Suba o serviço `db` com o comando de compose do seu container runtime. Ele publica a porta só no endereço de
-   loopback, em `127.0.0.1:55432`, e é nessa porta que a configuração aponta.
+1. Tenha no ambiente do editor as variáveis `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` e `PGDATABASE` do `.env`, as
+   mesmas que o `compose.yaml` e a API leem; o servidor de linguagem as lê sozinho, e o `postgres-language-server.jsonc`
+   não guarda dado de conexão. As do `.env.example` são só de desenvolvimento; uma senha de verdade nunca entra no
+   repositório.
+2. Suba o serviço `db` com o comando de compose do seu container runtime. Ele publica a porta `PGPORT` só no endereço de
+   loopback.
 
 O banco começa sem tabelas, e o servidor só completa o que as migrations aplicadas criaram.
 

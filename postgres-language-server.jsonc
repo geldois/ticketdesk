@@ -32,12 +32,6 @@
   "pglinter": {
     "enabled": false,
   },
-  "db": {
-    "host": "127.0.0.1",
-    "port": 55432,
-    "username": "postgres",
-    "database": "postgres",
-  },
   "vcs": {
     "enabled": true,
     "clientKind": "git",
