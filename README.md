@@ -35,18 +35,45 @@ O que a IA de fato fez em cada spec está em [IA.md](IA.md).
 
 ## Como rodar
 
+Há dois caminhos, ambos na raiz do repositório, e `docker compose` é o comando de compose do seu container runtime.
+Escolha um:
+
+| Quero | Preciso de | Vá para |
+| --- | --- | --- |
+| Rodar o sistema e ver a API responder | Só um container runtime, sem Node e sem `npm ci` | "Só rodar" |
+| Mexer no código, rodar a API no host e conferir o repositório | Um container runtime e o Node do `.node-version` | "Para quem desenvolve" |
+
 ### Só rodar
 
-Precisa apenas de um container runtime, sem Node e sem `npm ci`. Na raiz, um comando por vez (`docker compose` é o
-comando de compose do seu container runtime):
+Dois comandos, um por vez:
 
 ```sh
 cp .env.example .env
 docker compose up -d
 ```
 
-O `cp` cria o `.env` com as variáveis que o compose exige, e o `docker compose up -d` sobe o `db`, constrói as imagens
-do `migrate` e da `api`, aplica as migrations e sobe a API. Os detalhes do banco estão em "Banco e migrations".
+O `cp` cria o `.env`. O `docker compose up -d` constrói as imagens, sobe o `db`, aplica as migrations e sobe a API.
+Nenhuma dependência é instalada no seu host.
+
+Com o `.env.example` sem alterar, a API responde em `http://127.0.0.1:3001`, o `API_PUBLISH_HOST` e o `API_PUBLISH_PORT`
+dele; se você mudou algum, use os seus no lugar de `127.0.0.1:3001` nos comandos abaixo. Ainda não há tela: a API
+devolve JSON. Para conferir, um comando por vez:
+
+```sh
+curl -i http://127.0.0.1:3001/tickets/019a0000-0000-7000-8000-000000000000
+curl -i -X POST http://127.0.0.1:3001/tickets -H 'content-type: application/json' -d '{"customerName":"Ana","description":"Printer is down","channel":"chat","priority":"high"}'
+```
+
+O primeiro devolve `404`, porque esse `id` não existe, e prova que a API alcança o banco. O segundo devolve `201` com o
+ticket criado; o `id` dele abre em `GET /tickets/<id>` e em `GET /tickets/<id>/history`, no navegador também.
+
+Para parar e limpar, um destes:
+
+| Comando | O que faz |
+| --- | --- |
+| `docker compose stop` | Para os serviços e mantém os dados; `docker compose up -d` os sobe de novo |
+| `docker compose down` | Remove os contêineres e as redes e mantém os dados, que ficam no volume `db-data` |
+| `docker compose down --volumes` | Remove também o volume: apaga o banco inteiro, sem volta |
 
 ### Para quem desenvolve
 
@@ -61,25 +88,37 @@ Os testes de banco sobem um PostgreSQL num contêiner, então o desenvolvimento 
 container runtime com o socket no lugar padrão não pede configuração. Com o socket em outro lugar, a variável de
 ambiente `DOCKER_HOST` aponta para ele, como a documentação do `testcontainers` descreve.
 
-Do clone ao repositório conferido, com o banco migrado, na raiz, um comando por vez e nesta ordem:
+Primeiro, instale as dependências, uma vez:
 
 ```sh
 npm ci
-cp .env.example .env
-docker compose up -d
+```
+
+Para conferir o repositório, que não precisa de compose nem de `.env`:
+
+```sh
 npm run check
 ```
 
-O `npm ci` instala as dependências, o `cp` cria o `.env` com as variáveis que o compose exige, o `docker compose up -d`
-sobe o `db`, constrói as imagens do `migrate` e da `api`, aplica as migrations e sobe a API, e o `npm run check` confere
-o repositório.
+Para rodar a API no host, com o banco em contêiner, um comando por vez, depois do `npm ci`:
+
+```sh
+cp .env.example .env
+docker compose run --rm migrate
+npm run dev
+```
+
+O `docker compose run --rm migrate` sobe só o `db`, espera ele ficar saudável, aplica as migrations, espera terminar e
+deixa o `db` no ar, sem subir a `api` do compose. O `npm run dev` carrega o `.env` e a API escuta em
+`http://127.0.0.1:3000`, o `API_HOST` e o `API_PORT`; `Ctrl+C` a encerra, fechando o servidor e depois o pool. Os dois
+caminhos rodam ao mesmo tempo, em portas diferentes, sobre o mesmo banco.
 
 Comandos, executados na raiz:
 
 | Comando | O que faz |
 | --- | --- |
 | `npm ci` | Instala as dependências exatas do lockfile |
-| `npm run dev` | Sobe a API no host, com o `.env` carregado; exige o `db` no ar e migrado, e `Ctrl+C` a encerra fechando o servidor e depois o pool |
+| `npm run dev` | Sobe a API no host, com o `.env` carregado; exige o `db` no ar e migrado |
 | `npm run check` | Confere antes de tudo que há um container runtime e, sem ele, para com uma mensagem, sem rodar mais nada; com ele, roda todas as verificações do repositório, o lint e o formato do SQL de `apps/api` inclusos, mesmo que uma falhe, e sai com erro se qualquer uma falhou; é o que o CI roda a cada push |
 | `npm run fix` | Corrige o que o lint e os formatadores sabem corrigir, o do SQL incluso |
 
@@ -91,28 +130,44 @@ O serviço `migrate` do `compose.yaml` aplica as migrations de `apps/api/migrati
 banco ficar saudável, aplica o que falta e termina com 0; rodar de novo não muda nada; com o banco inalcançável, termina
 com código diferente de 0. A imagem dele é construída por `apps/api/Dockerfile`, então não pede `npm ci` na máquina.
 
-O compose exige `PGUSER`, `PGPASSWORD` e `PGDATABASE` no ambiente, sem valor padrão, para o `db` e para o `migrate`, e
-`PGHOST` e `PGPORT` para o endereço e a porta que o `db` publica; `PGHOST` precisa ser um endereço IP, e o
-`.env.example` traz o de loopback, que mantém o banco fora da rede. O serviço `api` exige ainda `API_PUBLISH_HOST` e
-`API_PUBLISH_PORT`, o endereço e a porta em que publica a API no host; o `.env.example` traz o de loopback e uma porta
-diferente da do `npm run dev`. O `npm run dev` lê `API_HOST` e `API_PORT` (padrões `127.0.0.1` e `3000`), com o prefixo
-para que um `HOST` ou `PORT` exportado por outra ferramenta nunca mude onde a API escuta. Sem alguma delas, o compose
-recusa subir. Para desenvolver, copie o `.env.example` para `.env`, que o git ignora e o compose lê sozinho; a senha
-dele é só de desenvolvimento e não protege nada. Para aplicar as migrations de novo, com o `db` no ar, o comando, na
-raiz, é `docker compose run --rm migrate`. O `npm run check` não precisa do compose nem das variáveis: os testes de
-banco sobem o próprio contêiner, numa porta livre.
+O `.env` nasce do `cp .env.example .env`, que o git ignora, e o compose o lê sozinho; a senha do exemplo é só de
+desenvolvimento e não protege nada. Estas são as variáveis dele, todas obrigatórias, sem valor padrão, menos onde a
+tabela diz o contrário; sem alguma delas, o compose recusa subir e diz qual falta:
 
-O serviço `api` só sobe depois que o `migrate` termina com 0. Dentro do contêiner ele escuta em `0.0.0.0:3000`, fixo no
-`compose.yaml`, e a conexão com o banco usa o host `db`; a imagem vem do mesmo `apps/api/Dockerfile`, no alvo `api`. O
-`pull_policy: build` faz o `docker compose up -d` reconstruir as imagens do `migrate` e da `api` a cada subida, com o
-cache de camadas, para nunca subir uma imagem de código antigo. Ao receber `SIGTERM`, como no `docker compose stop`, ele
-fecha o servidor, depois o pool, e sai com 0. O `npm run dev` e o serviço `api` usam portas diferentes do host
-(`API_PORT` e `API_PUBLISH_PORT`), então rodam juntos, sobre o mesmo banco.
+| Variável | Quem lê | Para quê |
+| --- | --- | --- |
+| `PGHOST`, `PGPORT` | O compose, o `npm run dev` e o editor | O endereço e a porta em que o `db` aparece no host; `PGHOST` precisa ser um endereço IP, e o do exemplo é o de loopback, que mantém o banco fora da rede |
+| `PGUSER`, `PGPASSWORD`, `PGDATABASE` | O compose, o `npm run dev` e o editor | O usuário, a senha e o banco: o `db` os cria na primeira vez, e o `migrate` e a `api` conectam com eles |
+| `API_PUBLISH_HOST`, `API_PUBLISH_PORT` | O compose | O endereço e a porta em que a `api` do contêiner aparece no host |
+| `API_HOST`, `API_PORT` | O `npm run dev` | Onde a API do host escuta; opcionais, com os padrões `127.0.0.1` e `3000` |
+
+Cada processo tem o seu endereço, e nenhum se repete:
+
+| Quem | Endereço no host | Variáveis |
+| --- | --- | --- |
+| O `db` | `PGHOST:PGPORT` | `PGHOST` e `PGPORT` |
+| A `api` do compose | `API_PUBLISH_HOST:API_PUBLISH_PORT` | `API_PUBLISH_HOST` e `API_PUBLISH_PORT` |
+| A API do `npm run dev` | `API_HOST:API_PORT` | `API_HOST` e `API_PORT` |
+
+Dentro dos contêineres, e só ali, estes valores são fixos no `compose.yaml` e nunca vêm do `.env`: o `migrate` e a `api`
+acham o banco em `db:5432`, e a `api` escuta em `0.0.0.0:3000`. O prefixo `API_` existe para que um `HOST` ou `PORT`
+exportado por outra ferramenta no seu shell nunca mude onde a API escuta.
+
+O serviço `api` só sobe depois que o `migrate` termina com 0, e a imagem dele vem do mesmo `apps/api/Dockerfile`, no
+alvo `api`. O `pull_policy: build` faz o `docker compose up -d` reconstruir as imagens do `migrate` e da `api` a cada
+subida, com o cache de camadas, para nunca subir uma imagem de código antigo. Ao receber `SIGTERM`, como no
+`docker compose stop`, a `api` fecha o servidor, depois o pool, e sai com 0. Para aplicar as migrations de novo, o
+comando é `docker compose run --rm migrate`. O `npm run check` não precisa do compose nem das variáveis: os testes de
+banco sobem o próprio contêiner, numa porta livre.
 
 Duas armadilhas do compose. Uma variável já exportada no shell vence a do `.env`: se `PGUSER` ou `PGDATABASE` no shell
 diferirem do `.env`, o compose usa as do shell, e o banco e o `migrate` podem divergir da API sem aviso. E a imagem do
 `db` lê o usuário, a senha e o banco só na primeira inicialização do volume `db-data`: mudá-los depois não altera um
 banco que já existe, e a conexão falha até o volume ser recriado (`docker compose down --volumes` apaga os dados).
+
+Se o `npm run dev` falhar com `address already in use`, ou o `docker compose up -d` recusar uma porta com o erro de
+porta ocupada do seu container runtime, outro programa seu usa essa porta: pare esse programa ou mude, no `.env`, a
+variável da tabela acima que dá o endereço dela.
 
 ### Editor com SQL (opcional)
 
