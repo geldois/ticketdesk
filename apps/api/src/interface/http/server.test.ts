@@ -7,12 +7,8 @@ import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createMigratedTestDatabase } from "../../../test/database.ts";
-import { CreateTicketUseCase } from "../../application/use-cases/create-ticket.ts";
-import { GetTicketUseCase } from "../../application/use-cases/get-ticket.ts";
-import { ListTicketHistoryEntriesUseCase } from "../../application/use-cases/list-ticket-history-entries.ts";
-import type { Container } from "../../config/container.ts";
+import { buildContainer } from "../../config/container.ts";
 import { createPgPool } from "../../infrastructure/pool.ts";
-import { PgTicketRepository } from "../../infrastructure/repositories/pg-ticket-repository.ts";
 import { buildServer } from "./server.ts";
 
 const INSTANT = new Date("2026-01-01T10:20:30.123Z");
@@ -25,22 +21,6 @@ const VALID_BODY = {
   channel: "chat",
   priority: "high",
 };
-
-function buildContainer(pgPool: Pool): Container {
-  const repository = new PgTicketRepository(pgPool);
-
-  return {
-    now: () => INSTANT,
-    repositories: { ticketRepository: repository },
-    useCases: {
-      createTicketUseCase: new CreateTicketUseCase(repository),
-      getTicketUseCase: new GetTicketUseCase(repository),
-      listTicketHistoryEntriesUseCase: new ListTicketHistoryEntriesUseCase(
-        repository,
-      ),
-    },
-  };
-}
 
 function readProblem(response: LightMyRequestResponse) {
   const body = response.json<Record<string, unknown>>();
@@ -77,8 +57,10 @@ describe("the HTTP server", () => {
   beforeAll(async () => {
     pgPool = createPgPool(await createMigratedTestDatabase());
     unreachablePgPool = createPgPool(UNREACHABLE_DATABASE_URL);
-    server = buildServer(buildContainer(pgPool));
-    unreachableServer = buildServer(buildContainer(unreachablePgPool));
+    server = buildServer(buildContainer({ now: () => INSTANT, pgPool }));
+    unreachableServer = buildServer(
+      buildContainer({ now: () => INSTANT, pgPool: unreachablePgPool }),
+    );
   });
 
   afterAll(async () => {
