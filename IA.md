@@ -72,6 +72,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00006`, passo 3: a IA escreveu fora do repositório a sonda do passo e orientou a sintaxe de TypeScript enquanto
   eu escrevia os casos de uso. A IA escreveu o `application/errors.ts` e os testes dos erros e dos três casos de uso,
   contra o PostgreSQL real e com o relógio por argumento.
+- `spec: 00006`, passo 4: a IA escreveu o servidor Fastify, as três rotas, os esquemas do Zod, o mapeador de erros em
+  `problem+json` e os tipos do contrato, explicando cada peça antes de seguir, e os testes do servidor.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -205,6 +207,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   projeto descartável: o `db` ficou saudável, o `migrate` saiu com 0, a `api` respondeu 404 a um `id` inexistente e o
   `docker compose stop` a encerrou com código 0. O `check` não exercita a imagem nem o compose, então esse é o único
   teste dessa parte.
+- `spec: 00006`, passo 4, "Como rodar": a IA provou num projeto descartável que `docker compose run --rm migrate` só
+  devolve o controle depois da migração e que `docker compose up -d migrate` não espera por ela, e que um segundo
+  `up -d` reconstrói a imagem da `api`. O README usa o primeiro no caminho de quem desenvolve.
 - `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
   de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
   cobrem o que os removidos cobriam.
@@ -280,6 +285,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   percebeu ao rodar o compose cru, que recusava e nomeava a variável, e corrigiu a sonda sem mudar o caso. Antes disso,
   a primeira versão do script de entrada lia uma `DATABASE_URL` que o compose montaria com a senha, e uma senha com `@`
   ou `/` a quebraria; a IA trocou por variáveis `PG*` separadas antes de eu pedir.
+- `spec: 00006`, passo 4: o `Dockerfile` e o `.dockerignore` do `migrate` copiavam só o `settings.ts` e não o
+  `errors.ts` que ele importa, e a imagem quebraria ao rodar. A IA achou e corrigiu antes de commitar a configuração;
+  nenhum teste constrói essa imagem (o `migrate.test.ts` só lê o texto do `Dockerfile`), e só o `docker build` do commit
+  do serviço `api` a construiu de verdade.
 
 ## Uma decisão minha
 
@@ -392,6 +401,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   escolhi separar as portas, para o choque deixar de depender de lembrar um comando. Mandei trocar `HOST` e `PORT` por
   `API_HOST` e `API_PORT`, porque outras ferramentas exportam os nomes soltos e um valor do shell vence o `.env` sem
   aviso. O commit declara o desvio da spec, que deixava o serviço de fora.
+- `spec: 00006`, passo 4: a IA propôs mapear à mão os códigos de erro do Fastify para o `problem+json`, e corrigi: o
+  mapeador preserva o status de qualquer 4xx que o Fastify devolve (por exemplo, o 413 de um corpo grande) sob
+  `invalid_request` e colapsa todo 5xx em `internal_error`, em vez de dobrar tudo em 400. Escolhi também a classe
+  `Settings`, que lê as variáveis de ambiente num lugar só, no lugar de o pool ler as `PG*` direto.
 
 ## Onde a IA não entrou
 
@@ -432,3 +445,5 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00006`, passo 3: `CreateTicketUseCase`, `GetTicketUseCase` e `ListTicketHistoryEntriesUseCase` são meus, com o
   repositório no construtor e o 404 decidido no caso de uso. A IA orientou a sintaxe de TypeScript e escreveu o
   `application/errors.ts` e os testes.
+- `spec: 00006`, passo 4: o `main.ts`, a raiz de composição que monta o contêiner, sobe o servidor e encerra o pool nos
+  sinais, é meu.
