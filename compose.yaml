@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: ${PGPASSWORD:?set PGPASSWORD in .env}
       POSTGRES_DB: ${PGDATABASE:?set PGDATABASE in .env}
     ports:
-      - "127.0.0.1:${PGPORT:?set PGPORT in .env}:5432"
+      - "${PGHOST:?set PGHOST in .env}:${PGPORT:?set PGPORT in .env}:5432"
     volumes:
       - db-data:/var/lib/postgresql
     healthcheck:
