@@ -135,20 +135,19 @@ export function normalizeTicketStatus(raw: string): TicketStatus {
   return raw;
 }
 
-export const TRANSITION_TICKET_STATUSES: Record<
-  TicketStatus,
-  Set<TicketStatus>
-> = {
-  open: new Set(["in_progress"]),
-  in_progress: new Set(["resolved"]),
-  resolved: new Set(["open"]),
-};
+export const TRANSITION_TICKET_STATUSES: Readonly<
+  Record<TicketStatus, readonly TicketStatus[]>
+> = Object.freeze({
+  open: Object.freeze(["in_progress"] as const),
+  in_progress: Object.freeze(["resolved"] as const),
+  resolved: Object.freeze(["open"] as const),
+});
 
 export function validateTransitionTicketStatus(
   from: TicketStatus,
   to: TicketStatus,
 ): void {
-  if (!TRANSITION_TICKET_STATUSES[from].has(to)) {
+  if (!TRANSITION_TICKET_STATUSES[from].includes(to)) {
     throw new InvalidTransitionError();
   }
 }

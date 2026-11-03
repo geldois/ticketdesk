@@ -21,6 +21,7 @@ import {
   normalizeTicketStatus,
   REOPEN_REASON,
   RESOLUTION_NOTE,
+  TRANSITION_TICKET_STATUSES,
   validateInstant,
   validateTransitionTicketStatus,
 } from "./invariants.ts";
@@ -217,6 +218,26 @@ describe("validateTransitionTicketStatus", () => {
     expect(() => {
       validateTransitionTicketStatus(from, to);
     }).toThrow(InvalidTransitionError);
+  });
+});
+
+describe("TRANSITION_TICKET_STATUSES", () => {
+  it("refuses to change a destination of a status and keeps the transition refused", () => {
+    expect(() =>
+      Object.assign(TRANSITION_TICKET_STATUSES.open, ["resolved"]),
+    ).toThrow(TypeError);
+    expect(() => {
+      validateTransitionTicketStatus("open", "resolved");
+    }).toThrow(InvalidTransitionError);
+  });
+
+  it("refuses to replace the destinations of a status and keeps the transition accepted", () => {
+    expect(() =>
+      Object.assign(TRANSITION_TICKET_STATUSES, { open: [] }),
+    ).toThrow(TypeError);
+    expect(() => {
+      validateTransitionTicketStatus("open", "in_progress");
+    }).not.toThrow();
   });
 });
 
