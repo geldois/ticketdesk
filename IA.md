@@ -87,6 +87,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00007`, passo 4: a IA escreveu fora do repositório a sonda dos critérios 5 a 9 e 11 e, por delegação minha, a
   rota `POST /tickets/:id/transitions`, a leitura do `If-Match`, o `ETag`, os dois erros novos, o membro `ticket` do
   409, os tipos do contrato e os testes do servidor, explicando cada peça.
+- `spec: 00007`, passo 5: a IA escreveu fora do repositório a sonda dos critérios 10 e 12 e o teste HTTP da corrida, por
+  delegação minha.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -226,6 +228,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00007`, passo 4: a sonda dos critérios 5 a 9 e 11 ficou vermelha antes da rota, com 16 casos reprovados, e
   verde depois dela, com os 19 casos aprovados; os testes do servidor repetem esses casos e o `check` passou com a
   cobertura mínima.
+- `spec: 00007`, passo 5: a sonda ficou vermelha nas linhas da corrida e verde com o teste, que dispara duas requisições
+  juntas e afirma um 200, um 409, uma só entrada nova e a `version` 2; o `check` passou sobre a árvore inteira.
 - `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
   de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
   cobrem o que os removidos cobriam.

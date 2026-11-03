@@ -592,6 +592,34 @@ describe("the HTTP server", () => {
         expect(await snapshot(id)).toEqual(before);
       },
     );
+
+    it("ends two concurrent requests with the same If-Match in one 200 and one 409, with a single new history entry", async () => {
+      for (let round = 0; round < 20; round += 1) {
+        const ticket = await createTicket();
+
+        const responses = await Promise.all([
+          transit(ticket.id, '"1"'),
+          transit(ticket.id, '"1"'),
+        ]);
+
+        const statuses = responses
+          .map((response) => response.statusCode)
+          .toSorted((a, b) => a - b);
+        expect(statuses).toEqual([200, 409]);
+        const history = await server.inject({
+          method: "GET",
+          url: `/tickets/${ticket.id}/history`,
+        });
+        expect(
+          history.json<TicketHistoryEntryResponse[]>().map((entry) => entry.to),
+        ).toEqual(["open", "in_progress"]);
+        const current = await server.inject({
+          method: "GET",
+          url: `/tickets/${ticket.id}`,
+        });
+        expect(current.json<TicketResponse>().version).toBe(2);
+      }
+    });
   });
 
   describe("failures that no route owns", () => {
