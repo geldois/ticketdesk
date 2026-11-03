@@ -30,9 +30,7 @@ export function createTicketChange(
   },
   at: Date,
 ): TicketChange {
-  const atCopy = new Date(at);
-
-  validateInstant(atCopy);
+  validateInstant(new Date(at));
 
   const resolutionNote = null;
 
@@ -41,7 +39,7 @@ export function createTicketChange(
     to: "open",
     resolutionNote,
     reopenReason: null,
-    at: atCopy,
+    at: new Date(at),
   };
 
   const normalizedCustomerName = normalizeInvariantField(
@@ -64,7 +62,7 @@ export function createTicketChange(
     priority: normalizedPriority,
     status: "open",
     resolutionNote,
-    createdAt: atCopy,
+    createdAt: new Date(at),
   };
 
   return { ticketHistoryEntry, ticket };
@@ -83,9 +81,7 @@ export function transitTicketChange(
   },
   at: Date,
 ): TicketChange {
-  const atCopy = new Date(at);
-
-  validateInstant(atCopy);
+  validateInstant(new Date(at));
   validateTransition(ticket.status, to, resolutionNote, reopenReason);
 
   const normalizedResolutionNote =
@@ -102,7 +98,7 @@ export function transitTicketChange(
     to,
     resolutionNote: normalizedResolutionNote,
     reopenReason: normalizedReopenReason,
-    at: atCopy,
+    at: new Date(at),
   };
 
   const newTicket: Ticket = {
