@@ -117,6 +117,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   avisa, sem falhar, diante de uma pasta inexistente, escreveu a sonda e, em peças, uma de cada vez, com a explicação de
   cada uma, a variável no `Settings`, o plugin que serve a pasta, a assinatura nova do `buildServer`, os testes e a
   linha do Registro.
+- `spec: 00009`, passo 4: por delegação minha, a IA escreveu a sonda e, em peças, uma de cada vez, com a explicação de
+  cada uma, a liberação do `apps/web` no `.dockerignore`, o estágio do `Dockerfile` que constrói o front, a cópia dele
+  para o alvo `api` e as passagens do `README.md`.
 
 ## O que validei
 
@@ -283,6 +286,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   sobe da pasta, e que uma pasta inexistente não impede o `ready()`, o que mostrou que o critério 6 pedia uma checagem
   própria. A sonda do passo partiu com quatro dos treze casos vermelhos e ficou toda verde; os testes do
   `server.test.ts` e do `settings.test.ts` repetem esses casos contra uma pasta temporária real.
+- `spec: 00009`, passo 4: a sonda subiu a pilha inteira num projeto descartável do compose, com portas livres para não
+  colidir com a minha, e partiu com dois dos nove casos vermelhos (a página e o script do build) e os outros sete
+  verdes, entre eles o de que a imagem da `api` não traz o Vite nem o React; ficou toda verde depois do estágio novo,
+  com a página, o script, a lista e o 404 respondendo pela porta publicada.
 
 ## Um erro da IA
 

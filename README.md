@@ -58,12 +58,13 @@ cp .env.example .env
 docker compose up -d
 ```
 
-O `cp` cria o `.env`. O `docker compose up -d` constrói as imagens, sobe o `db`, aplica as migrations e sobe a API.
-Nenhuma dependência é instalada no seu host.
+O `cp` cria o `.env`. O `docker compose up -d` constrói as imagens, sobe o `db`, aplica as migrations e sobe a API, que
+serve também a página do front. Nenhuma dependência é instalada no seu host.
 
 Com o `.env.example` sem alterar, a API responde em `http://127.0.0.1:3001`, o `API_PUBLISH_HOST` e o `API_PUBLISH_PORT`
-dele; se você mudou algum, use os seus no lugar de `127.0.0.1:3001` nos comandos abaixo. Ainda não há tela: a API
-devolve JSON. Para conferir, um comando por vez:
+dele; se você mudou algum, use os seus no lugar de `127.0.0.1:3001` nos comandos abaixo. Abrir esse endereço no
+navegador mostra a página mínima do front; a tela de tickets ainda não existe, e as rotas da API devolvem JSON. Para
+conferir, um comando por vez:
 
 ```sh
 curl -i http://127.0.0.1:3001/tickets/019a0000-0000-7000-8000-000000000000
@@ -111,20 +112,24 @@ Para rodar a API no host, com o banco em contêiner, um comando por vez, depois 
 ```sh
 cp .env.example .env
 docker compose run --rm migrate
+npm run build
 npm run dev
 ```
 
 O `docker compose run --rm migrate` sobe só o `db`, espera ele ficar saudável, aplica as migrations, espera terminar e
-deixa o `db` no ar, sem subir a `api` do compose. O `npm run dev` carrega o `.env` e a API escuta em
-`http://127.0.0.1:3000`, o `API_HOST` e o `API_PORT`; `Ctrl+C` a encerra, fechando o servidor e depois o pool. Os dois
-caminhos rodam ao mesmo tempo, em portas diferentes, sobre o mesmo banco.
+deixa o `db` no ar, sem subir a `api` do compose. O `npm run build` gera o front em `apps/web/dist`, a pasta que o
+`WEB_DIST_DIR` do `.env` aponta; sem ele, o `npm run dev` recusa subir e diz para rodar o build. O `npm run dev` carrega
+o `.env` e a API escuta em `http://127.0.0.1:3000`, o `API_HOST` e o `API_PORT`, e serve a página nesse mesmo endereço;
+`Ctrl+C` a encerra, fechando o servidor e depois o pool. Os dois caminhos rodam ao mesmo tempo, em portas diferentes,
+sobre o mesmo banco.
 
 Comandos, executados na raiz:
 
 | Comando | O que faz |
 | --- | --- |
 | `npm ci` | Instala as dependências exatas do lockfile |
-| `npm run dev` | Sobe a API no host, com o `.env` carregado; exige o `db` no ar e migrado |
+| `npm run build` | Gera o front em `apps/web/dist`; o `npm run dev` o serve quando o `WEB_DIST_DIR` aponta para essa pasta |
+| `npm run dev` | Sobe a API no host, com o `.env` carregado; exige o `db` no ar e migrado e, com o `WEB_DIST_DIR` definido, o build feito |
 | `npm run check` | Confere antes de tudo que há um container runtime e, sem ele, para com uma mensagem, sem rodar mais nada; com ele, roda todas as verificações do repositório, o lint e o formato do SQL de `apps/api` inclusos, mesmo que uma falhe, e sai com erro se qualquer uma falhou; é o que o CI roda a cada push |
 | `npm run fix` | Corrige o que o lint e os formatadores sabem corrigir, o do SQL incluso |
 
@@ -146,6 +151,7 @@ tabela diz o contrário; sem alguma delas, o compose recusa subir e diz qual fal
 | `PGUSER`, `PGPASSWORD`, `PGDATABASE` | O compose, o `npm run dev` e o editor | O usuário, a senha e o banco: o `db` os cria na primeira vez, e o `migrate` e a `api` conectam com eles |
 | `API_PUBLISH_HOST`, `API_PUBLISH_PORT` | O compose | O endereço e a porta em que a `api` do contêiner aparece no host |
 | `API_HOST`, `API_PORT` | O `npm run dev` | Onde a API do host escuta; opcionais, com os padrões `127.0.0.1` e `3000` |
+| `WEB_DIST_DIR` | O `npm run dev` | A pasta do front compilado que a API serve; opcional, e ausente, vazia ou só com espaços a API serve só as rotas; o exemplo aponta para `apps/web/dist`, e uma pasta que não existe impede a API de subir |
 
 Cada processo tem o seu endereço, e nenhum se repete:
 
@@ -156,15 +162,17 @@ Cada processo tem o seu endereço, e nenhum se repete:
 | A API do `npm run dev` | `API_HOST:API_PORT` | `API_HOST` e `API_PORT` |
 
 Dentro dos contêineres, e só ali, estes valores são fixos no `compose.yaml` e nunca vêm do `.env`: o `migrate` e a `api`
-acham o banco em `db:5432`, e a `api` escuta em `0.0.0.0:3000`. O prefixo `API_` existe para que um `HOST` ou `PORT`
+acham o banco em `db:5432`, e a `api` escuta em `0.0.0.0:3000`. O `WEB_DIST_DIR` da `api` também não vem do `.env`: o
+`Dockerfile` o define para o front que ele mesmo constrói. O prefixo `API_` existe para que um `HOST` ou `PORT`
 exportado por outra ferramenta no seu shell nunca mude onde a API escuta.
 
-O serviço `api` só sobe depois que o `migrate` termina com 0, e a imagem dele vem do mesmo `Dockerfile`, no alvo `api`.
-O `pull_policy: build` faz o `docker compose up -d` reconstruir as imagens do `migrate` e da `api` a cada subida, com o
-cache de camadas, para nunca subir uma imagem de código antigo. Ao receber `SIGTERM`, como no `docker compose stop`, a
-`api` fecha o servidor, depois o pool, e sai com 0. Para aplicar as migrations de novo, o comando é
-`docker compose run --rm migrate`. O `npm run check` não precisa do compose nem das variáveis: os testes de banco sobem
-o próprio contêiner, numa porta livre.
+O serviço `api` só sobe depois que o `migrate` termina com 0, e a imagem dele vem do mesmo `Dockerfile`, no alvo `api`,
+que traz o front compilado por um estágio próprio, sem o Vite nem o React. O `pull_policy: build` faz o
+`docker compose up -d` reconstruir as imagens do `migrate` e da `api` a cada subida, com o cache de camadas, para nunca
+subir uma imagem de código antigo. Ao receber `SIGTERM`, como no `docker compose stop`, a `api` fecha o servidor, depois
+o pool, e sai com 0. Para aplicar as migrations de novo, o comando é `docker compose run --rm migrate`. O
+`npm run check` não precisa do compose nem das variáveis: os testes de banco sobem o próprio contêiner, numa porta
+livre.
 
 Duas armadilhas do compose. Uma variável já exportada no shell vence a do `.env`: se `PGUSER` ou `PGDATABASE` no shell
 diferirem do `.env`, o compose usa as do shell, e o banco e o `migrate` podem divergir da API sem aviso. E a imagem do

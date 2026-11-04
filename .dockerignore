@@ -3,6 +3,11 @@
 !package.json
 !package-lock.json
 !apps/api/package.json
+!apps/web/package.json
+!apps/web/index.html
+!apps/web/tsconfig.json
+!apps/web/vite.config.ts
+!apps/web/src
 !apps/api/migrations
 !apps/api/scripts/migrate.ts
 !apps/api/src
