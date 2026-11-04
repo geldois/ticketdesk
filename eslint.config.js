@@ -6,10 +6,10 @@ import importX from "eslint-plugin-import-x";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  { ignores: [".cache"] },
+  { ignores: [".cache", "apps/web/dist"] },
   { linterOptions: { reportUnusedDisableDirectives: "error" } },
   {
-    files: ["**/*.{js,ts}"],
+    files: ["**/*.{js,ts,tsx}"],
     extends: [
       js.configs.recommended,
       tseslint.configs.strictTypeChecked,

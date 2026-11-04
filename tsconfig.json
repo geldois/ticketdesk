@@ -22,5 +22,6 @@
     "allowUnreachableCode": false,
     "allowUnusedLabels": false
   },
-  "include": ["apps", "packages", "vitest.config.ts"]
+  "include": ["apps", "packages", "vitest.config.ts"],
+  "exclude": ["apps/web"]
 }

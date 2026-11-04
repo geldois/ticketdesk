@@ -108,6 +108,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00009`: a IA me entrevistou sobre a tela, o cliente HTTP, como o front chega ao usuário e onde mora o
   `Dockerfile`, e redigiu o rascunho da spec, que o `docs-auditor` revisou antes do commit; os oito achados médios foram
   corrigidos na spec antes de congelá-la.
+- `spec: 00009`, passo 2: por delegação minha, a IA pesquisou as versões do front no registro do npm, provou a
+  compatibilidade num projeto descartável fora do repositório, escreveu a sonda e, em quatro peças, uma de cada vez, com
+  a explicação de cada uma, o `package.json` e o `tsconfig.json` do `apps/web`, a página mínima, o script `build` da
+  raiz, a cobertura dos portões do `check` e o teste do build.
 
 ## O que validei
 
@@ -264,6 +268,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
   de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
   cobrem o que os removidos cobriam.
+- `spec: 00009`, passo 2: antes de qualquer arquivo, a IA provou num projeto descartável, com o Node pinado do
+  repositório, que as versões escolhidas do Vite, do plugin de React, do React e dos tipos compilam com o TypeScript do
+  repositório em modo estrito, com JSX e DOM, e geram um `index.html` com o script que ele referencia. A sonda do passo
+  partiu com dez dos catorze casos vermelhos e ficou toda verde, inclusive o `npm ci` sem alterar o lockfile e o
+  `npm run check` com código 0; o teste do build repete o caso do `index.html` contra uma pasta temporária.
 
 ## Um erro da IA
 
@@ -353,6 +362,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   tipa como `null`, e eles chegavam como `undefined`. Os dezessete casos de listagem reprovaram com o mesmo erro de
   leitura de `createdAt`. A IA apontou que a falha era da sonda, e não do repositório, e a corrigiu para completar os
   campos com `null`, sem afrouxar a checagem do repositório.
+- `spec: 00009`, passo 2: o script `build` da raiz foi escrito sem o `--` que repassa argumentos, então o `--outDir` do
+  teste do build virou argumento do `npm`, e o Vite tomou a pasta temporária como raiz do projeto. O teste reprovou na
+  primeira rodada, a IA achou a causa e acrescentou o `--` ao script.
 
 ## Uma decisão minha
 

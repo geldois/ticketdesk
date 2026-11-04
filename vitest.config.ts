@@ -7,7 +7,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["apps/*/src/**", "packages/*/src/**"],
-      exclude: ["**/*.test.ts", "apps/api/src/main.ts"],
+      exclude: ["**/*.test.ts", "apps/api/src/main.ts", "apps/web/**"],
       reporter: ["text"],
       reportsDirectory: ".cache/coverage",
       thresholds: {
