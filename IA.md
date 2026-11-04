@@ -120,6 +120,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00009`, passo 4: por delegação minha, a IA escreveu a sonda e, em peças, uma de cada vez, com a explicação de
   cada uma, a liberação do `apps/web` no `.dockerignore`, o estágio do `Dockerfile` que constrói o front, a cópia dele
   para o alvo `api` e as passagens do `README.md`.
+- `spec: 00010`: a IA me entrevistou em três rodadas sobre o fatiamento do front, o desenvolvimento contra a API, a
+  autoria do cliente HTTP, os testes, os tipos compartilhados, o idioma e o conteúdo da tela, e redigiu o rascunho da
+  spec, que o `docs-auditor` revisou antes do commit; os oito achados médios foram corrigidos na spec antes de
+  congelá-la.
 
 ## O que validei
 
@@ -529,6 +533,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   um passo `npm run build` explícito antes do `npm run dev`, sem acoplá-lo ao script. Mandei também que o serviço de
   arquivos tivesse uma subpasta e um `errors.ts` próprios, contra a proposta de mantê-lo solto em `interface/http/`, e
   um nome que reaproveitasse o `webDistDir`, no lugar de "shell", que é o vocabulário da spec.
+- `spec: 00010`: a IA recomendou só o Prettier para o primeiro CSS, e mandei o `stylelint` na configuração mais
+  rigorosa, a melhor versão, a maior cobertura e a integração máxima no `check` e no `fix`, e depois mandei o mesmo para
+  um linter de HTML, ambos provados por canários de provocação.
 
 ## Onde a IA não entrou
 
