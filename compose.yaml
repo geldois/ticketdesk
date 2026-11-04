@@ -18,7 +18,7 @@ services:
   migrate:
     build:
       context: .
-      dockerfile: apps/api/Dockerfile
+      dockerfile: Dockerfile
       target: migrate
     pull_policy: build
     environment:
@@ -35,7 +35,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: apps/api/Dockerfile
+      dockerfile: Dockerfile
       target: api
     pull_policy: build
     environment:

@@ -56,7 +56,7 @@ describe("the service images", () => {
       "utf8",
     ).trim();
     const dockerfile = readFileSync(
-      new URL("../Dockerfile", import.meta.url),
+      new URL("../../../Dockerfile", import.meta.url),
       "utf8",
     );
 

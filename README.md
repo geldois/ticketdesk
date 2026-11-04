@@ -134,7 +134,7 @@ O que o CI roda, incluindo a auditoria de dependências, está em [.github/workf
 
 O serviço `migrate` do `compose.yaml` aplica as migrations de `apps/api/migrations/` e sai. Ele sobe o `db`, espera o
 banco ficar saudável, aplica o que falta e termina com 0; rodar de novo não muda nada; com o banco inalcançável, termina
-com código diferente de 0. A imagem dele é construída por `apps/api/Dockerfile`, então não pede `npm ci` na máquina.
+com código diferente de 0. A imagem dele é construída pelo `Dockerfile` da raiz, então não pede `npm ci` na máquina.
 
 O `.env` nasce do `cp .env.example .env`, que o git ignora, e o compose o lê sozinho; a senha do exemplo é só de
 desenvolvimento e não protege nada. Estas são as variáveis dele, todas obrigatórias, sem valor padrão, menos onde a
@@ -159,12 +159,12 @@ Dentro dos contêineres, e só ali, estes valores são fixos no `compose.yaml` e
 acham o banco em `db:5432`, e a `api` escuta em `0.0.0.0:3000`. O prefixo `API_` existe para que um `HOST` ou `PORT`
 exportado por outra ferramenta no seu shell nunca mude onde a API escuta.
 
-O serviço `api` só sobe depois que o `migrate` termina com 0, e a imagem dele vem do mesmo `apps/api/Dockerfile`, no
-alvo `api`. O `pull_policy: build` faz o `docker compose up -d` reconstruir as imagens do `migrate` e da `api` a cada
-subida, com o cache de camadas, para nunca subir uma imagem de código antigo. Ao receber `SIGTERM`, como no
-`docker compose stop`, a `api` fecha o servidor, depois o pool, e sai com 0. Para aplicar as migrations de novo, o
-comando é `docker compose run --rm migrate`. O `npm run check` não precisa do compose nem das variáveis: os testes de
-banco sobem o próprio contêiner, numa porta livre.
+O serviço `api` só sobe depois que o `migrate` termina com 0, e a imagem dele vem do mesmo `Dockerfile`, no alvo `api`.
+O `pull_policy: build` faz o `docker compose up -d` reconstruir as imagens do `migrate` e da `api` a cada subida, com o
+cache de camadas, para nunca subir uma imagem de código antigo. Ao receber `SIGTERM`, como no `docker compose stop`, a
+`api` fecha o servidor, depois o pool, e sai com 0. Para aplicar as migrations de novo, o comando é
+`docker compose run --rm migrate`. O `npm run check` não precisa do compose nem das variáveis: os testes de banco sobem
+o próprio contêiner, numa porta livre.
 
 Duas armadilhas do compose. Uma variável já exportada no shell vence a do `.env`: se `PGUSER` ou `PGDATABASE` no shell
 diferirem do `.env`, o compose usa as do shell, e o banco e o `migrate` podem divergir da API sem aviso. E a imagem do
@@ -232,7 +232,7 @@ Só as decisões de alto ROI, da mais antiga para a mais recente.
 | O banco espelha a estrutura, o tamanho, as transições aceitas e a presença de nota e motivo, e deixa o formato de caractere para o domínio | Espelhar também o formato e os caracteres de controle no banco | Um texto com caractere que o domínio recusa pode entrar no banco; em troca o banco e o domínio não divergem em regex que o PostgreSQL não equipara, e o domínio fica como único dono dos caracteres |
 | A imutabilidade do histórico pelo próprio banco, com gatilhos que recusam `UPDATE`, `DELETE` e `TRUNCATE` em `ticket_history_entry` | Recusar na aplicação, ou revogar as permissões do papel da aplicação | O linter avisa dos gatilhos e das reversões, e cada um leva um `pgls-ignore`; em troca nenhum cliente do banco, nem um `psql`, altera o histórico, e o dono da tabela só o altera derrubando o gatilho |
 | O `migrate` como serviço de execução única do compose, com imagem própria e a conexão em variáveis `PG*` separadas | Migrar na subida da API, uma imagem do Node com o repositório montado (exige `npm ci` no host) ou uma `DATABASE_URL` única | Um Dockerfile e um build a manter, e o esquema nunca muda como efeito colateral de subir a API; em troca roda em qualquer máquina sem instalar nada além do container runtime, e a senha nunca precisa de escape de URL |
-| Um só `apps/api/Dockerfile`, em estágios, com os alvos `migrate` e `api` sobre a mesma base | Um Dockerfile por serviço | Mudar a base ou o `npm ci` afeta os dois serviços de uma vez e o compose precisa nomear o alvo; em troca a versão do Node e a instalação das dependências moram num lugar só |
+| Um só `Dockerfile`, na raiz e em estágios, com os alvos `migrate` e `api` sobre a mesma base | Um Dockerfile por serviço | Mudar a base ou o `npm ci` afeta os dois serviços de uma vez e o compose precisa nomear o alvo; em troca a versão do Node e a instalação das dependências moram num lugar só |
 | A transação única que grava o ticket e a entrada de criação do histórico, aberta dentro do método do repositório | Uma unidade de trabalho explícita na camada de aplicação, ou duas escritas sem transação | Um caso de uso que precisar combinar várias chamadas de repositório numa transação exigirá refatorar para uma unidade de trabalho; em troca nenhuma escrita parcial e um desenho mais simples |
 | A entrada do histórico devolvida sem o identificador numérico do banco | Devolver a linha inteira, com o `id` da entrada | Quem precisar do identificador da entrada terá de pedir uma operação nova; em troca ele nunca vaza numa resposta, e a ordem fica só dentro do banco |
 | O repositório como uma classe que recebe o pool, atrás de uma interface da camada de aplicação | Funções soltas que recebem o pool, sem interface | Uma interface e uma classe a mais para manter; em troca os casos de uso dependem só da interface, e o teste e a montagem da API escolhem a implementação |
