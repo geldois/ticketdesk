@@ -307,6 +307,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   importa `TicketResponse`, o `docker build` dos alvos `migrate` e `api` e a pilha de pé num projeto descartável do
   compose. Só duas das oito linhas partiram vermelhas (a dependência e o lockfile); uma nona, que a própria sonda
   acrescentou, provou que o estágio `web` resolve o contrato e ficou vermelha até o `Dockerfile` copiar o pacote.
+- `spec: 00010`, passo 3: a sonda roda o cliente contra a API real num projeto descartável do compose, com 45 tickets
+  semeados, empates de `created_at` forçados no banco, tickets com transições e um servidor local que responde 502 com
+  texto; antes de entregá-la, a IA a provou contra um cliente descartável seu, fora do repositório, e depois o apagou.
+  Ela partiu vermelha, na importação do arquivo, e ficou toda verde com onze linhas.
 
 ## Um erro da IA
 
@@ -407,6 +411,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   sonda mostrou o contrário: o build seguiu verde, porque o `vite build` apaga os `import type`. Ela corrigiu o
   entendimento e trocou a premissa por uma checagem de que o estágio `web` resolve o pacote, que ficou vermelha até o
   `Dockerfile` copiá-lo.
+- `spec: 00010`, passo 3: a primeira versão da sonda reabria o ticket de `resolved` para `in_progress`, e a API recusou
+  com 422 `invalid_transition`: a reabertura volta para `open`. A IA só percebeu ao validar a sonda contra o cliente
+  descartável, e corrigiu a sonda, não a API.
 
 ## Uma decisão minha
 
