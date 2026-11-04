@@ -79,6 +79,8 @@ regra de autoria (a intenção do autor) e nunca relata o que a IA fez. Seções
 - Só o que uma pessoa toca: comandos, arquivos, rotas, esquemas, variáveis. Nenhum passo oculto.
 - Seção ainda sem conteúdo escreve apenas `Ainda sem conteúdo.` e não promete nada.
 - O Registro de decisões é uma tabela com Decisão, Alternativa descartada e Trade-off aceito.
+- O Registro de decisões só cresce: uma linha nova entra no fim da tabela, e uma linha existente só muda quando a
+  decisão que ela registra muda. Gatilho: escrever uma linha do Registro.
 
 ### IA.md
 
@@ -98,6 +100,9 @@ comportamento da IA; não é diário de estudo do autor.
 - Todo número de spec existente aparece em "Onde usei", e todo número citado existe em `docs/specs/`.
 - Só fatos reais: erro e decisão nunca são escolhidos de antemão nem inventados. Quando registrar é regra de
   `CLAUDE.md`.
+- O diário só cresce: uma entrada nova entra no fim da sua seção, e uma entrada existente nunca é reordenada nem
+  reescrita, salvo para corrigir um fato que o código desmentiu, como o nome de um arquivo que mudou. Gatilho: escrever
+  uma entrada do `IA.md`.
 - "Onde a IA não entrou" fala por artefato e nunca diz "sem IA". Corpo de teste gerado por IA é declarado como tal.
 
 ### CLAUDE.md e AGENTS.md

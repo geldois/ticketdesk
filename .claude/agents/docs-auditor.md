@@ -55,6 +55,7 @@ arquivo nem altere o git.
 | Regra sem dono ou gatilho | Regra em documento que não diz o seu dono ou quando se aplica |
 | Dependência | Versão com `^`, `~`, faixa ou `latest` em manifesto |
 | Voz do IA.md | `IA.md` que fala do autor em terceira pessoa ou da IA em primeira |
+| Acréscimo fora do fim | Pelo `git diff`, linha nova do Registro de decisões que não está no fim da tabela, entrada nova do `IA.md` que não está no fim da sua seção, ou linha do Registro reescrita sem que a decisão que ela registra tenha mudado, ou entrada do `IA.md` reordenada ou reescrita sem ser a correção de um fato que o código desmentiu; sem diff, numa auditoria do repositório inteiro, a checagem não se aplica |
 | Ruído no README | Linha do `README.md` que o código ou outro dono já diz, que não é digna de nota para quem clona, ou que é comportamento da IA |
 
 ## Checagens de specs e do histórico
