@@ -79,8 +79,9 @@ regra de autoria (a intenção do autor) e nunca relata o que a IA fez. Seções
 - Só o que uma pessoa toca: comandos, arquivos, rotas, esquemas, variáveis. Nenhum passo oculto.
 - Seção ainda sem conteúdo escreve apenas `Ainda sem conteúdo.` e não promete nada.
 - O Registro de decisões é uma tabela com Decisão, Alternativa descartada e Trade-off aceito.
-- O Registro de decisões só cresce: uma linha nova entra no fim da tabela, e uma linha existente só muda quando a
-  decisão que ela registra muda. Gatilho: escrever uma linha do Registro.
+- O `README.md` é a condensação das decisões de maior ROI, sem contradição entre linhas: uma linha que uma decisão
+  posterior supera é reescrita ou fundida, nunca deixada ao lado da nova, e o que o código ou outro dono já diz sai.
+  Gatilho: escrever ou revisar uma linha do Registro, ou fechar um commit que muda um fato do `README.md`.
 
 ### IA.md
 
