@@ -89,6 +89,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   409, os tipos do contrato e os testes do servidor, explicando cada peça.
 - `spec: 00007`, passo 5: a IA escreveu fora do repositório a sonda dos critérios 10 e 12 e o teste HTTP da corrida, por
   delegação minha.
+- `spec: 00008`: a IA me entrevistou sobre o cursor, o formato da resposta e do cabeçalho `Link`, os filtros, o limite
+  da página e o índice, e redigiu o rascunho da spec, que o `docs-auditor` revisou antes do commit; os seis achados
+  médios foram corrigidos na spec antes de congelá-la.
+- `spec: 00008`, passo 1: a IA escreveu fora do repositório a sonda do índice e, por delegação minha, o teste do índice
+  no `schema.test.ts` e a linha do Registro de decisões.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -230,6 +235,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   cobertura mínima.
 - `spec: 00007`, passo 5: a sonda ficou vermelha nas linhas da corrida e verde com o teste, que dispara duas requisições
   juntas e afirma um 200, um 409, uma só entrada nova e a `version` 2; o `check` passou sobre a árvore inteira.
+- `spec: 00008`, passo 1: a sonda do índice ficou vermelha antes da migration, com quatro casos reprovados, e verde
+  depois dela, com os oito aprovados, o que inclui reverter e aplicar de novo; o teste do `schema.test.ts` afirma a
+  definição do índice no catálogo do banco.
 - `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
   de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
   cobrem o que os removidos cobriam.
@@ -486,3 +494,4 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   sinais, é meu.
 - `spec: 00007`, passo 3: escrevi a estrutura do teste de conflito do repositório: as rodadas com um ticket novo cada,
   as duas gravações disparadas juntas no `Promise.all` com instantes diferentes e a contagem de quem perde.
+- `spec: 00008`, passo 1: a migration do índice, com o `CREATE INDEX` e o `DROP INDEX`, é minha.

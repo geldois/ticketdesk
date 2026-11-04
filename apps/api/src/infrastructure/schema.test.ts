@@ -318,6 +318,19 @@ describe("the tables", () => {
       ).toEqual(columns);
     },
   );
+
+  it("has the index that orders the ticket list by creation instant and id, newest first", async () => {
+    const rows = await queryRows(
+      databaseUrl,
+      `SELECT indexdef FROM pg_indexes
+       WHERE schemaname = 'public' AND tablename = 'ticket' AND indexname = $1`,
+      ["ticket_created_at_id_idx"],
+    );
+
+    expect(rows.map((row) => row["indexdef"])).toEqual([
+      "CREATE INDEX ticket_created_at_id_idx ON public.ticket USING btree (created_at DESC, id DESC)",
+    ]);
+  });
 });
 
 describe("ticket", () => {
