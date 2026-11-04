@@ -12,20 +12,14 @@ alteração de outra operadora.
 
 ## Como este projeto é desenvolvido
 
-Desenvolvimento orientado por especificação: cada fatia nasce como uma spec congelada em [docs/specs/](docs/specs/), e
-cada passo dela vira um ou mais commits que citam a spec. As regras de trabalho, entre elas a de que todo commit que
-muda comportamento sobe com os seus testes, estão em [CLAUDE.md](CLAUDE.md). A prova de cada passo e o uso de IA estão
-relatados, por spec, em [IA.md](IA.md).
-
-## Filosofia
-
 O ticketdesk é um projeto montado para tirar o máximo de produtividade da IA sem abrir mão do rigor, e para isso segue
 dois métodos: SDD (desenvolvimento orientado por especificação) e TDD (desenvolvimento orientado por testes).
 
-No SDD, a spec vem antes do código, é congelada e tem cada trade-off decidido em entrevista. No TDD, cada passo começa
+No SDD, a spec vem antes do código: cada fatia nasce como uma spec congelada em [docs/specs/](docs/specs/), com cada
+trade-off decidido em entrevista, e cada passo dela vira um ou mais commits que citam a spec. No TDD, cada passo começa
 por uma sonda: um script, fora do repositório, que exercita o passo pela interface pública. Ela nasce vermelha e fica
 verde quando o código está pronto, e cada caso de borda descoberto pelo caminho entra nela e vira teste. Esses testes
-sobem no mesmo commit da mudança que provam.
+sobem no mesmo commit da mudança que provam. As regras de trabalho estão em [CLAUDE.md](CLAUDE.md).
 
 A IA pesquisa, aponta alternativas, revisa e escreve o que lhe cabe, e as decisões de domínio ficam com o autor. A
 autoria segue o quanto a peça exige de raciocínio sobre estado e falha: quanto mais exige, mais perto da mão do autor.
@@ -43,7 +37,7 @@ parte.
 A linguagem é ubíqua e rigorosa: cada conceito tem um nome só, na spec, no código, nos testes e nos documentos, e um
 nome que sugere outro significado do que o valor guarda é tratado como defeito.
 
-O que a IA de fato fez em cada spec está em [IA.md](IA.md).
+A prova de cada passo e o que a IA de fato fez em cada spec estão em [IA.md](IA.md).
 
 ## Como rodar
 

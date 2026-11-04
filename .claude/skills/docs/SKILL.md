@@ -63,14 +63,13 @@ Só documentação. Como o código e os testes são escritos, e quando cada regr
 ### README.md
 
 Escrito para quem vai clonar o repositório, e só com os pontos dignos de nota: o que o código não diz e o que não é
-comportamento da IA, que mora só no `IA.md`. A única exceção é a Filosofia, que declara a regra de autoria (a intenção
-do autor) e nunca relata o que a IA fez. Seções fixas, nesta ordem:
+comportamento da IA, que mora só no `IA.md`. A única exceção é a seção "Como este projeto é desenvolvido", que declara a
+regra de autoria (a intenção do autor) e nunca relata o que a IA fez. Seções fixas, nesta ordem:
 
 | Seção | Papel |
 | --- | --- |
 | Título e resumo | O que o sistema é |
-| Como este projeto é desenvolvido | Um parágrafo que aponta para `docs/specs/`, `IA.md` e `CLAUDE.md` |
-| Filosofia | Curta: o método (SDD e TDD) e a regra de autoria, o que se escreve à mão, o que é semimanual e o que se delega, em voz impessoal; o relato do que a IA fez fica no `IA.md` |
+| Como este projeto é desenvolvido | O método (SDD e TDD), a regra de autoria (o que se escreve à mão, o que é semimanual e o que se delega) e a linguagem ubíqua, em voz impessoal, com apontamento para `docs/specs/`, `CLAUDE.md` e `IA.md`; o relato do que a IA fez fica no `IA.md` |
 | Como rodar | Só comandos que existem e que uma pessoa digita, e o apontamento para os workflows |
 | Visão geral da arquitetura | Prosa curta e, se preciso, um Mermaid enxuto |
 | Premissas | Cada uma como "assumi X porque Y" |
@@ -132,7 +131,7 @@ Todos aparecem sempre, nesta ordem:
 | --- | --- |
 | Objetivo | A fatia em uma ou duas frases |
 | Fora do escopo | O que esta spec deliberadamente não resolve |
-| Contrato | Assinatura, esquema, rota ou comando, escrito como código; estrutura de arquivos só como tabela. A parte que a Filosofia reserva à mão ou ao semimanual segue §Regras |
+| Contrato | Assinatura, esquema, rota ou comando, escrito como código; estrutura de arquivos só como tabela. A parte que a seção "Como este projeto é desenvolvido" reserva à mão ou ao semimanual segue §Regras |
 | Critérios de aceite | Condições binárias, cada uma verificável por teste ou comando |
 | Casos de teste | Por critério, o nível (unitário, integração, regressão) e a asserção; as bordas enumeradas |
 | Restrições | Ferramentas e limites que a fatia respeita |
@@ -145,9 +144,9 @@ motivo diz por que o campo não cabe nesta fatia e não repete o que `IA.md`, `R
 ### Regras
 
 - O autor escreve a spec. A IA entrevista, aponta trade-offs e confere o formato; ela nunca decide o domínio.
-- Respeita a Filosofia do `README.md`: para o que ela reserva à mão ou ao semimanual, a spec fixa só nomes públicos,
-  tipos, invariantes e comportamento observável, em tabelas. Nunca traz código, assinatura, classe, função auxiliar nem
-  organização em arquivos dessa parte, porque a forma é de quem a escreve.
+- Respeita a seção "Como este projeto é desenvolvido" do `README.md`: para o que ela reserva à mão ou ao semimanual, a
+  spec fixa só nomes públicos, tipos, invariantes e comportamento observável, em tabelas. Nunca traz código, assinatura,
+  classe, função auxiliar nem organização em arquivos dessa parte, porque a forma é de quem a escreve.
 - A spec é a fonte da verdade do norte a seguir, que é o Objetivo e o Contrato dela, e é congelada no conteúdo a partir
   do commit que a introduz: não tem status nem registro, e só a formatação pode mudar depois, com o commit
   `spec: none (format)`. Spec e commit pontual coexistem: a spec fixa o rumo, e o commit o executa e o ajusta.

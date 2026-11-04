@@ -389,8 +389,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   na skill `docs` que o README cita cada comando do CI, e o auditor me fez listar os `npm audit`; decidi trocar a regra
   por citar só os comandos que uma pessoa digita e apontar para `.github/workflows/`, para não duplicar a fonte.
 - `spec: 00004`: o que escrevo à mão não tem forma prescrita pela spec. A IA tinha escrito o contrato como código
-  (tipos, classes e assinaturas); decidi que a spec fixa só nomes públicos, tipos e invariantes, e que a Filosofia do
-  README vale para a IA como regra.
+  (tipos, classes e assinaturas); decidi que a spec fixa só nomes públicos, tipos e invariantes, e que a seção "Como
+  este projeto é desenvolvido" do README vale para a IA como regra.
 - `spec: 00004`: renomeei os campos `note` e `reason` da entrada do histórico para `resolutionNote` e `reopenReason`,
   para os nomes dizerem a que se referem. É um desvio da spec congelada, que a IA me apresentou como pergunta; aceitei o
   desvio e o commit o registra num parágrafo próprio.
@@ -478,9 +478,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   ficaria num lugar só; decidi manter a defesa em profundidade, com um erro de aplicação próprio, o `InvalidLimitError`,
   mesmo duplicando a regra. Decidi também renomear o campo da posição da próxima página para `afterPosition`, depois de
   perceber que `nextPosition` sugeria a posição do ticket seguinte quando o valor é a do último ticket da página.
-- `spec: 00008`, passo 3: a IA tinha escrito a regra de vocabulário em dois lugares, a Filosofia do `README.md` e o
-  `CLAUDE.md`; decidi que a Filosofia fixa o princípio da linguagem ubíqua e o `CLAUDE.md` aponta para ela e mantém só a
-  regra operacional de coesão dos nomes, sem duplicar a fonte da verdade.
+- `spec: 00008`, passo 3: a IA tinha escrito a regra de vocabulário em dois lugares, no `README.md` e no `CLAUDE.md`;
+  decidi que o `README.md` fixa o princípio da linguagem ubíqua e o `CLAUDE.md` aponta para ele e mantém só a regra
+  operacional de coesão dos nomes, sem duplicar a fonte da verdade.
+- `spec: none (tweak)`: decidi unir a seção "Filosofia" do `README.md` à seção "Como este projeto é desenvolvido",
+  porque dizem quase a mesma coisa e a Filosofia não acrescentava um tópico próprio.
 - `spec: 00008`, passo 4: o campo `after` do `ListTicketsQuery` ainda tinha outro nome que o `afterPosition` do
   `TicketPage`; percebi e mandei renomear, para o conceito ter um nome só na consulta, na página e nas sondas. Mandei
   também que o `MIN_LIMIT` fosse explícito no esquema, sem confiar só no regex, e que os limites tivessem um dono só, o

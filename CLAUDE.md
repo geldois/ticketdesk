@@ -27,9 +27,9 @@ aponta para ele.
 
 ## Desenvolvimento orientado por especificação
 
-- A Filosofia do `README.md` é lei para a IA: ela nunca escreve o que a Filosofia reserva à mão (nem em código, nem em
-  scaffold, nem em esqueleto) e, no semimanual, só escreve o mecânico depois que o autor escreveu o núcleo. Em dúvida
-  sobre de quem é uma peça, pergunta-se antes de escrever.
+- A seção "Como este projeto é desenvolvido" do `README.md` é lei para a IA: ela nunca escreve o que a seção reserva à
+  mão (nem em código, nem em scaffold, nem em esqueleto) e, no semimanual, só escreve o mecânico depois que o autor
+  escreveu o núcleo. Em dúvida sobre de quem é uma peça, pergunta-se antes de escrever.
 - Todo passo de uma spec parte de uma sonda: um script fora do repositório que exercita o passo pela interface pública,
   vermelho antes do código e verde ao fim. Cada borda que o trabalho revela entra na sonda e vira teste no mesmo ciclo;
   na spec, só no rascunho anterior ao commit dela, e depois pelo parágrafo do commit. Gatilho: iniciar um passo.
@@ -79,11 +79,12 @@ aponta para ele.
 
 - Documentação e comentários em português do Brasil; código (identificadores, mensagens de erro, rotas) e mensagens de
   commit em inglês.
-- A Filosofia do `README.md` fixa a linguagem ubíqua rigorosa; esta é a regra que a cumpre. O vocabulário é um só em
-  todo o projeto: o mesmo conceito tem o mesmo nome em parâmetros, funções, classes, tipos, interfaces, valores,
-  constantes, códigos de erro e testes. Antes de nomear algo, procure como o conceito já se chama e reuse; um nome novo
-  para um conceito que já tem nome é um defeito, e renomear tudo de uma vez custa menos que conviver com dois. Gatilho:
-  escrever, renomear ou revisar qualquer identificador, de parâmetro a constante. O procedimento tem quatro passos:
+- A seção "Como este projeto é desenvolvido" do `README.md` fixa a linguagem ubíqua rigorosa; esta é a regra que a
+  cumpre. O vocabulário é um só em todo o projeto: o mesmo conceito tem o mesmo nome em parâmetros, funções, classes,
+  tipos, interfaces, valores, constantes, códigos de erro e testes. Antes de nomear algo, procure como o conceito já se
+  chama e reuse; um nome novo para um conceito que já tem nome é um defeito, e renomear tudo de uma vez custa menos que
+  conviver com dois. Gatilho: escrever, renomear ou revisar qualquer identificador, de parâmetro a constante. O
+  procedimento tem quatro passos:
   1. Antes de nomear, `grep` do conceito no repositório; o que já existe vence.
   2. O nome carrega o conceito inteiro e o mesmo qualificador em toda parte: `databaseUrl` em todo lugar, nunca `url`
      num e `databaseUrl` noutro, nem um mesmo nome para dois conceitos (uma função e um parâmetro `databaseUrl`).
