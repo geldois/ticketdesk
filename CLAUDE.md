@@ -79,11 +79,11 @@ aponta para ele.
 
 - Documentação e comentários em português do Brasil; código (identificadores, mensagens de erro, rotas) e mensagens de
   commit em inglês.
-- O vocabulário é um só em todo o projeto: o mesmo conceito tem o mesmo nome em parâmetros, funções, classes, tipos,
-  interfaces, valores, constantes, códigos de erro e testes. Antes de nomear algo, procure como o conceito já se chama e
-  reuse; um nome novo para um conceito que já tem nome é um defeito, e renomear tudo de uma vez custa menos que conviver
-  com dois. Gatilho: escrever, renomear ou revisar qualquer identificador, de parâmetro a constante. O procedimento tem
-  quatro passos:
+- A Filosofia do `README.md` fixa a linguagem ubíqua rigorosa; esta é a regra que a cumpre. O vocabulário é um só em
+  todo o projeto: o mesmo conceito tem o mesmo nome em parâmetros, funções, classes, tipos, interfaces, valores,
+  constantes, códigos de erro e testes. Antes de nomear algo, procure como o conceito já se chama e reuse; um nome novo
+  para um conceito que já tem nome é um defeito, e renomear tudo de uma vez custa menos que conviver com dois. Gatilho:
+  escrever, renomear ou revisar qualquer identificador, de parâmetro a constante. O procedimento tem quatro passos:
   1. Antes de nomear, `grep` do conceito no repositório; o que já existe vence.
   2. O nome carrega o conceito inteiro e o mesmo qualificador em toda parte: `databaseUrl` em todo lugar, nunca `url`
      num e `databaseUrl` noutro, nem um mesmo nome para dois conceitos (uma função e um parâmetro `databaseUrl`).

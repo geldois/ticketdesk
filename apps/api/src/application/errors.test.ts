@@ -4,6 +4,7 @@ import { DomainError } from "../domain/errors.ts";
 import {
   APPLICATION_ERROR_CODES,
   ApplicationError,
+  InvalidLimitError,
   TicketNotFoundError,
   VersionConflictError,
 } from "./errors.ts";
@@ -28,6 +29,7 @@ const ERRORS = [
     create: () => new VersionConflictError(CURRENT_STORED_TICKET),
     code: "version_conflict",
   },
+  { create: () => new InvalidLimitError(), code: "invalid_limit" },
 ] as const;
 
 describe("application errors", () => {

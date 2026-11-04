@@ -96,6 +96,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   no `schema.test.ts` e a linha do Registro de decisões.
 - `spec: 00008`, passo 2: a IA escreveu fora do repositório a sonda do repositório e, por delegação minha, os testes de
   `listTickets` no `pg-ticket-repository.test.ts` e a linha do Registro de decisões.
+- `spec: 00008`, passo 3: a IA escreveu fora do repositório a sonda do caso de uso e, por delegação minha, o esqueleto
+  do arquivo, o `InvalidLimitError` com a entrada dele no mapeador e os testes do `list-tickets.test.ts`.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -244,6 +246,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   casos aprovados, um deles o da leitura pelo `id`, que não podia quebrar, e os outros dezessete de listagem: percorrer
   páginas de 1, 2 e 3 sobre empates e vizinhos de microssegundo, a posição de um ticket apagado e os filtros. Os testes
   de `listTickets` repetem esses dezessete casos contra um banco só deles.
+- `spec: 00008`, passo 3: a sonda do caso de uso ficou vermelha antes do ajuste final e verde depois dele, com os nove
+  casos aprovados: página cheia com posição, última página sem posição, página de tamanho exato, lista vazia, filtros e
+  percurso completo sem repetir ticket. Os testes do `list-tickets.test.ts` repetem esses casos com o repositório real e
+  somam os limites aceitos e recusados.
 - `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
   de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
   cobrem o que os removidos cobriam.
@@ -460,6 +466,13 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   mesma `version`, mandei a leitura do ticket para um método privado do caso de uso, usado também na releitura depois do
   `null`, e mantive o `to` no corpo da requisição quando perguntei se o servidor não podia só avançar o status. A IA
   recomendou manter o `to` pelos dados que cada destino exige (nota e motivo) e pelo contrato estável.
+- `spec: 00008`, passo 3: a IA recomendou tirar do caso de uso a validação do `limit`, porque a rota já a faz e a regra
+  ficaria num lugar só; decidi manter a defesa em profundidade, com um erro de aplicação próprio, o `InvalidLimitError`,
+  mesmo duplicando a regra. Decidi também renomear o campo da posição da próxima página para `afterPosition`, depois de
+  perceber que `nextPosition` sugeria a posição do ticket seguinte quando o valor é a do último ticket da página.
+- `spec: 00008`, passo 3: a IA tinha escrito a regra de vocabulário em dois lugares, a Filosofia do `README.md` e o
+  `CLAUDE.md`; decidi que a Filosofia fixa o princípio da linguagem ubíqua e o `CLAUDE.md` aponta para ela e mantém só a
+  regra operacional de coesão dos nomes, sem duplicar a fonte da verdade.
 
 ## Onde a IA não entrou
 

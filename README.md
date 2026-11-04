@@ -40,6 +40,9 @@ autoria segue o quanto a peça exige de raciocínio sobre estado e falha: quanto
 No semimanual, o autor decide o desenho e escreve o núcleo da peça, a IA escreve o mecânico, e o autor revisa cada
 parte.
 
+A linguagem é ubíqua e rigorosa: cada conceito tem um nome só, na spec, no código, nos testes e nos documentos, e um
+nome que sugere outro significado do que o valor guarda é tratado como defeito.
+
 O que a IA de fato fez em cada spec está em [IA.md](IA.md).
 
 ## Como rodar

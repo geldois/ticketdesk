@@ -32,6 +32,7 @@ const STATUS_BY_FAMILY_ERROR_CODE = {
   invalid_transition: 422,
   ticket_not_found: 404,
   version_conflict: 409,
+  invalid_limit: 400,
   invalid_request: 400,
   invalid_ticket_id: 400,
   missing_if_match: 428,

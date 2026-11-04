@@ -3,6 +3,7 @@ import type { StoredTicket } from "./stored-ticket.ts";
 export const APPLICATION_ERROR_CODES = [
   "ticket_not_found",
   "version_conflict",
+  "invalid_limit",
 ] as const;
 
 export type ApplicationErrorCode = (typeof APPLICATION_ERROR_CODES)[number];
@@ -16,6 +17,14 @@ export class TicketNotFoundError extends ApplicationError {
 
   constructor() {
     super("ticket not found");
+  }
+}
+
+export class InvalidLimitError extends ApplicationError {
+  readonly code = "invalid_limit";
+
+  constructor() {
+    super("limit must be an integer from 1 to 100");
   }
 }
 
