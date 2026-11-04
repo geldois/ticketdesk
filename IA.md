@@ -94,6 +94,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   médios foram corrigidos na spec antes de congelá-la.
 - `spec: 00008`, passo 1: a IA escreveu fora do repositório a sonda do índice e, por delegação minha, o teste do índice
   no `schema.test.ts` e a linha do Registro de decisões.
+- `spec: 00008`, passo 2: a IA escreveu fora do repositório a sonda do repositório e, por delegação minha, os testes de
+  `listTickets` no `pg-ticket-repository.test.ts` e a linha do Registro de decisões.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -238,6 +240,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00008`, passo 1: a sonda do índice ficou vermelha antes da migration, com quatro casos reprovados, e verde
   depois dela, com os oito aprovados, o que inclui reverter e aplicar de novo; o teste do `schema.test.ts` afirma a
   definição do índice no catálogo do banco.
+- `spec: 00008`, passo 2: a sonda do repositório ficou vermelha antes do método e verde depois dele, com os dezoito
+  casos aprovados, um deles o da leitura pelo `id`, que não podia quebrar, e os outros dezessete de listagem: percorrer
+  páginas de 1, 2 e 3 sobre empates e vizinhos de microssegundo, a posição de um ticket apagado e os filtros. Os testes
+  de `listTickets` repetem esses dezessete casos contra um banco só deles.
 - `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
   de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
   cobrem o que os removidos cobriam.
@@ -326,6 +332,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   mas o Fastify recusa o JSON antes de a rota rodar, e a resposta é 400. A sonda mostrou o caso vermelho com o código
   pronto, a IA apresentou as duas saídas e eu aceitei o desvio: o caso passou a usar um JSON válido de forma errada, e o
   desvio fica declarado no parágrafo do commit.
+- `spec: 00008`, passo 2: a sonda do repositório chamava `listTickets` sem `status`, `channel` e `after`, que o contrato
+  tipa como `null`, e eles chegavam como `undefined`. Os dezessete casos de listagem reprovaram com o mesmo erro de
+  leitura de `createdAt`. A IA apontou que a falha era da sonda, e não do repositório, e a corrigiu para completar os
+  campos com `null`, sem afrouxar a checagem do repositório.
 
 ## Uma decisão minha
 

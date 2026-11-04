@@ -1,8 +1,11 @@
 import type { UUID } from "node:crypto";
 import type { TicketRepository } from "../../application/contracts/repositories/ticket-repository.ts";
 import type {
+  ListedTicket,
+  ListTicketsQuery,
   StoredTicket,
   StoredTicketRef,
+  TicketPosition,
 } from "../../application/stored-ticket.ts";
 import type {
   Ticket,
@@ -29,6 +32,10 @@ interface TicketRow {
   readonly created_at: Date;
   readonly resolution_note: string | null;
   readonly version: number;
+}
+
+interface ListedTicketRow extends TicketRow {
+  readonly created_at_text: string;
 }
 
 interface TicketHistoryEntryRow {
@@ -174,6 +181,75 @@ export class PgTicketRepository implements TicketRepository {
     }));
 
     return ticketHistoryEntries;
+  }
+
+  async listTickets(query: ListTicketsQuery): Promise<ListedTicket[]> {
+    const conditions: string[] = [];
+    const values: unknown[] = [];
+    const placeholder = (back = 0): string =>
+      "$" + String(values.length - back);
+
+    if (query.status !== null) {
+      values.push(query.status);
+      conditions.push(`status = ${placeholder()}`);
+    }
+
+    if (query.channel !== null) {
+      values.push(query.channel);
+      conditions.push(`channel = ${placeholder()}`);
+    }
+
+    if (query.after !== null) {
+      values.push(query.after.createdAt, query.after.id);
+      conditions.push(
+        `(created_at, id) < (${placeholder(1)}, ${placeholder()})`,
+      );
+    }
+
+    values.push(query.limit);
+
+    const where =
+      conditions.length === 0 ? "" : ` WHERE ${conditions.join(" AND ")}`;
+
+    const result = await this.#pgPool.query<ListedTicketRow>(
+      `SELECT id, customer_name, description, channel, priority, status, resolution_note, version, created_at, to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS created_at_text FROM ticket${where} ORDER BY created_at DESC, id DESC LIMIT ${placeholder()}`,
+      values,
+    );
+
+    const rows = result.rows;
+    const listedTickets: ListedTicket[] = [];
+
+    for (const row of rows) {
+      const ref: StoredTicketRef = {
+        id: row.id,
+        version: row.version,
+      };
+
+      const ticket: Ticket = {
+        customerName: row.customer_name,
+        description: row.description,
+        channel: row.channel,
+        priority: row.priority,
+        status: row.status,
+        createdAt: row.created_at,
+        resolutionNote: row.resolution_note,
+      };
+
+      const position: TicketPosition = {
+        createdAt: row.created_at_text,
+        id: row.id,
+      };
+
+      const listedTicket: ListedTicket = {
+        ref,
+        ticket,
+        position,
+      };
+
+      listedTickets.push(listedTicket);
+    }
+
+    return listedTickets;
   }
 
   async updateTicketChange(

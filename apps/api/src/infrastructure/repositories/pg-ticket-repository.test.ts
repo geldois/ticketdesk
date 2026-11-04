@@ -9,7 +9,16 @@ import {
   createTicketChange,
   transitTicketChange,
 } from "../../domain/lifecycle.ts";
-import type { TicketChange } from "../../domain/ticket.ts";
+import type {
+  ListedTicket,
+  ListTicketsQuery,
+  TicketPosition,
+} from "../../application/stored-ticket.ts";
+import type {
+  TicketChange,
+  TicketChannel,
+  TicketStatus,
+} from "../../domain/ticket.ts";
 import { createPgPool } from "../pool.ts";
 import { PgTicketRepository } from "./pg-ticket-repository.ts";
 
@@ -322,9 +331,9 @@ describe("PgTicketRepository", () => {
     });
 
     it("ends two concurrent updates at the same version with one winner, the next version and only the winner's entry", async () => {
-      for (let i = 0; i < 20; i++) {
+      for (let round = 0; round < 20; round++) {
         const { change, stored } = await storeTicket(
-          `Concurrent Ana ${i.toString()}`,
+          `Concurrent Ana ${round.toString()}`,
         );
 
         const transitedTicketChange = transitTicketChange(
@@ -389,6 +398,312 @@ describe("PgTicketRepository", () => {
         repository.findTicketById(UNKNOWN_TICKET_ID),
       ).resolves.toBeNull();
     });
+  });
+
+  describe("listTickets", () => {
+    interface SeedRow {
+      readonly id: string;
+      readonly createdAt: string;
+      readonly status: TicketStatus;
+      readonly channel: TicketChannel;
+    }
+
+    let listDatabaseUrl: string;
+    let listPgPool: Pool;
+    let listRepository: PgTicketRepository;
+    let counter = 0;
+
+    function seedRow(
+      createdAt: string,
+      extra: { status?: TicketStatus; channel?: TicketChannel } = {},
+    ): SeedRow {
+      counter += 1;
+
+      return {
+        id: `019a0000-0000-7000-8000-${counter.toString(16).padStart(12, "0")}`,
+        createdAt,
+        status: extra.status ?? "open",
+        channel: extra.channel ?? "chat",
+      };
+    }
+
+    async function seed(rows: readonly SeedRow[]): Promise<void> {
+      await queryRows(listDatabaseUrl, "DELETE FROM ticket");
+
+      for (const row of rows) {
+        await queryRows(
+          listDatabaseUrl,
+          "INSERT INTO ticket (id, customer_name, description, channel, priority, status, created_at, resolution_note) VALUES ($1, 'Seed', 'x', $2, 'low', $3, $4, $5)",
+          [
+            row.id,
+            row.channel,
+            row.status,
+            row.createdAt,
+            row.status === "resolved" ? "done" : null,
+          ],
+        );
+      }
+    }
+
+    function list(
+      query: Partial<ListTicketsQuery> = {},
+    ): Promise<ListedTicket[]> {
+      return listRepository.listTickets({
+        status: null,
+        channel: null,
+        after: null,
+        limit: 100,
+        ...query,
+      });
+    }
+
+    function idsOf(listedTickets: readonly ListedTicket[]): string[] {
+      return listedTickets.map((listedTicket) => listedTicket.ref.id);
+    }
+
+    // O texto ISO de largura fixa compara como instante; empate desfaz pelo id.
+    function expectedIds(rows: readonly SeedRow[]): string[] {
+      return [...rows]
+        .sort((a, b) =>
+          a.createdAt === b.createdAt
+            ? b.id.localeCompare(a.id)
+            : b.createdAt.localeCompare(a.createdAt),
+        )
+        .map((row) => row.id);
+    }
+
+    async function walk(
+      limit: number,
+      filters: Partial<ListTicketsQuery> = {},
+    ): Promise<ListedTicket[]> {
+      const walked: ListedTicket[] = [];
+      let after: TicketPosition | null = null;
+
+      for (;;) {
+        const page: ListedTicket[] = await list({ ...filters, after, limit });
+        const last = page[page.length - 1];
+
+        if (last === undefined) {
+          return walked;
+        }
+
+        walked.push(...page);
+        after = last.position;
+      }
+    }
+
+    const DISTINCT = [
+      seedRow("2026-03-01T10:00:00.000003Z"),
+      seedRow("2026-03-05T10:00:00.000000Z"),
+      seedRow("2026-03-02T10:00:00.000000Z"),
+      seedRow("2026-03-04T10:00:00.000000Z"),
+      seedRow("2026-03-03T10:00:00.000000Z"),
+    ];
+
+    const TIES_AND_MICROSECONDS = [
+      seedRow("2026-03-02T10:00:00.123455Z"),
+      seedRow("2026-03-02T10:00:00.123456Z"),
+      seedRow("2026-03-02T10:00:00.123456Z"),
+      seedRow("2026-03-02T10:00:00.123456Z"),
+      seedRow("2026-03-02T10:00:00.123457Z"),
+      seedRow("2026-03-02T10:00:00.123000Z"),
+      seedRow("2026-03-02T10:00:00.124000Z"),
+      seedRow("2026-03-01T23:59:59.999999Z"),
+    ];
+
+    const MIXED = [
+      seedRow("2026-03-06T10:00:00.000000Z", {
+        status: "open",
+        channel: "chat",
+      }),
+      seedRow("2026-03-05T10:00:00.000000Z", {
+        status: "resolved",
+        channel: "chat",
+      }),
+      seedRow("2026-03-04T10:00:00.000000Z", {
+        status: "open",
+        channel: "email",
+      }),
+      seedRow("2026-03-03T10:00:00.000000Z", {
+        status: "resolved",
+        channel: "email",
+      }),
+      seedRow("2026-03-02T10:00:00.000000Z", {
+        status: "open",
+        channel: "chat",
+      }),
+      seedRow("2026-03-01T10:00:00.000000Z", {
+        status: "open",
+        channel: "chat",
+      }),
+    ];
+
+    beforeAll(async () => {
+      listDatabaseUrl = await createMigratedTestDatabase();
+      listPgPool = createPgPool(listDatabaseUrl);
+      listRepository = new PgTicketRepository(listPgPool);
+    });
+
+    afterAll(async () => {
+      await listPgPool.end();
+    });
+
+    it("returns an empty list for an empty table", async () => {
+      await seed([]);
+
+      await expect(list()).resolves.toEqual([]);
+    });
+
+    it("lists the tickets from the newest to the oldest whatever the insertion order", async () => {
+      await seed(DISTINCT);
+
+      expect(idsOf(await list())).toEqual(expectedIds(DISTINCT));
+    });
+
+    it("cuts the list at the requested number, and a larger number lists every ticket", async () => {
+      await seed(DISTINCT);
+
+      expect(idsOf(await list({ limit: 2 }))).toEqual(
+        expectedIds(DISTINCT).slice(0, 2),
+      );
+      expect(await list({ limit: 50 })).toHaveLength(DISTINCT.length);
+    });
+
+    it("lists the greater id first among tickets with the same created_at", async () => {
+      const tie = [
+        seedRow("2026-03-02T10:00:00.123456Z"),
+        seedRow("2026-03-02T10:00:00.123456Z"),
+      ];
+      await seed(tie);
+
+      expect(idsOf(await list())).toEqual(expectedIds(tie));
+    });
+
+    it("carries the version, the fields and the position of each ticket", async () => {
+      const only = seedRow("2026-03-01T10:00:00.000001Z", {
+        status: "resolved",
+        channel: "email",
+      });
+      await seed([only]);
+      await queryRows(
+        listDatabaseUrl,
+        "UPDATE ticket SET version = 3 WHERE id = $1",
+        [only.id],
+      );
+
+      const [listedTicket] = await list();
+
+      expect(listedTicket?.ref).toEqual({ id: only.id, version: 3 });
+      expect(listedTicket?.ticket).toMatchObject({
+        customerName: "Seed",
+        channel: "email",
+        status: "resolved",
+        resolutionNote: "done",
+      });
+      expect(listedTicket?.position).toEqual({
+        createdAt: "2026-03-01T10:00:00.000001Z",
+        id: only.id,
+      });
+    });
+
+    it.each([1, 2, 3])(
+      "walks pages of %i over ties and microsecond neighbours, repeating and skipping none",
+      async (limit) => {
+        await seed(TIES_AND_MICROSECONDS);
+
+        const single = await list();
+        const walked = await walk(limit);
+
+        expect(idsOf(single)).toEqual(expectedIds(TIES_AND_MICROSECONDS));
+        expect(idsOf(walked)).toEqual(idsOf(single));
+      },
+    );
+
+    it("continues with the next tied ticket from the position of a ticket in the middle of a tie", async () => {
+      await seed(TIES_AND_MICROSECONDS);
+      const order = expectedIds(TIES_AND_MICROSECONDS);
+
+      const firstPage = await list({ limit: 3 });
+      const nextPage = await list({
+        limit: 2,
+        after: firstPage[2]?.position ?? null,
+      });
+
+      expect(idsOf(nextPage)).toEqual(order.slice(3, 5));
+    });
+
+    it("continues the list from a position whose ticket no longer exists", async () => {
+      await seed(DISTINCT);
+      const order = expectedIds(DISTINCT);
+      const [first] = await list({ limit: 1 });
+      await queryRows(listDatabaseUrl, "DELETE FROM ticket WHERE id = $1", [
+        first?.ref.id,
+      ]);
+
+      const next = await list({ after: first?.position ?? null });
+
+      expect(idsOf(next)).toEqual(order.slice(1));
+    });
+
+    it("lists only the tickets of the status asked for, in order", async () => {
+      await seed(MIXED);
+
+      const listed = await list({ status: "resolved" });
+
+      expect(idsOf(listed)).toEqual(
+        expectedIds(MIXED.filter((row) => row.status === "resolved")),
+      );
+    });
+
+    it("lists only the tickets of the channel asked for, in order", async () => {
+      await seed(MIXED);
+
+      const listed = await list({ channel: "email" });
+
+      expect(idsOf(listed)).toEqual(
+        expectedIds(MIXED.filter((row) => row.channel === "email")),
+      );
+    });
+
+    it("lists only the tickets that match both filters, in order", async () => {
+      await seed(MIXED);
+
+      const listed = await list({ status: "open", channel: "chat" });
+
+      expect(idsOf(listed)).toEqual(
+        expectedIds(
+          MIXED.filter(
+            (row) => row.status === "open" && row.channel === "chat",
+          ),
+        ),
+      );
+    });
+
+    it("lists nothing when no ticket matches the filters", async () => {
+      await seed(MIXED.filter((row) => row.status === "open"));
+
+      await expect(list({ status: "resolved" })).resolves.toEqual([]);
+    });
+
+    it.each([
+      { status: "open", channel: null },
+      { status: null, channel: "chat" },
+      { status: "open", channel: "chat" },
+    ] as const)(
+      "walks filtered pages of 2 listing each matching ticket once (%o)",
+      async (filters) => {
+        await seed(MIXED);
+        const matching = MIXED.filter(
+          (row) =>
+            (filters.status === null || row.status === filters.status) &&
+            (filters.channel === null || row.channel === filters.channel),
+        );
+
+        const walked = await walk(2, filters);
+
+        expect(idsOf(walked)).toEqual(expectedIds(matching));
+      },
+    );
   });
 
   describe("listTicketHistoryEntries", () => {
