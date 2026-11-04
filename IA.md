@@ -102,7 +102,7 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   de cada vez, com a explicação de cada uma: os tipos da lista em `packages/contract`, o `InvalidCursorError` com a
   entrada no mapeador, o `cursor.ts` com o `CURSOR_SCHEMA`, o esquema da consulta, a rota `GET /tickets` com o
   `presentNextLink` e o `listTicketsUseCase` no `Container`, os testes do `cursor.test.ts`, do `schemas.test.ts` e do
-  `server-list.test.ts` e a linha do Registro.
+  `server.test.ts` e a linha do Registro.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
 
@@ -256,8 +256,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   percurso completo sem repetir ticket. Os testes do `list-tickets.test.ts` repetem esses casos com o repositório real e
   somam os limites aceitos e recusados.
 - `spec: 00008`, passo 4: a sonda da rota partiu com os 44 casos vermelhos, porque a rota não existia, e ficou toda
-  verde depois da rota; os testes do `server-list.test.ts` repetem os casos pela interface do servidor, sem abrir porta,
-  e o do `invalid_limit` exercita o mapeador com um erro real lançado numa rota mínima, sem dublê.
+  verde depois da rota; os testes do `server.test.ts` repetem os casos pela interface do servidor, sem abrir porta, e o
+  do `invalid_limit` exercita o mapeador com um erro real lançado numa rota mínima, sem dublê.
 - `spec: 00004`, testes: depois da limpeza, a IA rodou o `npm run fix` e o `npm run check`, que passou com a cobertura
   de linhas, ramos, funções e instruções ainda em 100%, e conferiu que os testes dos `normalize*` e dos `validate*`
   cobrem o que os removidos cobriam.
