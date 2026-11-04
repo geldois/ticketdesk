@@ -105,6 +105,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   `server.test.ts` e a linha do Registro.
 - `spec: 00004`, testes: a IA revisou todos os testes contra a regra de testes do `CLAUDE.md`, apontou os que só
   afirmavam a presença de texto, os de detalhe de implementação e os repetidos, e, por ordem minha, os removeu ou uniu.
+- `spec: 00009`: a IA me entrevistou sobre a tela, o cliente HTTP, como o front chega ao usuário e onde mora o
+  `Dockerfile`, e redigiu o rascunho da spec, que o `docs-auditor` revisou antes do commit; os oito achados médios foram
+  corrigidos na spec antes de congelá-la.
 
 ## O que validei
 
