@@ -28,7 +28,11 @@ aponta para ele.
 ## Desenvolvimento orientado por especificação
 
 - A Filosofia do `README.md` é lei para a IA: ela nunca escreve o que a Filosofia reserva à mão (nem em código, nem em
-  scaffold, nem em esqueleto). Em dúvida sobre de quem é uma peça, pergunta-se antes de escrever.
+  scaffold, nem em esqueleto) e, no semimanual, só escreve o mecânico depois que o autor escreveu o núcleo. Em dúvida
+  sobre de quem é uma peça, pergunta-se antes de escrever.
+- Todo passo de uma spec parte de uma sonda: um script fora do repositório que exercita o passo pela interface pública,
+  vermelho antes do código e verde ao fim. Cada borda que o trabalho revela entra na sonda e vira teste no mesmo ciclo;
+  na spec, só no rascunho anterior ao commit dela, e depois pelo parágrafo do commit. Gatilho: iniciar um passo.
 - Uma spec em `docs/specs/` é obrigatória só quando a mudança altera um contrato público ou um comportamento observável,
   tem vários passos ou carrega uma decisão com trade-off que outras specs vão consumir. Uma mudança pequena, local e
   reversível dispensa spec: entra num commit rápido com `spec: none (tweak)`, e o registro que couber vai para o

@@ -19,17 +19,26 @@ relatados, por spec, em [IA.md](IA.md).
 
 ## Filosofia
 
-Este repositório é construído com o máximo rigor e a produtividade de uma engenharia real. A spec vem antes do código, e
-cada trade-off dela é decidido em entrevista, nunca assumido; a IA pesquisa, aponta alternativas e revisa, mas nunca
-decide o domínio. A regra de autoria: o que exige raciocínio sobre estado e falha é escrito à mão, e o que é encanamento
-é delegado à IA e revisado.
+O ticketdesk é um projeto montado para tirar o máximo de produtividade da IA sem abrir mão do rigor, e para isso segue
+dois métodos: SDD (desenvolvimento orientado por especificação) e TDD (desenvolvimento orientado por testes).
 
-| À mão | Delegado à IA, revisado |
-| --- | --- |
-| As regras do domínio | Ferramentas e CI |
-| O esquema do banco: o SQL das migrations, as constraints e os gatilhos | As rotas |
-| A concorrência: o `UPDATE` condicional e a unidade de trabalho | O front-end |
-| O tratamento de erros | Os corpos de teste e a documentação |
+No SDD, a spec vem antes do código, é congelada e tem cada trade-off decidido em entrevista. No TDD, cada passo começa
+por uma sonda: um script, fora do repositório, que exercita o passo pela interface pública. Ela nasce vermelha e fica
+verde quando o código está pronto, e cada caso de borda descoberto pelo caminho entra nela e vira teste. Esses testes
+sobem no mesmo commit da mudança que provam.
+
+A IA pesquisa, aponta alternativas, revisa e escreve o que lhe cabe, e as decisões de domínio ficam com o autor. A
+autoria segue o quanto a peça exige de raciocínio sobre estado e falha: quanto mais exige, mais perto da mão do autor.
+
+| À mão | Semimanual | Delegado à IA, revisado |
+| --- | --- | --- |
+| As regras do domínio | O tratamento de erros | Ferramentas e CI |
+| O SQL do esquema (migrations, constraints e gatilhos) e das consultas | Os casos de uso | As rotas |
+| A concorrência: o `UPDATE` condicional e a unidade de trabalho | O front-end | O corpo dos testes (a montagem) e a documentação |
+| | A estrutura dos testes (o que se afirma) | |
+
+No semimanual, o autor decide o desenho e escreve o núcleo da peça, a IA escreve o mecânico, e o autor revisa cada
+parte.
 
 O que a IA de fato fez em cada spec está em [IA.md](IA.md).
 
