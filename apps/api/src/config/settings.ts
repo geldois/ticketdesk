@@ -16,7 +16,15 @@ export class Settings {
   readonly apiHost: string;
   readonly apiPort: number;
 
-  private constructor(databaseUrl: string, apiHost: string, apiPort: number) {
+  private constructor({
+    databaseUrl,
+    apiHost,
+    apiPort,
+  }: {
+    databaseUrl: string;
+    apiHost: string;
+    apiPort: number;
+  }) {
     this.databaseUrl = databaseUrl;
     this.apiHost = apiHost;
     this.apiPort = apiPort;
@@ -54,11 +62,11 @@ export class Settings {
     databaseUrl.password = readVariable(env, "PGPASSWORD");
     databaseUrl.pathname = readVariable(env, "PGDATABASE");
 
-    return new Settings(
-      databaseUrl.toString(),
-      env["API_HOST"] ?? DEFAULT_API_HOST,
-      Number(apiPort),
-    );
+    return new Settings({
+      databaseUrl: databaseUrl.toString(),
+      apiHost: env["API_HOST"] ?? DEFAULT_API_HOST,
+      apiPort: Number(apiPort),
+    });
   }
 }
 
