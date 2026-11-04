@@ -35,6 +35,7 @@ const STATUS_BY_FAMILY_ERROR_CODE = {
   invalid_limit: 400,
   invalid_request: 400,
   invalid_ticket_id: 400,
+  invalid_cursor: 400,
   missing_if_match: 428,
   invalid_if_match: 400,
 } as const satisfies Record<FamilyErrorCode, number>;

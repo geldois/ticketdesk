@@ -6,8 +6,8 @@ import type {
   TicketPosition,
 } from "../stored-ticket.ts";
 
-const MIN_LIMIT = 1;
-const MAX_LIMIT = 100;
+export const MIN_LIMIT = 1;
+export const MAX_LIMIT = 100;
 
 export interface TicketPage {
   readonly listedTickets: ListedTicket[];
@@ -35,7 +35,7 @@ export class ListTicketsUseCase {
     const lookaheadQuery: ListTicketsQuery = {
       status: query.status,
       channel: query.channel,
-      after: query.after,
+      afterPosition: query.afterPosition,
       limit: lookaheadLimit,
     };
 

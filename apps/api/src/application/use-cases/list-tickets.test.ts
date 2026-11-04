@@ -45,7 +45,7 @@ describe("ListTicketsUseCase", () => {
     return listTicketsUseCase.execute({
       status: null,
       channel: null,
-      after: null,
+      afterPosition: null,
       limit: 20,
       ...query,
     });
@@ -78,7 +78,7 @@ describe("ListTicketsUseCase", () => {
     const order = await seed(5);
     const first = await list({ limit: 2 });
 
-    const second = await list({ limit: 2, after: first.afterPosition });
+    const second = await list({ limit: 2, afterPosition: first.afterPosition });
 
     expect(idsOf(second)).toEqual(order.slice(2, 4));
     expect(second.afterPosition).not.toBeNull();
@@ -87,9 +87,9 @@ describe("ListTicketsUseCase", () => {
   it("returns the last page with the rest of the tickets and no position", async () => {
     const order = await seed(5);
     const first = await list({ limit: 2 });
-    const second = await list({ limit: 2, after: first.afterPosition });
+    const second = await list({ limit: 2, afterPosition: first.afterPosition });
 
-    const third = await list({ limit: 2, after: second.afterPosition });
+    const third = await list({ limit: 2, afterPosition: second.afterPosition });
 
     expect(idsOf(third)).toEqual(order.slice(4));
     expect(third.afterPosition).toBeNull();
@@ -99,7 +99,7 @@ describe("ListTicketsUseCase", () => {
     const order = await seed(4);
     const first = await list({ limit: 2 });
 
-    const second = await list({ limit: 2, after: first.afterPosition });
+    const second = await list({ limit: 2, afterPosition: first.afterPosition });
 
     expect(idsOf(second)).toEqual(order.slice(2));
     expect(second.afterPosition).toBeNull();
@@ -138,7 +138,7 @@ describe("ListTicketsUseCase", () => {
     walked.push(...idsOf(page));
 
     while (page.afterPosition !== null) {
-      page = await list({ limit: 3, after: page.afterPosition });
+      page = await list({ limit: 3, afterPosition: page.afterPosition });
       walked.push(...idsOf(page));
     }
 

@@ -209,7 +209,10 @@ Ainda sem conteúdo.
 
 ## O que faria com mais tempo
 
-Ainda sem conteúdo.
+- A listagem só avança, pelo `rel="next"` do cabeçalho `Link`. Voltar uma página ou ir à última exigiria os `rel="prev"`
+  e `rel="last"`: o `prev` pede um cursor no sentido oposto (a posição do primeiro ticket, com a comparação e a ordem
+  invertidas), e o `last` pede saber onde a lista acaba. Hoje quem volta é o cliente, que guarda as URLs das páginas que
+  já leu.
 
 ## Registro de decisões
 
@@ -251,3 +254,4 @@ Só as decisões de alto ROI, da mais antiga para a mais recente.
 | A versão esperada vai no cabeçalho `If-Match` e volta no `ETag`, os dois com a `version` entre aspas, e a versão que não bate responde 409 em vez de 412 | A versão dentro do corpo da transição, ou o 412 que o HTTP reserva à pré-condição falhada | O 409 não é o código que o padrão HTTP indica para o `If-Match` que falha, e quem integra precisa saber disso; em troca o conflito de versão e o conflito de estado têm um só código, o corpo traz o ticket atual e a versão fica fora dos dados da transição |
 | Um único índice sobre `created_at` e `id`, ambos decrescentes, que sustenta a ordem da lista e a posição do cursor, sem índice por filtro | Um índice por `status` e por `channel`, ou um composto com o filtro à frente | Com filtro, o banco lê pela ordem e descarta o que não combina, o que pesa só quando o filtro é raro e a tabela é grande; em troca nenhuma transição reescreve um índice de `status`, e cada gravação mantém um índice só |
 | A página seguinte parte de uma posição `(created_at, id)`, comparada em linha no `WHERE`, e a posição guarda o `created_at` como o banco o escreve, em texto com seis casas de fração | Paginar por `OFFSET`, ou guardar o instante como `Date` do JavaScript | Quem chama leva a posição devolvida, não um número de página, e a posição de um ticket apagado ainda continua a lista dali; em troca o cursor depende do formato do texto do banco, e o `Date` não serve porque perde os microssegundos e faria a página pular ou repetir tickets de empate |
+| A resposta da lista é o array de tickets, e o cursor da próxima página vai no cabeçalho `Link` (`rel="next"`), em caminho relativo, com um código de erro próprio, `invalid_cursor`, para o cursor que não decodifica | Um envelope `{ items, nextCursor }` no corpo, ou um único `invalid_request` para tudo | O cliente lê o cabeçalho para paginar e o corpo continua igual ao do `GET /tickets/:id`; em troca o envelope fica para quem quiser mais metadados, e o cliente não distingue o cursor ruim do parâmetro ruim sem olhar o `code` |

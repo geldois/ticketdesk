@@ -36,6 +36,15 @@ export interface VersionConflictResponse {
   readonly ticket: TicketResponse;
 }
 
+export interface ListTicketsRequest {
+  readonly status?: TicketStatus;
+  readonly channel?: TicketChannel;
+  readonly limit?: number;
+  readonly cursor?: string;
+}
+
+export type ListTicketsResponse = readonly TicketResponse[];
+
 export interface TicketHistoryEntryResponse {
   readonly from: TicketStatus | null;
   readonly to: TicketStatus;

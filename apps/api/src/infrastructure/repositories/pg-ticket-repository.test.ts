@@ -451,7 +451,7 @@ describe("PgTicketRepository", () => {
       return listRepository.listTickets({
         status: null,
         channel: null,
-        after: null,
+        afterPosition: null,
         limit: 100,
         ...query,
       });
@@ -477,10 +477,14 @@ describe("PgTicketRepository", () => {
       filters: Partial<ListTicketsQuery> = {},
     ): Promise<ListedTicket[]> {
       const walked: ListedTicket[] = [];
-      let after: TicketPosition | null = null;
+      let afterPosition: TicketPosition | null = null;
 
       for (;;) {
-        const page: ListedTicket[] = await list({ ...filters, after, limit });
+        const page: ListedTicket[] = await list({
+          ...filters,
+          afterPosition,
+          limit,
+        });
         const last = page[page.length - 1];
 
         if (last === undefined) {
@@ -488,7 +492,7 @@ describe("PgTicketRepository", () => {
         }
 
         walked.push(...page);
-        after = last.position;
+        afterPosition = last.position;
       }
     }
 
@@ -626,7 +630,7 @@ describe("PgTicketRepository", () => {
       const firstPage = await list({ limit: 3 });
       const nextPage = await list({
         limit: 2,
-        after: firstPage[2]?.position ?? null,
+        afterPosition: firstPage[2]?.position ?? null,
       });
 
       expect(idsOf(nextPage)).toEqual(order.slice(3, 5));
@@ -640,7 +644,7 @@ describe("PgTicketRepository", () => {
         first?.ref.id,
       ]);
 
-      const next = await list({ after: first?.position ?? null });
+      const next = await list({ afterPosition: first?.position ?? null });
 
       expect(idsOf(next)).toEqual(order.slice(1));
     });

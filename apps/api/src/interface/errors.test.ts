@@ -5,6 +5,7 @@ import { DomainError } from "../domain/errors.ts";
 import {
   INTERFACE_ERROR_CODES,
   InterfaceError,
+  InvalidCursorError,
   InvalidIfMatchError,
   InvalidRequestError,
   InvalidTicketIdError,
@@ -14,6 +15,7 @@ import {
 const ERRORS = [
   { error: InvalidRequestError, code: "invalid_request" },
   { error: InvalidTicketIdError, code: "invalid_ticket_id" },
+  { error: InvalidCursorError, code: "invalid_cursor" },
   { error: MissingIfMatchError, code: "missing_if_match" },
   { error: InvalidIfMatchError, code: "invalid_if_match" },
 ] as const;

@@ -199,8 +199,8 @@ export class PgTicketRepository implements TicketRepository {
       conditions.push(`channel = ${placeholder()}`);
     }
 
-    if (query.after !== null) {
-      values.push(query.after.createdAt, query.after.id);
+    if (query.afterPosition !== null) {
+      values.push(query.afterPosition.createdAt, query.afterPosition.id);
       conditions.push(
         `(created_at, id) < (${placeholder(1)}, ${placeholder()})`,
       );

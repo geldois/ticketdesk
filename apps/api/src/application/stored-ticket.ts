@@ -19,7 +19,7 @@ export interface TicketPosition {
 export interface ListTicketsQuery {
   status: TicketStatus | null;
   channel: TicketChannel | null;
-  after: TicketPosition | null;
+  afterPosition: TicketPosition | null;
   limit: number;
 }
 

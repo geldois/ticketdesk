@@ -1,19 +1,24 @@
 import type { UUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import type { Container } from "../../../config/container.ts";
+import type { ListTicketsQuery } from "../../../application/stored-ticket.ts";
 import {
+  InvalidCursorError,
   InvalidIfMatchError,
   InvalidRequestError,
   InvalidTicketIdError,
   MissingIfMatchError,
 } from "../../errors.ts";
+import { decodeCursor } from "../cursor.ts";
 import {
   presentETag,
+  presentNextLink,
   presentTicket,
   presentTicketHistoryEntry,
 } from "../presenters.ts";
 import {
   CREATE_TICKET_SCHEMA,
+  LIST_TICKETS_QUERY_SCHEMA,
   TICKET_ID_SCHEMA,
   TRANSIT_TICKET_SCHEMA,
 } from "../schemas.ts";
@@ -28,6 +33,7 @@ export function registerTicketRouter(
     createTicketUseCase,
     getTicketUseCase,
     listTicketHistoryEntriesUseCase,
+    listTicketsUseCase,
     transitTicketUseCase,
   } = container.useCases;
 
@@ -47,6 +53,40 @@ export function registerTicketRouter(
       .code(201)
       .header("Location", `/tickets/${storedTicket.ref.id}`)
       .send(presentTicket(storedTicket));
+  });
+
+  server.get("/tickets", async (request, response) => {
+    const parsedQuery = LIST_TICKETS_QUERY_SCHEMA.safeParse(request.query);
+
+    if (!parsedQuery.success) {
+      throw new InvalidRequestError(
+        "query must have only status, channel, limit and cursor, each once and with a valid value",
+      );
+    }
+
+    const { status, channel, limit, cursor } = parsedQuery.data;
+
+    if (Array.isArray(cursor)) {
+      throw new InvalidCursorError();
+    }
+
+    const listTicketsQuery: ListTicketsQuery = {
+      status: status ?? null,
+      channel: channel ?? null,
+      afterPosition: cursor === undefined ? null : decodeCursor(cursor),
+      limit,
+    };
+
+    const ticketPage = await listTicketsUseCase.execute(listTicketsQuery);
+
+    if (ticketPage.afterPosition !== null) {
+      response.header(
+        "Link",
+        presentNextLink(listTicketsQuery, ticketPage.afterPosition),
+      );
+    }
+
+    return ticketPage.listedTickets.map(presentTicket);
   });
 
   server.get("/tickets/:id", async (request, response) => {

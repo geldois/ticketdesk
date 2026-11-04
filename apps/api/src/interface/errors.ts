@@ -1,6 +1,7 @@
 export const INTERFACE_ERROR_CODES = [
   "invalid_request",
   "invalid_ticket_id",
+  "invalid_cursor",
   "missing_if_match",
   "invalid_if_match",
 ] as const;
@@ -26,6 +27,14 @@ export class InvalidTicketIdError extends InterfaceError {
 
   constructor() {
     super("ticket id must be a UUID");
+  }
+}
+
+export class InvalidCursorError extends InterfaceError {
+  readonly code = "invalid_cursor";
+
+  constructor() {
+    super("cursor must be the one returned in the Link header");
   }
 }
 

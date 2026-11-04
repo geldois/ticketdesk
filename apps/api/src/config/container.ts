@@ -3,6 +3,7 @@ import type { TicketRepository } from "../application/contracts/repositories/tic
 import { CreateTicketUseCase } from "../application/use-cases/create-ticket.ts";
 import { GetTicketUseCase } from "../application/use-cases/get-ticket.ts";
 import { ListTicketHistoryEntriesUseCase } from "../application/use-cases/list-ticket-history-entries.ts";
+import { ListTicketsUseCase } from "../application/use-cases/list-tickets.ts";
 import { TransitTicketUseCase } from "../application/use-cases/transit-ticket.ts";
 import { PgTicketRepository } from "../infrastructure/repositories/pg-ticket-repository.ts";
 
@@ -20,6 +21,7 @@ export interface UseCases {
   readonly createTicketUseCase: CreateTicketUseCase;
   readonly getTicketUseCase: GetTicketUseCase;
   readonly listTicketHistoryEntriesUseCase: ListTicketHistoryEntriesUseCase;
+  readonly listTicketsUseCase: ListTicketsUseCase;
   readonly transitTicketUseCase: TransitTicketUseCase;
 }
 
@@ -41,12 +43,14 @@ export function buildContainer({
   const listTicketHistoryEntriesUseCase = new ListTicketHistoryEntriesUseCase(
     pgTicketRepository,
   );
+  const listTicketsUseCase = new ListTicketsUseCase(pgTicketRepository);
   const transitTicketUseCase = new TransitTicketUseCase(pgTicketRepository);
 
   const useCases: UseCases = {
     createTicketUseCase,
     getTicketUseCase,
     listTicketHistoryEntriesUseCase,
+    listTicketsUseCase,
     transitTicketUseCase,
   };
 
