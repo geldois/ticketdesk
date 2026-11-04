@@ -14,8 +14,10 @@ WORKDIR /app
 
 COPY .npmrc package.json package-lock.json ./
 COPY apps/web/package.json apps/web/
+COPY packages/contract/package.json packages/contract/
 RUN npm ci --workspace apps/web
 
+COPY packages/contract/src packages/contract/src
 COPY apps/web/index.html apps/web/tsconfig.json apps/web/vite.config.ts apps/web/
 COPY apps/web/src apps/web/src
 RUN npm run build

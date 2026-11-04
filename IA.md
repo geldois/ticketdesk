@@ -126,6 +126,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   congelá-la.
 - `spec: 00010`, passo 1: por delegação minha, a IA escreveu a sonda e, em peças, uma de cada vez, com a explicação de
   cada uma, o proxy do `vite.config.ts`, o script `dev:web` e as passagens do `README.md`.
+- `spec: 00010`, passo 2: por delegação minha, a IA escreveu a sonda e fez a ligação do `apps/web` ao pacote do
+  contrato: a dependência no `package.json`, o lockfile e as cópias do pacote no estágio `web` do `Dockerfile`.
 
 ## O que validei
 
@@ -301,6 +303,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   `vite build` com `ERR_MODULE_NOT_FOUND`, e que o `import()` dinâmico só no `serve` não quebra; a prova pesou na minha
   decisão de não compartilhar um pacote de configuração com o front. A sonda do passo partiu toda vermelha e ficou toda
   verde: a página, o proxy devolvendo o mesmo status e corpo da API e a recusa de subir sem `API_PORT`.
+- `spec: 00010`, passo 2: a sonda checou o lockfile antes e depois do `npm ci`, o `tsc` do front sobre um arquivo que
+  importa `TicketResponse`, o `docker build` dos alvos `migrate` e `api` e a pilha de pé num projeto descartável do
+  compose. Só duas das oito linhas partiram vermelhas (a dependência e o lockfile); uma nona, que a própria sonda
+  acrescentou, provou que o estágio `web` resolve o contrato e ficou vermelha até o `Dockerfile` copiar o pacote.
 
 ## Um erro da IA
 
@@ -397,6 +403,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   imediato e propôs mover a checagem para lá. Só ao eu perguntar como isso se comportaria em deploy ela notou que o
   `migrate.ts` também lê o `Settings` e passaria a falhar por causa de uma pasta do front, e voltou atrás: a checagem
   fica no plugin que consome a pasta, e o `fromEnv` continua só lendo o texto.
+- `spec: 00010`, passo 2: a IA previu que o `docker build` quebraria assim que o `apps/web` declarasse o contrato, e a
+  sonda mostrou o contrário: o build seguiu verde, porque o `vite build` apaga os `import type`. Ela corrigiu o
+  entendimento e trocou a premissa por uma checagem de que o estágio `web` resolve o pacote, que ficou vermelha até o
+  `Dockerfile` copiá-lo.
 
 ## Uma decisão minha
 
