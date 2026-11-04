@@ -124,6 +124,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   autoria do cliente HTTP, os testes, os tipos compartilhados, o idioma e o conteúdo da tela, e redigiu o rascunho da
   spec, que o `docs-auditor` revisou antes do commit; os oito achados médios foram corrigidos na spec antes de
   congelá-la.
+- `spec: 00010`, passo 1: por delegação minha, a IA escreveu a sonda e, em peças, uma de cada vez, com a explicação de
+  cada uma, o proxy do `vite.config.ts`, o script `dev:web` e as passagens do `README.md`.
 
 ## O que validei
 
@@ -294,6 +296,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   colidir com a minha, e partiu com dois dos nove casos vermelhos (a página e o script do build) e os outros sete
   verdes, entre eles o de que a imagem da `api` não traz o Vite nem o React; ficou toda verde depois do estágio novo,
   com a página, o script, a lista e o 404 respondendo pela porta publicada.
+- `spec: 00010`, passo 1: antes de fechar o desenho do proxy, a IA provou num projeto descartável, com o Vite do
+  repositório e o Node pinado, que um `import` estático de um pacote que o estágio do build não tem quebra o
+  `vite build` com `ERR_MODULE_NOT_FOUND`, e que o `import()` dinâmico só no `serve` não quebra; a prova pesou na minha
+  decisão de não compartilhar um pacote de configuração com o front. A sonda do passo partiu toda vermelha e ficou toda
+  verde: a página, o proxy devolvendo o mesmo status e corpo da API e a recusa de subir sem `API_PORT`.
 
 ## Um erro da IA
 
@@ -536,6 +543,12 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00010`: a IA recomendou só o Prettier para o primeiro CSS, e mandei o `stylelint` na configuração mais
   rigorosa, a melhor versão, a maior cobertura e a integração máxima no `check` e no `fix`, e depois mandei o mesmo para
   um linter de HTML, ambos provados por canários de provocação.
+- `spec: 00010`, passo 1: a IA escreveu o proxy com `127.0.0.1` e `3000` como padrão, como a spec manda, e mandei que o
+  `.env` fosse a única fonte dos valores e que o front não tivesse nenhum escrito no código: ele lê `API_HOST` e
+  `API_PORT` sem padrão e se recusa a subir sem elas, um desvio do critério 1. Cogitei mover a leitura de env para um
+  pacote compartilhado e dividir o `Settings` da API, a IA listou o custo de cada caminho (um workspace novo, o
+  `Dockerfile` e o `migrate`, que usa o mesmo leitor), e decidi deixar a API como está e abrir a divisão só quando ela
+  ganhar outra variável.
 
 ## Onde a IA não entrou
 

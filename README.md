@@ -98,21 +98,29 @@ Para rodar a API no host, com o banco em contêiner, um comando por vez, depois 
 ```sh
 cp .env.example .env
 docker compose run --rm migrate
-npm run build
 npm run dev
 ```
 
 O `docker compose run --rm migrate` sobe só o `db`, espera ele ficar saudável, aplica as migrations, espera terminar e
-deixa o `db` no ar, sem subir a `api` do compose. O `npm run build` gera o front em `apps/web/dist`, a pasta do
-`WEB_DIST_DIR`; sem ele, o `npm run dev` recusa subir e diz para rodar o build. O `npm run dev` escuta em
-`http://127.0.0.1:3000` (`API_HOST` e `API_PORT`) e serve a página nesse endereço; `Ctrl+C` fecha o servidor e depois o
-pool. Os dois caminhos rodam ao mesmo tempo, em portas diferentes, sobre o mesmo banco.
+deixa o `db` no ar, sem subir a `api` do compose. O `npm run dev` escuta em `http://127.0.0.1:3000` (`API_HOST` e
+`API_PORT`) e serve só as rotas, porque o `WEB_DIST_DIR` do exemplo é vazio; `Ctrl+C` fecha o servidor e depois o pool.
+Os dois caminhos rodam ao mesmo tempo, em portas diferentes, sobre o mesmo banco.
+
+Para ver o front enquanto se desenvolve, num segundo terminal, com a API do host no ar:
+
+```sh
+npm run dev:web
+```
+
+O `npm run dev:web` sobe o servidor de desenvolvimento do front no endereço que ele imprime, recarrega a página a cada
+mudança e repassa `/tickets` à API em `API_HOST` e `API_PORT`, então a página e a API compartilham a origem, sem CORS.
 
 | Comando | O que faz |
 | --- | --- |
 | `npm ci` | Instala as dependências exatas do lockfile |
-| `npm run build` | Gera o front em `apps/web/dist` |
+| `npm run build` | Gera o front em `apps/web/dist`, que a API serve quando o `WEB_DIST_DIR` aponta para essa pasta |
 | `npm run dev` | Sobe a API no host, com o `.env` carregado; exige o `db` migrado e, com o `WEB_DIST_DIR` definido, o build feito |
+| `npm run dev:web` | Sobe o servidor de desenvolvimento do front, com o proxy para a API do host; exige `API_HOST` e `API_PORT` e a API no ar |
 | `npm run check` | Confere que há um container runtime, e sem ele para com uma mensagem; com ele, roda todas as verificações, mesmo que uma falhe, e sai com erro se alguma falhou; é o que o CI roda a cada push |
 | `npm run fix` | Corrige o que o lint e os formatadores sabem corrigir, o do SQL incluso |
 
@@ -129,8 +137,8 @@ delas, o compose recusa subir e diz qual falta. Cada processo tem o seu endereç
 | `PGHOST`, `PGPORT` | O compose, o `npm run dev` e o editor | O endereço do `db` no host; `PGHOST` precisa ser um IP, e o do exemplo é o de loopback, que mantém o banco fora da rede |
 | `PGUSER`, `PGPASSWORD`, `PGDATABASE` | O compose, o `npm run dev` e o editor | O usuário, a senha e o banco: o `db` os cria na primeira vez, e o `migrate` e a `api` conectam com eles |
 | `API_PUBLISH_HOST`, `API_PUBLISH_PORT` | O compose | O endereço da `api` do contêiner no host |
-| `API_HOST`, `API_PORT` | O `npm run dev` | Onde a API do host escuta; opcionais, com os padrões `127.0.0.1` e `3000`; o prefixo `API_` evita que um `HOST` ou `PORT` de outra ferramenta mude onde ela escuta |
-| `WEB_DIST_DIR` | O `npm run dev` | A pasta do front compilado que a API serve; opcional, e ausente ou vazia a API serve só as rotas; uma pasta que não existe impede a API de subir |
+| `API_HOST`, `API_PORT` | O `npm run dev` e o `npm run dev:web` | Onde a API do host escuta e para onde o proxy do front aponta; o `npm run dev` usa o padrão de `apps/api/src/config/settings.ts` quando elas faltam, mas o `npm run dev:web` as exige, sem valor padrão; o prefixo `API_` evita que um `HOST` ou `PORT` de outra ferramenta mude onde a API escuta |
+| `WEB_DIST_DIR` | O `npm run dev` | A pasta do front compilado que a API serve; opcional, e ausente ou vazia a API serve só as rotas, como no exemplo; uma pasta que não existe impede a API de subir |
 
 Dentro dos contêineres, e só ali, o `compose.yaml` fixa estes valores, que nunca vêm do `.env`: o `migrate` e a `api`
 acham o banco em `db:5432`, a `api` escuta em `0.0.0.0:3000`, e o `WEB_DIST_DIR` dela é o front que o `Dockerfile`
@@ -193,4 +201,4 @@ Só as decisões de alto ROI, sem contradição entre linhas.
 | Um único índice sobre `created_at` e `id`, ambos decrescentes, sustenta a ordem e a posição do cursor, sem índice por filtro; a página seguinte parte da posição `(created_at, id)`, comparada em linha no `WHERE`, com o `created_at` em texto de seis casas de fração, como o banco o escreve | Um índice por `status` e por `channel`, paginar por `OFFSET`, ou guardar o instante como `Date` do JavaScript | Com filtro, o banco lê pela ordem e descarta o que não combina, o que pesa só se o filtro é raro e a tabela é grande, e o cursor depende do formato do texto do banco; em troca cada gravação mantém um índice só, nenhuma transição reescreve índice de `status`, e o `Date`, que perde os microssegundos, não faz a página pular nem repetir tickets de empate |
 | A resposta da lista é o array de tickets, e o cursor da próxima página vai no cabeçalho `Link` (`rel="next"`), em caminho relativo, com o erro próprio `invalid_cursor` para o cursor que não decodifica | Um envelope `{ items, nextCursor }` no corpo, ou um único `invalid_request` para tudo | O cliente lê o cabeçalho para paginar e não distingue o cursor ruim do parâmetro ruim sem olhar o `code`; em troca o corpo continua igual ao do `GET /tickets/:id` |
 | O front sem teste automatizado, provado pela sonda e por uma conferência guiada | Testar o front, ao menos o cliente HTTP | O `check` só tipa e compila o front, e um defeito do cliente só aparece na conferência; em troca nenhuma ferramenta de teste de front entra no projeto, e a rede de segurança do contrato fica nos testes da API |
-| O front compilado é servido pelo mesmo processo da API, a partir de uma pasta que só a configuração fixa, e a API não fica pronta se essa pasta não existe | Liberar a origem do front com CORS, ou um servidor de arquivos à frente da API | A página e a API compartilham a origem, sem cabeçalho `access-control-*`, e o contêiner da `api` entrega as duas; em troca a API conhece o build do front, o que uma CDN evitaria, e quem roda `npm run dev` precisa de `npm run build` antes |
+| O front compilado é servido pelo mesmo processo da API, a partir de uma pasta que só a configuração fixa, e a API não fica pronta se essa pasta não existe; no desenvolvimento, o servidor do front repassa `/tickets` à API por um proxy que lê `API_HOST` e `API_PORT` do `.env`, sem valor padrão | Liberar a origem do front com CORS, ou um servidor de arquivos à frente da API | A página e a API compartilham a origem, sem cabeçalho `access-control-*`, e o contêiner da `api` entrega as duas; em troca a API conhece o build do front, o que uma CDN evitaria, e o desenvolvimento do front pede um segundo processo, o proxy, que se recusa a subir sem as duas variáveis em vez de apontar para um lugar errado |
