@@ -112,6 +112,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   compatibilidade num projeto descartável fora do repositório, escreveu a sonda e, em quatro peças, uma de cada vez, com
   a explicação de cada uma, o `package.json` e o `tsconfig.json` do `apps/web`, a página mínima, o script `build` da
   raiz, a cobertura dos portões do `check` e o teste do build.
+- `spec: 00009`, passo 3: por delegação minha, a IA pesquisou a versão do servidor de arquivos oficial do Fastify,
+  provou fora do repositório que ele serve a página e os arquivos, que o 404 do mapeador continua valendo e que ele só
+  avisa, sem falhar, diante de uma pasta inexistente, escreveu a sonda e, em peças, uma de cada vez, com a explicação de
+  cada uma, a variável no `Settings`, o plugin que serve a pasta, a assinatura nova do `buildServer`, os testes e a
+  linha do Registro.
 
 ## O que validei
 
@@ -273,6 +278,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   repositório em modo estrito, com JSX e DOM, e geram um `index.html` com o script que ele referencia. A sonda do passo
   partiu com dez dos catorze casos vermelhos e ficou toda verde, inclusive o `npm ci` sem alterar o lockfile e o
   `npm run check` com código 0; o teste do build repete o caso do `index.html` contra uma pasta temporária.
+- `spec: 00009`, passo 3: a IA provou, num projeto descartável com o Fastify do repositório, que o servidor de arquivos
+  responde 200 com o tipo de mídia do arquivo, mantém o 404 `route_not_found` para o desconhecido e para o caminho que
+  sobe da pasta, e que uma pasta inexistente não impede o `ready()`, o que mostrou que o critério 6 pedia uma checagem
+  própria. A sonda do passo partiu com quatro dos treze casos vermelhos e ficou toda verde; os testes do
+  `server.test.ts` e do `settings.test.ts` repetem esses casos contra uma pasta temporária real.
 
 ## Um erro da IA
 
@@ -365,6 +375,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00009`, passo 2: o script `build` da raiz foi escrito sem o `--` que repassa argumentos, então o `--outDir` do
   teste do build virou argumento do `npm`, e o Vite tomou a pasta temporária como raiz do projeto. O teste reprovou na
   primeira rodada, a IA achou a causa e acrescentou o `--` ao script.
+- `spec: 00009`, passo 3: quando perguntei por que a checagem da pasta não ficava no `Settings`, a IA concordou de
+  imediato e propôs mover a checagem para lá. Só ao eu perguntar como isso se comportaria em deploy ela notou que o
+  `migrate.ts` também lê o `Settings` e passaria a falhar por causa de uma pasta do front, e voltou atrás: a checagem
+  fica no plugin que consome a pasta, e o `fromEnv` continua só lendo o texto.
 
 ## Uma decisão minha
 
@@ -503,6 +517,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   também que o `MIN_LIMIT` fosse explícito no esquema, sem confiar só no regex, e que os limites tivessem um dono só, o
   caso de uso, que o esquema da rota importa. Decidi que a listagem só avança, sem `rel="prev"` nem `rel="last"`, e
   registrei os dois em "O que faria com mais tempo".
+- `spec: 00009`, passo 3: a IA propôs a pasta do front como segundo argumento posicional do `buildServer`, e mandei a
+  forma nomeada, como o `Settings`. Mandei `null` para a pasta ausente, por ser o que o projeto usa para "sem valor", e
+  um passo `npm run build` explícito antes do `npm run dev`, sem acoplá-lo ao script. Mandei também que o serviço de
+  arquivos tivesse uma subpasta e um `errors.ts` próprios, contra a proposta de mantê-lo solto em `interface/http/`, e
+  um nome que reaproveitasse o `webDistDir`, no lugar de "shell", que é o vocabulário da spec.
 
 ## Onde a IA não entrou
 

@@ -62,6 +62,27 @@ describe("Settings.fromEnv", () => {
     expect([settings.apiHost, settings.apiPort]).toEqual(["127.0.0.1", 3000]);
   });
 
+  it.each([undefined, "", "   "])(
+    "leaves webDistDir absent when WEB_DIST_DIR is %j",
+    (value) => {
+      const env =
+        value === undefined
+          ? DATABASE_ENV
+          : { ...DATABASE_ENV, WEB_DIST_DIR: value };
+
+      expect(Settings.fromEnv(env).webDistDir).toBeNull();
+    },
+  );
+
+  it("reads WEB_DIST_DIR as the webDistDir", () => {
+    const settings = Settings.fromEnv({
+      ...DATABASE_ENV,
+      WEB_DIST_DIR: "/srv/web",
+    });
+
+    expect(settings.webDistDir).toBe("/srv/web");
+  });
+
   it.each(Object.keys(DATABASE_ENV))(
     "throws naming %s when it is missing or empty",
     (name) => {

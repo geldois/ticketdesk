@@ -15,7 +15,7 @@ try {
 
 const pgPool = createPgPool(settings.databaseUrl);
 const container = buildContainer({ now: () => new Date(), pgPool });
-const server = buildServer(container);
+const server = buildServer({ container, webDistDir: settings.webDistDir });
 
 try {
   await server.listen({ host: settings.apiHost, port: settings.apiPort });

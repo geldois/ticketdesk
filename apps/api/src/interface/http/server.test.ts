@@ -1,3 +1,7 @@
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import type {
   TicketHistoryEntryResponse,
   TicketResponse,
@@ -16,6 +20,7 @@ import { createPgPool } from "../../infrastructure/pool.ts";
 import { encodeCursor } from "./cursor.ts";
 import { handleError } from "./error-handler.ts";
 import { buildServer } from "./server.ts";
+import { InvalidWebDistDirError } from "./web/errors.ts";
 
 const INSTANT = new Date("2026-01-01T10:20:30.123Z");
 const UNKNOWN_TICKET_ID = "019a0000-0000-7000-8000-000000000000";
@@ -96,10 +101,17 @@ describe("the HTTP server", () => {
   beforeAll(async () => {
     pgPool = createPgPool(await createMigratedTestDatabase());
     unreachablePgPool = createPgPool(UNREACHABLE_DATABASE_URL);
-    server = buildServer(buildContainer({ now: () => INSTANT, pgPool }));
-    unreachableServer = buildServer(
-      buildContainer({ now: () => INSTANT, pgPool: unreachablePgPool }),
-    );
+    server = buildServer({
+      container: buildContainer({ now: () => INSTANT, pgPool }),
+      webDistDir: null,
+    });
+    unreachableServer = buildServer({
+      container: buildContainer({
+        now: () => INSTANT,
+        pgPool: unreachablePgPool,
+      }),
+      webDistDir: null,
+    });
   });
 
   afterAll(async () => {
@@ -653,9 +665,10 @@ describe("the HTTP server", () => {
 
     beforeAll(async () => {
       listPgPool = createPgPool(await createMigratedTestDatabase());
-      listServer = buildServer(
-        buildContainer({ now: () => INSTANT, pgPool: listPgPool }),
-      );
+      listServer = buildServer({
+        container: buildContainer({ now: () => INSTANT, pgPool: listPgPool }),
+        webDistDir: null,
+      });
     });
 
     afterAll(async () => {
@@ -973,6 +986,8 @@ describe("the HTTP server", () => {
     it.each([
       ["an unknown path", "GET", "/nowhere"],
       ["a known path with an unknown method", "DELETE", "/tickets"],
+      ["the page when no web dist is served", "GET", "/"],
+      ["an asset when no web dist is served", "GET", "/assets/app.js"],
     ] as const)(
       "answers 404 route_not_found for %s",
       async (_name, method, url) => {
@@ -1008,6 +1023,96 @@ describe("the HTTP server", () => {
       expect(response.body).not.toMatch(
         /ECONNREFUSED|127\.0\.0\.1|node_modules|\.ts/,
       );
+    });
+  });
+
+  describe("with a web dist", () => {
+    const INDEX_HTML = '<!doctype html><div id="root"></div>';
+    const APP_JS = "console.log('ticketdesk');";
+    let webDistDir: string;
+    let webPgPool: Pool;
+    let webServer: FastifyInstance;
+
+    beforeAll(async () => {
+      webDistDir = await mkdtemp(join(tmpdir(), "ticketdesk-web-dist-"));
+      await mkdir(join(webDistDir, "assets"));
+      await writeFile(join(webDistDir, "index.html"), INDEX_HTML);
+      await writeFile(join(webDistDir, "assets", "app.js"), APP_JS);
+
+      webPgPool = createPgPool(await createMigratedTestDatabase());
+      webServer = buildServer({
+        container: buildContainer({ now: () => INSTANT, pgPool: webPgPool }),
+        webDistDir,
+      });
+    });
+
+    afterAll(async () => {
+      await webServer.close();
+      await webPgPool.end();
+      await rm(webDistDir, { recursive: true, force: true });
+    });
+
+    it("serves the index.html at / as text/html", async () => {
+      const response = await webServer.inject("/");
+
+      expect(response.statusCode).toBe(200);
+      expect(String(response.headers["content-type"])).toMatch(/^text\/html/);
+      expect(response.body).toBe(INDEX_HTML);
+    });
+
+    it("serves a file under assets/ with its own media type", async () => {
+      const response = await webServer.inject("/assets/app.js");
+
+      expect(response.statusCode).toBe(200);
+      expect(String(response.headers["content-type"])).toMatch(/javascript/);
+      expect(response.body).toBe(APP_JS);
+    });
+
+    it("keeps the ticket routes answering as before", async () => {
+      const created = await webServer.inject({
+        method: "POST",
+        url: "/tickets",
+        payload: JSON.stringify(VALID_BODY),
+        headers: JSON_HEADERS,
+      });
+      const { id } = created.json<TicketResponse>();
+      const read = await webServer.inject(`/tickets/${id}`);
+      const listed = await webServer.inject("/tickets");
+
+      expect(created.statusCode).toBe(201);
+      expect(read.statusCode).toBe(200);
+      expect(read.json()).toEqual(created.json());
+      expect(listed.statusCode).toBe(200);
+      expect(listed.json()).toEqual([created.json()]);
+    });
+
+    it.each([
+      ["an unknown path", "/nowhere"],
+      ["an unknown file under assets/", "/assets/missing.js"],
+      ["a path that climbs out of the web dist", "/..%2Fpackage.json"],
+    ])("answers 404 route_not_found for %s", async (_name, url) => {
+      const response = await webServer.inject(url);
+
+      expect(readProblem(response)).toEqual(problem(404, "route_not_found"));
+    });
+
+    it("answers 404 route_not_found to a method the web dist does not serve", async () => {
+      const response = await webServer.inject({ method: "POST", url: "/" });
+
+      expect(readProblem(response)).toEqual(problem(404, "route_not_found"));
+    });
+
+    it.each([
+      ["a folder that does not exist", (dir: string) => join(dir, "missing")],
+      ["a path that is a file", (dir: string) => join(dir, "index.html")],
+    ])("is not ready when the web dist is %s", async (_name, pathOf) => {
+      const unready = buildServer({
+        container: buildContainer({ now: () => INSTANT, pgPool: webPgPool }),
+        webDistDir: pathOf(webDistDir),
+      });
+
+      await expect(unready.ready()).rejects.toThrow(InvalidWebDistDirError);
+      await unready.close();
     });
   });
 });

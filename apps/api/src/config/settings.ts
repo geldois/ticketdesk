@@ -15,19 +15,23 @@ export class Settings {
   readonly databaseUrl: string;
   readonly apiHost: string;
   readonly apiPort: number;
+  readonly webDistDir: string | null;
 
   private constructor({
     databaseUrl,
     apiHost,
     apiPort,
+    webDistDir,
   }: {
     databaseUrl: string;
     apiHost: string;
     apiPort: number;
+    webDistDir: string | null;
   }) {
     this.databaseUrl = databaseUrl;
     this.apiHost = apiHost;
     this.apiPort = apiPort;
+    this.webDistDir = webDistDir;
   }
 
   static fromEnv(env: NodeJS.ProcessEnv = process.env): Settings {
@@ -62,10 +66,13 @@ export class Settings {
     databaseUrl.password = readVariable(env, "PGPASSWORD");
     databaseUrl.pathname = readVariable(env, "PGDATABASE");
 
+    const webDistDir = readVariable(env, "WEB_DIST_DIR");
+
     return new Settings({
       databaseUrl: databaseUrl.toString(),
       apiHost: env["API_HOST"] ?? DEFAULT_API_HOST,
       apiPort: Number(apiPort),
+      webDistDir: webDistDir.trim() === "" ? null : webDistDir,
     });
   }
 }
