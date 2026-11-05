@@ -7,6 +7,10 @@ import type {
   StoredTicket,
   TicketPosition,
 } from "../../application/stored-ticket.ts";
+import {
+  TRANSITION_TICKET_STATUSES,
+  TRANSITION_TICKET_TEXTS,
+} from "../../domain/invariants.ts";
 import type { TicketHistoryEntry } from "../../domain/ticket.ts";
 import { encodeCursor } from "./cursor.ts";
 
@@ -23,6 +27,10 @@ export function presentTicket(storedTicket: StoredTicket): TicketResponse {
     resolutionNote: ticket.resolutionNote,
     version: ref.version,
     createdAt: ticket.createdAt.toISOString(),
+    nextTransitions: TRANSITION_TICKET_STATUSES[ticket.status].map((to) => ({
+      to,
+      requires: TRANSITION_TICKET_TEXTS[to],
+    })),
   };
 }
 

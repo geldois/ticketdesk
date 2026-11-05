@@ -36,6 +36,7 @@ const TICKET = {
   resolutionNote: null,
   version: 1,
   createdAt: "2026-11-04T22:00:00.000Z",
+  nextTransitions: [{ to: "in_progress", requires: null }],
 };
 const ENTRY = {
   from: null,

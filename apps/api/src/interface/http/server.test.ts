@@ -137,7 +137,7 @@ describe("the HTTP server", () => {
   }
 
   describe("POST /tickets", () => {
-    it("answers 201 with the Location of the ticket and the nine contract fields, open at version 1 and stamped by the clock", async () => {
+    it("answers 201 with the Location of the ticket and the ten contract fields, open at version 1 and stamped by the clock", async () => {
       const response = await postTicket(JSON.stringify(VALID_BODY));
       const ticket = response.json<TicketResponse>();
 
@@ -153,6 +153,7 @@ describe("the HTTP server", () => {
         resolutionNote: null,
         version: 1,
         createdAt: "2026-01-01T10:20:30.123Z",
+        nextTransitions: [{ to: "in_progress", requires: null }],
       });
     });
 
@@ -414,6 +415,7 @@ describe("the HTTP server", () => {
         ...ticket,
         status: "in_progress",
         version: 2,
+        nextTransitions: [{ to: "resolved", requires: "resolutionNote" }],
       });
       const history = await server.inject({
         method: "GET",
@@ -558,6 +560,33 @@ describe("the HTTP server", () => {
       );
       expect(await snapshot(id)).toEqual(before);
     });
+
+    it.each([
+      ["open", [{ to: "in_progress", requires: null }]],
+      ["in_progress", [{ to: "resolved", requires: "resolutionNote" }]],
+      ["resolved", [{ to: "open", requires: "reopenReason" }]],
+    ] as const)(
+      "carries the next transitions of a ticket in %s when read, in the list and in the body of a 409",
+      async (status, expected) => {
+        const { id } = await createTicketIn(status);
+
+        const one = await server.inject({
+          method: "GET",
+          url: `/tickets/${id}`,
+        });
+        const list = await server.inject({ method: "GET", url: "/tickets" });
+        const conflict = await transit(id, '"99"');
+
+        expect(one.json<TicketResponse>().nextTransitions).toEqual(expected);
+        expect(
+          list.json<TicketResponse[]>().find((listed) => listed.id === id)
+            ?.nextTransitions,
+        ).toEqual(expected);
+        expect(
+          conflict.json<{ ticket: TicketResponse }>().ticket.nextTransitions,
+        ).toEqual(expected);
+      },
+    );
 
     it("answers 409 when the same transition is repeated with the same If-Match", async () => {
       const ticket = await createTicket();

@@ -28,6 +28,17 @@ export interface ListTicketsRequest {
   readonly cursor?: string;
 }
 
+export const NEXT_TRANSITION_RESPONSE_SCHEMA = z
+  .object({
+    to: TICKET_STATUS_SCHEMA,
+    requires: z.enum(["resolutionNote", "reopenReason"]).nullable(),
+  })
+  .readonly();
+
+export type NextTransitionResponse = z.infer<
+  typeof NEXT_TRANSITION_RESPONSE_SCHEMA
+>;
+
 export const TICKET_RESPONSE_SCHEMA = z
   .object({
     id: z.string(),
@@ -39,6 +50,7 @@ export const TICKET_RESPONSE_SCHEMA = z
     resolutionNote: z.string().nullable(),
     version: z.number().int(),
     createdAt: z.iso.datetime(),
+    nextTransitions: z.array(NEXT_TRANSITION_RESPONSE_SCHEMA).readonly(),
   })
   .readonly();
 

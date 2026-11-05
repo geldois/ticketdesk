@@ -143,6 +143,16 @@ export const TRANSITION_TICKET_STATUSES: Readonly<
   resolved: Object.freeze(["open"] as const),
 });
 
+export type TransitionTicketText = "resolutionNote" | "reopenReason";
+
+export const TRANSITION_TICKET_TEXTS: Readonly<
+  Record<TicketStatus, TransitionTicketText | null>
+> = Object.freeze({
+  open: "reopenReason",
+  in_progress: null,
+  resolved: "resolutionNote",
+});
+
 export function validateTransitionTicketStatus(
   from: TicketStatus,
   to: TicketStatus,
@@ -157,11 +167,13 @@ export function validateTransitionUnexpected(
   resolutionNote: string | null,
   reopenReason: string | null,
 ): void {
-  if (to !== "resolved" && resolutionNote !== null) {
+  const required = TRANSITION_TICKET_TEXTS[to];
+
+  if (required !== "resolutionNote" && resolutionNote !== null) {
     throw new UnexpectedResolutionNoteError();
   }
 
-  if (to !== "open" && reopenReason !== null) {
+  if (required !== "reopenReason" && reopenReason !== null) {
     throw new UnexpectedReopenReasonError();
   }
 }
@@ -171,11 +183,13 @@ export function validateTransitionMissing(
   resolutionNote: string | null,
   reopenReason: string | null,
 ): void {
-  if (to === "resolved" && resolutionNote === null) {
+  const required = TRANSITION_TICKET_TEXTS[to];
+
+  if (required === "resolutionNote" && resolutionNote === null) {
     throw new MissingResolutionNoteError();
   }
 
-  if (to === "open" && reopenReason === null) {
+  if (required === "reopenReason" && reopenReason === null) {
     throw new MissingReopenReasonError();
   }
 }

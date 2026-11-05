@@ -11,6 +11,8 @@ import {
   InvalidTransitionError,
   MissingResolutionNoteError,
   MissingReopenReasonError,
+  UnexpectedReopenReasonError,
+  UnexpectedResolutionNoteError,
 } from "./errors.ts";
 import {
   CUSTOMER_NAME,
@@ -22,8 +24,11 @@ import {
   REOPEN_REASON,
   RESOLUTION_NOTE,
   TRANSITION_TICKET_STATUSES,
+  TRANSITION_TICKET_TEXTS,
   validateInstant,
+  validateTransitionMissing,
   validateTransitionTicketStatus,
+  validateTransitionUnexpected,
 } from "./invariants.ts";
 
 const FIELDS = [
@@ -238,6 +243,53 @@ describe("TRANSITION_TICKET_STATUSES", () => {
     expect(() => {
       validateTransitionTicketStatus("open", "in_progress");
     }).not.toThrow();
+  });
+});
+
+describe("TRANSITION_TICKET_TEXTS", () => {
+  it.each([
+    ["in_progress", null, null, null],
+    ["resolved", "Replaced the cable", null, "resolutionNote"],
+    ["open", null, "It broke again", "reopenReason"],
+  ] as const)(
+    "names the text that %s requires and accepts it",
+    (to, resolutionNote, reopenReason, required) => {
+      expect(TRANSITION_TICKET_TEXTS[to]).toBe(required);
+      expect(() => {
+        validateTransitionMissing(to, resolutionNote, reopenReason);
+        validateTransitionUnexpected(to, resolutionNote, reopenReason);
+      }).not.toThrow();
+    },
+  );
+
+  it.each([
+    ["resolved", MissingResolutionNoteError],
+    ["open", MissingReopenReasonError],
+  ] as const)("refuses %s without the text it requires", (to, error) => {
+    expect(() => {
+      validateTransitionMissing(to, null, null);
+    }).toThrow(error);
+  });
+
+  it.each([
+    ["in_progress", "a note", "Done", null, UnexpectedResolutionNoteError],
+    ["in_progress", "a reason", null, "Why", UnexpectedReopenReasonError],
+    ["resolved", "a reason", "Done", "Why", UnexpectedReopenReasonError],
+    ["open", "a note", "Done", "Why", UnexpectedResolutionNoteError],
+  ] as const)(
+    "refuses %s with %s that it does not require",
+    (to, _, resolutionNote, reopenReason, error) => {
+      expect(() => {
+        validateTransitionUnexpected(to, resolutionNote, reopenReason);
+      }).toThrow(error);
+    },
+  );
+
+  it("refuses to change the text a destination requires", () => {
+    expect(() =>
+      Object.assign(TRANSITION_TICKET_TEXTS, { open: null }),
+    ).toThrow(TypeError);
+    expect(TRANSITION_TICKET_TEXTS.open).toBe("reopenReason");
   });
 });
 
