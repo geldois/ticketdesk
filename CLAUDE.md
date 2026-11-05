@@ -48,7 +48,7 @@ aponta para ele.
   nunca só a presença de texto, só um código de saída ou só uma contagem. Uma refatoração que preserva o comportamento
   não quebra teste algum. Vale em todo nível, que só muda onde fica essa interface: a função exportada no unitário, a
   fronteira real (banco, HTTP) na integração e o sintoma original do defeito na regressão. Dublê só na fronteira que o
-  projeto não controla (relógio, rede), nunca num colaborador interno. A cobertura é piso do `check`, não prova de
+  projeto não controla (relógio, rede), nunca num colaborador interno. A cobertura é piso do `test`, não prova de
   comportamento. Gatilho: escrever ou revisar qualquer teste.
 
 ## Commits
@@ -72,11 +72,12 @@ aponta para ele.
   `apps/api/test/web-client.test.ts`, e a prova do resto é a sonda e a conferência guiada, relatadas em "O que validei"
   do `IA.md`, e o `check` tipa e compila o front. Não mudam comportamento, e por isso não levam teste: documentação,
   formatação, `typo`, `spec`, `deps-bump`, `revert`, `scaffold` e ferramental ou configuração cujo efeito o próprio
-  `check` exercita. Gatilho: fechar o commit de um passo.
+  `check` ou o `test` exercita. Gatilho: fechar o commit de um passo.
 - Duas branches: todo commit e todo push vão para `dev`; a `main` só recebe o merge de `dev` e nunca um commit direto. A
   IA nunca pusha a `main` nem faz o merge para ela: é ordem do usuário.
-- O CI é o único portão do push para `dev`: o `check` roda nele a cada push, sem hook local, e um commit quebrado pode
-  entrar em `dev`.
+- O CI é o único portão do push para `dev`: o `check` (lint, tipos e formato, que só pedem o Node) e o `test` (os testes
+  e a cobertura, que pedem um container runtime) rodam nele a cada push, em jobs separados, sem hook local, e um commit
+  quebrado pode entrar em `dev`.
 
 ## Idioma e comentários
 
@@ -119,9 +120,10 @@ aponta para ele.
   rodar o agente de novo; achado baixo é registrado. O agente roda uma única vez por commit. Commit que só toca código,
   commit manual e commit só de formatação não precisam dele. A auditoria do repositório inteiro só acontece quando o
   usuário a pede.
-- Antes de todo commit de IA, ela roda o `npm run fix` e depois o `npm run check`, nessa ordem e uma vez cada, e só
-  então o `docs-auditor`, para ele auditar o documento já formatado. Se o `check` reprovar, ela reporta ao usuário e
-  pergunta antes de commitar, sem rodar de novo. Fora desse momento, só os roda quando o usuário pedir.
+- Antes de todo commit de IA, ela roda o `npm run fix`, depois o `npm run check` e depois o `npm test`, nessa ordem e
+  uma vez cada, e só então o `docs-auditor`, para ele auditar o documento já formatado. Se o `check` ou o `test`
+  reprovar, ela reporta ao usuário e pergunta antes de commitar, sem rodar de novo. Fora desse momento, só os roda
+  quando o usuário pedir.
 - O harness local só é carregado quando a sessão da IA abre dentro deste repositório.
 
 ## Pausas

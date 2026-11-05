@@ -169,6 +169,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   `main.ts` sobre ela, escreveu os testes do `PgStorage` e trocou as dez chamadas de `buildContainer` nos testes. A
   separação da base em `UseCase` e `UoWUseCase` é desenho meu: a IA apontou que o `CheckReadinessUseCase` não precisa da
   fábrica do Unit of Work, e eu mandei a separação, com o `execute` abstrato obrigatório.
+- `spec: 00005`: a IA verificou quem dependia de o `check` rodar os testes (o `CLAUDE.md`, o README e uma verificação de
+  spec congelada), separou o `npm test` do `npm run check`, escreveu o workflow `test.yml` e ajustou os documentos.
+  Prompt relevante: "verifique a necessidade de desacoplar o vitest do npm run check, para não rodar linting
+  necessitando de container runtime".
 
 ## O que validei
 
@@ -401,6 +405,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   `close()` do `PgStorage` de propósito e o teste de "fechado" falhou, e a suíte de 743 testes passou. Como o `main.ts`
   mudou, a pilha descartável do compose subiu de novo com as 11 checagens de HTTP verdes, e o desligamento do `api` por
   `stop` terminou com código 0, sem linha de erro.
+- `spec: 00005`: o `npm run check` passou a rodar sem container runtime, e o `npm test` roda os testes com a cobertura e
+  para com a mensagem de sempre quando não há; o novo workflow passou no validador de workflows do próprio `check`.
 
 ## Um erro da IA
 
@@ -698,6 +704,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: none (tweak)`: escolhi a porta `Storage`, só com PostgreSQL, em vez da versão mínima do container. Propus pôr a
   prontidão dentro do Unit of Work; a IA apontou que a prontidão não precisa de transação e que o caso de uso dela não
   usa a fábrica, e adotei a separação em `UseCase` e `UoWUseCase`.
+- `spec: 00005`: decidi desacoplar os testes do `npm run check`, para o lint e os tipos rodarem sem container runtime, e
+  pedi um job `test` próprio no CI, também obrigatório na `main`, com um selo no README.
 
 ## Onde a IA não entrou
 

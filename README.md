@@ -1,6 +1,7 @@
 # ticketdesk
 
 [![check](https://img.shields.io/github/actions/workflow/status/geldois/ticketdesk/check.yml?branch=main&label=check)](https://github.com/geldois/ticketdesk/actions/workflows/check.yml)
+[![test](https://img.shields.io/github/actions/workflow/status/geldois/ticketdesk/test.yml?branch=main&label=test)](https://github.com/geldois/ticketdesk/actions/workflows/test.yml)
 [![audit](https://img.shields.io/github/actions/workflow/status/geldois/ticketdesk/audit.yml?branch=main&label=audit)](https://github.com/geldois/ticketdesk/actions/workflows/audit.yml)
 [![node](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fgeldois%2Fticketdesk%2Fmain%2Fpackage.json&query=%24.engines.node&label=node)](.node-version)
 [![typescript](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fgeldois%2Fticketdesk%2Fmain%2Fpackage.json&query=%24.devDependencies.typescript&label=typescript)](package.json)
@@ -62,7 +63,8 @@ Há dois caminhos, ambos na raiz do repositório, e `docker compose` é o comand
 | Quero | Preciso de | Vá para |
 | --- | --- | --- |
 | Rodar o sistema e ver a API responder | Só um container runtime, sem Node e sem `npm ci` | "Só rodar" |
-| Mexer no código, rodar a API no host e conferir o repositório | Um container runtime e o Node do `.node-version` | "Para quem desenvolve" |
+| Mexer no código, conferir lint e tipos e rodar a API no host | O Node do `.node-version` e, para o banco da API do host, um container runtime | "Para quem desenvolve" |
+| Rodar os testes | O Node do `.node-version` e um container runtime | "Para quem desenvolve" |
 
 ### Só rodar
 
@@ -101,27 +103,36 @@ escreve uma linha JSON por requisição, menos as das rotas de saúde, na saída
 ### Para quem desenvolve
 
 O Node é de uma única versão exata, declarada em [.node-version](.node-version) e em `engines.node` do `package.json`; o
-`.npmrc` liga o `engine-strict`, e qualquer outra versão faz o `npm` recusar a instalação. Os testes de banco sobem um
-PostgreSQL num contêiner, então o container runtime precisa estar acessível; com o socket fora do lugar padrão,
-`DOCKER_HOST` aponta para ele, como a documentação do `testcontainers` descreve.
+`.npmrc` liga o `engine-strict`, e qualquer outra versão faz o `npm` recusar a instalação.
 
-Instale as dependências, uma vez, e confira o repositório, o que não precisa de compose nem de `.env`:
+Instale as dependências, uma vez, e confira o código. O `npm run check` roda só o lint, os tipos e o formato, então pede
+apenas o Node, sem container runtime, compose nem `.env`:
 
 ```sh
 npm ci
 npm run check
 ```
 
-Para rodar só os testes:
+Os testes são outra etapa, porque os de banco sobem um PostgreSQL num contêiner e o container runtime precisa estar
+acessível; com o socket fora do lugar padrão, `DOCKER_HOST` aponta para ele, como a documentação do `testcontainers`
+descreve. O `npm test` roda todos, com o piso de cobertura que o CI exige, e para no começo, com uma mensagem, se não
+houver container runtime:
+
+```sh
+npm test
+```
+
+Para rodar os testes sem a cobertura, o que é mais rápido, ou só um arquivo:
 
 ```sh
 npx vitest run
+npx vitest run apps/api/src/domain
 ```
 
 As regras do domínio, as transições inválidas incluídas, são testadas em `apps/api/src/domain/`; o conflito de
 concorrência, nas duas requisições disparadas juntas de `apps/api/src/interface/http/server.test.ts` e na corrida entre
-duas gravações de `apps/api/src/infrastructure/repositories/pg-ticket-repository.test.ts`; e o cliente da tela, contra a
-API real, em `apps/api/test/web-client.test.ts`.
+duas unidades de trabalho de `apps/api/src/infrastructure/pg-uow.test.ts`; e o cliente da tela, contra a API real, em
+`apps/api/test/web-client.test.ts`.
 
 Para rodar a API no host, com o banco em contêiner, um comando por vez, depois do `npm ci`:
 
@@ -151,7 +162,9 @@ mudança e repassa `/tickets` à API em `API_HOST` e `API_PORT`, então a págin
 | `npm run build` | Gera o front em `apps/web/dist`, que a API serve quando o `WEB_DIST_DIR` aponta para essa pasta |
 | `npm run dev` | Sobe a API no host, com o `.env` carregado; exige o `db` migrado e, com o `WEB_DIST_DIR` definido, o build feito |
 | `npm run dev:web` | Sobe o servidor de desenvolvimento do front, com o proxy para a API do host; exige `API_HOST` e `API_PORT` e a API no ar |
-| `npm run check` | Confere que há um container runtime, e sem ele para com uma mensagem; com ele, roda todas as verificações, mesmo que uma falhe, e sai com erro se alguma falhou; é o que o CI roda a cada push |
+| `npm run check` | Roda todas as verificações de lint, tipos e formato, mesmo que uma falhe, e sai com erro se alguma falhou; só pede o Node, e é o job `check` do CI a cada push |
+| `npm test` | Confere que há um container runtime, e sem ele para com uma mensagem; com ele, roda todos os testes com o piso de cobertura; é o job `test` do CI a cada push |
+| `npx vitest run` | Roda os testes sem a cobertura, ou só os que o caminho informado indicar; pede o container runtime, mas não a checagem dele |
 | `npm run fix` | Corrige o que o lint e os formatadores sabem corrigir, o do SQL incluso |
 
 O que o CI roda, incluindo a auditoria de dependências, está em [.github/workflows/](.github/workflows/).
@@ -256,14 +269,14 @@ Só as decisões de alto ROI, sem contradição entre linhas.
 | Decisão | Alternativa descartada | Trade-off aceito |
 | --- | --- | --- |
 | Versões exatas, sem scripts de instalação (`ignore-scripts`), Node exato recusado por `engine-strict` e `audit` em workflow próprio, não obrigatório | Faixas semver, scripts liberados, uma faixa de Node e `audit` como etapa do `check` | Toda atualização é um commit `deps-bump`, quem tem outro Node não instala, e um advisory novo não trava o push e pode passar despercebido |
-| O CI é o único portão, sem hook local, com cobertura mínima desde o primeiro teste e `check` obrigatório só na `main` (ruleset `protect-main`) | Hook de pre-commit, `check` obrigatório também na `dev`, ou cobertura sem mínimo | Um commit quebrado entra em `dev`, cada arquivo novo exige teste e o `check` exige shell POSIX; em troca a `main` só aceita um commit cujo `check` já passou na `dev` |
+| O CI é o único portão, sem hook local, em jobs separados: `check` (lint, tipos e formato), `test` (testes com cobertura mínima desde o primeiro teste) e `audit`, e `check` e `test` obrigatórios só na `main` (ruleset `protect-main`) | Hook de pre-commit, os dois obrigatórios também na `dev`, um job só para tudo, ou cobertura sem mínimo | Um commit quebrado entra em `dev`, cada arquivo novo exige teste e o `check` exige shell POSIX; em troca a `main` só aceita um commit cujo `check` e `test` já passaram na `dev`, e quem não tem container runtime ainda roda o lint e os tipos |
 | Falha lançada como erro tipado: `DomainError` e `ApplicationError` irmãs, sem ancestral comum, uma subclasse por `code` e mensagem fixa | Devolver sucesso ou falha como resultado, uma classe de erro única, ou uma só hierarquia | Quem traduz o erro em resposta trata as duas famílias e cada código custa uma classe; em troca `instanceof` distingue a camada, e código e mensagem moram num lugar só |
 | Texto validado e normalizado pelo domínio, em uma linha só, medido em pontos de código, com uma regra só para o nome, a descrição, a nota e o motivo: recusa-se o que nenhuma pessoa escreve de propósito (caractere de controle, substituto solto, uso privado, não atribuído, controles de direção que invertem a ordem do texto e texto sem nenhum caractere visível), e todo o resto passa, inclusive emoji compostos, marcas combinantes e qualquer pontuação | Uma lista do que se aceita (letras, números, pontuação e símbolos), que recusava emoji compostos e vários idiomas, e uma regra mais estrita para o nome | A tela precisa saber exibir qualquer texto, e o React o escapa; em troca ninguém é punido por um nome ou um emoji legítimo, e o formato vale em qualquer porta de entrada |
 | O `Ticket` do domínio sem `id` nem `version`, que a persistência junta, a entrada do histórico devolvida sem o `id` numérico do banco, e o instante por argumento, com o domínio só recusando um `Date` inválido | `id` e `version` dentro do `Ticket`, a linha inteira do histórico, ou o domínio ler o relógio e recusar instante futuro | Quem chama passa o relógio, e a rota é o único ponto que decide o "agora"; quem precisar do `id` da entrada pede uma operação nova; em troca o domínio não sabe como o ticket é identificado nem versionado, o `id` da entrada nunca vaza numa resposta, e um teste usa qualquer data fixa |
 | Ordem fixa de checagem, em que a primeira falha vence, e texto fora do destino ou sem o texto do destino recusado com erro próprio | Acumular todas as falhas, ou ignorar a nota ou o motivo que não pertencem ao destino | Quem chama vê um erro por vez e a ordem faz parte do contrato; em troca cada operação lança uma exceção só, com `code` previsível, e nenhum dado enviado some sem aviso |
 | As transições permitidas como um dicionário que liga cada status ao conjunto de destinos | Uma cadeia de `if` ou `switch` por par de status | Uma regra nova é uma linha na tabela e a consulta custa O(1); o `Record` exige uma chave para cada status e o compilador recusa o que faltar |
 | O isolamento do domínio provado por regras do ESLint (`eslint-plugin-import-x`) que só deixam o código do domínio importar de dentro de `apps/api/src/domain/` | Uma lista de pastas e pacotes proibidos no `no-restricted-imports`, ou uma ferramenta de grafo de dependências | Um pacote de desenvolvimento a mais; o pacote só é barrado depois de instalado, e os testes do domínio podem importar pacotes |
-| Os testes de banco rodam num PostgreSQL real, num contêiner por execução, cada caso num banco clonado de um modelo já migrado, e o `check` começa por uma checagem do container runtime que trava o resto se falhar | Um banco em memória, uma transação revertida por teste, ou deixar o erro cru da biblioteca ou pular os testes de banco | Quem não tem container runtime não roda nem os linters, e cada execução paga a subida do contêiner; em troca o banco é o de produção, com `CHECK` e gatilhos, e nenhum teste é pulado em silêncio |
+| Os testes de banco rodam num PostgreSQL real, num contêiner por execução, cada caso num banco clonado de um modelo já migrado, e o `npm test` começa por uma checagem do container runtime que trava o resto se falhar, em vez de pular os testes de banco | Um banco em memória, uma transação revertida por teste, ou deixar o erro cru da biblioteca ou pular os testes de banco | Quem não tem container runtime não roda os testes, e cada execução paga a subida do contêiner; em troca o banco é o de produção, com `CHECK` e gatilhos, nenhum teste é pulado em silêncio, e o lint e os tipos não dependem do contêiner |
 | O lint e o formato do SQL pelo Postgres Language Server, pacote do npm que é também o servidor de linguagem do editor, com o `check` rodando sem banco | `sqlfluff` ou `sqruff`, que ficariam fora do lockfile, ou nenhum linter de SQL | Um projeto ainda jovem, com o formatador reescrevendo o SQL (`integer` vira `int`); em troca editor e CI usam as mesmas regras e a ferramenta entra com versão exata |
 | O banco espelha a estrutura, o tamanho, as transições aceitas e a presença de nota e motivo, e deixa o formato de caractere para o domínio | Espelhar também o formato e os caracteres de controle no banco | Um texto com caractere que o domínio recusa pode entrar no banco; em troca banco e domínio não divergem em regex que o PostgreSQL não equipara, e o domínio é o único dono dos caracteres |
 | A imutabilidade do histórico pelo próprio banco, com gatilhos que recusam `UPDATE`, `DELETE` e `TRUNCATE` em `ticket_history_entry` | Recusar na aplicação, ou revogar as permissões do papel da aplicação | O linter avisa dos gatilhos e das reversões, e cada um leva um `pgls-ignore`; em troca nenhum cliente do banco, nem um `psql`, altera o histórico, e o dono da tabela só o altera derrubando o gatilho |
