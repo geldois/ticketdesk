@@ -22,6 +22,7 @@ import {
   transitTicket,
 } from "../../web/src/api/client.ts";
 import { buildContainer } from "../src/config/container.ts";
+import { PgStorage } from "../src/infrastructure/pg-storage.ts";
 import { createPgPool } from "../src/infrastructure/pool.ts";
 import { buildServer } from "../src/interface/http/server.ts";
 import { createMigratedTestDatabase } from "./database.ts";
@@ -75,7 +76,10 @@ function fetchFromOrigin(
 async function startApi(): Promise<RunningApi> {
   const pool = createPgPool(await createMigratedTestDatabase());
   const api = buildServer({
-    container: buildContainer({ now: () => new Date(), pgPool: pool }),
+    container: buildContainer({
+      now: () => new Date(),
+      storage: new PgStorage(pool),
+    }),
     webDistDir: null,
     logger: { level: "silent" },
   });

@@ -1,5 +1,5 @@
 import { buildContainer } from "./config/container.ts";
-import { createPgPool } from "./infrastructure/pool.ts";
+import { createPgStorage } from "./infrastructure/pg-storage.ts";
 import { Settings } from "./config/settings.ts";
 import { buildServer } from "./interface/http/server.ts";
 
@@ -13,8 +13,8 @@ try {
   process.exit(1);
 }
 
-const pgPool = createPgPool(settings.databaseUrl);
-const container = buildContainer({ now: () => new Date(), pgPool });
+const storage = createPgStorage(settings.databaseUrl);
+const container = buildContainer({ now: () => new Date(), storage });
 const server = buildServer({
   container,
   webDistDir: settings.webDistDir,
@@ -24,7 +24,7 @@ const server = buildServer({
 try {
   await server.listen({ host: settings.apiHost, port: settings.apiPort });
 } catch (error) {
-  await pgPool.end();
+  await storage.close();
 
   console.error(error);
 
@@ -42,7 +42,7 @@ async function shutdown(): Promise<void> {
 
   try {
     await server.close();
-    await pgPool.end();
+    await storage.close();
   } catch (error) {
     console.error(error);
 

@@ -1,6 +1,6 @@
 import type { UUID } from "node:crypto";
 import type { UoW } from "../contracts/uow.ts";
-import { UseCase } from "../contracts/use-case.ts";
+import { UoWUseCase } from "../contracts/use-case.ts";
 import type { StoredTicket } from "../stored-ticket.ts";
 import { TicketNotFoundError, VersionConflictError } from "../errors.ts";
 import { normalizeTicketStatus } from "../../domain/invariants.ts";
@@ -12,7 +12,7 @@ export interface TransitTicketInput {
   readonly reopenReason: string | null;
 }
 
-export class TransitTicketUseCase extends UseCase {
+export class TransitTicketUseCase extends UoWUseCase {
   async #getStoredTicket(uow: UoW, ticketId: UUID): Promise<StoredTicket> {
     const storedTicket = await uow.ticketRepository.findTicketById(ticketId);
 

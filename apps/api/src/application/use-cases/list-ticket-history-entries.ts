@@ -1,9 +1,9 @@
 import type { UUID } from "node:crypto";
 import type { TicketHistoryEntry } from "../../domain/ticket.ts";
-import { UseCase } from "../contracts/use-case.ts";
+import { UoWUseCase } from "../contracts/use-case.ts";
 import { TicketNotFoundError } from "../errors.ts";
 
-export class ListTicketHistoryEntriesUseCase extends UseCase {
+export class ListTicketHistoryEntriesUseCase extends UoWUseCase {
   async execute(ticketId: UUID): Promise<TicketHistoryEntry[]> {
     await using uow = await this.uowFactory();
 

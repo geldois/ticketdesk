@@ -1,5 +1,5 @@
 import { createTicketChange } from "../../domain/lifecycle.ts";
-import { UseCase } from "../contracts/use-case.ts";
+import { UoWUseCase } from "../contracts/use-case.ts";
 import type { StoredTicket } from "../stored-ticket.ts";
 
 export interface CreateTicketInput {
@@ -9,7 +9,7 @@ export interface CreateTicketInput {
   readonly priority: string;
 }
 
-export class CreateTicketUseCase extends UseCase {
+export class CreateTicketUseCase extends UoWUseCase {
   async execute(input: CreateTicketInput, now: Date): Promise<StoredTicket> {
     const ticketChange = createTicketChange(input, now);
 

@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createMigratedTestDatabase } from "../../../../test/database.ts";
 import { buildContainer } from "../../../config/container.ts";
+import { PgStorage } from "../../../infrastructure/pg-storage.ts";
 import { createPgPool } from "../../../infrastructure/pool.ts";
 import { buildServer } from "../server.ts";
 
@@ -36,7 +37,10 @@ describe("the health routes", () => {
 
   function buildServerOver(pgPool: Pool): FastifyInstance {
     const server = buildServer({
-      container: buildContainer({ now: () => INSTANT, pgPool }),
+      container: buildContainer({
+        now: () => INSTANT,
+        storage: new PgStorage(pgPool),
+      }),
       webDistDir: null,
       logger: { level: "silent" },
     });

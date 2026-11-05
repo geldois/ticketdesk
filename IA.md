@@ -163,6 +163,12 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: none (tweak)`: a IA respondeu à minha pergunta sobre o que é `create` e o que é `build`, achou no código que o
   projeto já seguia a distinção (`create` traz algo novo, `build` monta a partir de partes prontas) e redigiu a regra no
   `CLAUDE.md`.
+- `spec: none (tweak)`: a ideia de tirar o pool do container e de fazer da sonda de prontidão uma porta de armazenamento
+  foi minha, e escolhi só o PostgreSQL, sem implementação em memória. A IA propôs pôr o `openUnitOfWork` ao lado de
+  `isReady` e `close`, escreveu a porta `Storage`, o `PgStorage` e o `createPgStorage`, refez o `buildContainer` e o
+  `main.ts` sobre ela, escreveu os testes do `PgStorage` e trocou as dez chamadas de `buildContainer` nos testes. A
+  separação da base em `UseCase` e `UoWUseCase` é desenho meu: a IA apontou que o `CheckReadinessUseCase` não precisa da
+  fábrica do Unit of Work, e eu mandei a separação, com o `execute` abstrato obrigatório.
 
 ## O que validei
 
@@ -391,6 +397,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   conexão e a transição sem `commit`). A suíte inteira, com 740 testes, passa acima do piso de cobertura, e uma pilha
   descartável do compose, com a imagem construída do zero, respondeu às 11 checagens de HTTP, entre elas a corrida de
   seis transições, com um `200` e cinco `409`, sem linha de erro, sem `5xx` e sem transação aberta.
+- `spec: none (tweak)`: depois do `Storage`, a sonda de 21 linhas passou de novo sobre o container novo, a IA tirou o
+  `close()` do `PgStorage` de propósito e o teste de "fechado" falhou, e a suíte de 743 testes passou. Como o `main.ts`
+  mudou, a pilha descartável do compose subiu de novo com as 11 checagens de HTTP verdes, e o desligamento do `api` por
+  `stop` terminou com código 0, sem linha de erro.
 
 ## Um erro da IA
 
@@ -510,6 +520,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   recusa, e, quando a fábrica passou a ser assíncrona, deixou o `GetTicketUseCase` sem o `await` na fábrica, de modo que
   `uow` seria uma `Promise`. A IA percebeu ao revisar o resultado e corrigiu os dois; a causa do `!` era o campo
   opcional que a fábrica assíncrona eliminou.
+- `spec: none (tweak)`: ao separar a base dos casos de uso, a IA deixou a `UseCase` como uma classe vazia, que o ESLint
+  recusa, e pôs a `UoWUseCase` num arquivo novo. O ESLint apontou a classe vazia, e eu mandei o `execute` abstrato e a
+  `UoWUseCase` no mesmo arquivo da superclasse; a IA corrigiu.
 
 ## Uma decisão minha
 
@@ -682,6 +695,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   posto neles e se não era melhor confiar no `rollback`; ficou assim, e só a escrita confirma.
 - `spec: none (tweak)`: mandei que a distinção entre `create` e `build` fosse o padrão de nomes do projeto, inclusive
   para o `buildServer`.
+- `spec: none (tweak)`: escolhi a porta `Storage`, só com PostgreSQL, em vez da versão mínima do container. Propus pôr a
+  prontidão dentro do Unit of Work; a IA apontou que a prontidão não precisa de transação e que o caso de uso dela não
+  usa a fábrica, e adotei a separação em `UseCase` e `UoWUseCase`.
 
 ## Onde a IA não entrou
 

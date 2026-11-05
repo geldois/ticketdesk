@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
 
 import { buildContainer } from "../src/config/container.ts";
+import { PgStorage } from "../src/infrastructure/pg-storage.ts";
 import { Settings } from "../src/config/settings.ts";
 import {
   CONNECTION_TIMEOUT_MS,
@@ -160,7 +161,10 @@ describe("the api service of the compose", () => {
       [closedPool, 1],
     ] as const) {
       const server = buildServer({
-        container: buildContainer({ now: () => new Date(), pgPool }),
+        container: buildContainer({
+          now: () => new Date(),
+          storage: new PgStorage(pgPool),
+        }),
         webDistDir: null,
         logger: { level: "silent" },
       });

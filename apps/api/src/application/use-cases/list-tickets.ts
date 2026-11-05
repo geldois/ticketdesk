@@ -1,4 +1,4 @@
-import { UseCase } from "../contracts/use-case.ts";
+import { UoWUseCase } from "../contracts/use-case.ts";
 import { InvalidLimitError } from "../errors.ts";
 import type {
   ListedTicket,
@@ -14,7 +14,7 @@ export interface TicketPage {
   readonly afterPosition: TicketPosition | null;
 }
 
-export class ListTicketsUseCase extends UseCase {
+export class ListTicketsUseCase extends UoWUseCase {
   async #fetchTickets(query: ListTicketsQuery): Promise<ListedTicket[]> {
     await using uow = await this.uowFactory();
 

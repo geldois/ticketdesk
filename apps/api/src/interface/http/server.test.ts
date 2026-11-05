@@ -16,6 +16,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createMigratedTestDatabase } from "../../../test/database.ts";
 import { InvalidLimitError } from "../../application/errors.ts";
 import { buildContainer } from "../../config/container.ts";
+import { PgStorage } from "../../infrastructure/pg-storage.ts";
 import { createPgPool } from "../../infrastructure/pool.ts";
 import { encodeCursor } from "./cursor.ts";
 import { handleError } from "./error-handler.ts";
@@ -102,14 +103,17 @@ describe("the HTTP server", () => {
     pgPool = createPgPool(await createMigratedTestDatabase());
     unreachablePgPool = createPgPool(UNREACHABLE_DATABASE_URL);
     server = buildServer({
-      container: buildContainer({ now: () => INSTANT, pgPool }),
+      container: buildContainer({
+        now: () => INSTANT,
+        storage: new PgStorage(pgPool),
+      }),
       webDistDir: null,
       logger: { level: "silent" },
     });
     unreachableServer = buildServer({
       container: buildContainer({
         now: () => INSTANT,
-        pgPool: unreachablePgPool,
+        storage: new PgStorage(unreachablePgPool),
       }),
       webDistDir: null,
       logger: { level: "silent" },
@@ -697,7 +701,10 @@ describe("the HTTP server", () => {
     beforeAll(async () => {
       listPgPool = createPgPool(await createMigratedTestDatabase());
       listServer = buildServer({
-        container: buildContainer({ now: () => INSTANT, pgPool: listPgPool }),
+        container: buildContainer({
+          now: () => INSTANT,
+          storage: new PgStorage(listPgPool),
+        }),
         webDistDir: null,
         logger: { level: "silent" },
       });
@@ -1073,7 +1080,10 @@ describe("the HTTP server", () => {
 
       webPgPool = createPgPool(await createMigratedTestDatabase());
       webServer = buildServer({
-        container: buildContainer({ now: () => INSTANT, pgPool: webPgPool }),
+        container: buildContainer({
+          now: () => INSTANT,
+          storage: new PgStorage(webPgPool),
+        }),
         webDistDir,
         logger: { level: "silent" },
       });
@@ -1140,7 +1150,10 @@ describe("the HTTP server", () => {
       ["a path that is a file", (dir: string) => join(dir, "index.html")],
     ])("is not ready when the web dist is %s", async (_name, pathOf) => {
       const unready = buildServer({
-        container: buildContainer({ now: () => INSTANT, pgPool: webPgPool }),
+        container: buildContainer({
+          now: () => INSTANT,
+          storage: new PgStorage(webPgPool),
+        }),
         webDistDir: pathOf(webDistDir),
         logger: { level: "silent" },
       });

@@ -10,6 +10,7 @@ import { z } from "zod";
 
 import { createMigratedTestDatabase } from "../../../test/database.ts";
 import { buildContainer } from "../../config/container.ts";
+import { PgStorage } from "../../infrastructure/pg-storage.ts";
 import type { LogLevel } from "../../config/settings.ts";
 import { createPgPool } from "../../infrastructure/pool.ts";
 import { buildServer } from "./server.ts";
@@ -52,7 +53,10 @@ describe("the request log", () => {
       },
     });
     const server = buildServer({
-      container: buildContainer({ now: () => INSTANT, pgPool }),
+      container: buildContainer({
+        now: () => INSTANT,
+        storage: new PgStorage(pgPool),
+      }),
       webDistDir: withWeb ? webDistDir : null,
       logger: { level, destination },
     });
