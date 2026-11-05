@@ -1,4 +1,4 @@
-import { buildContainer } from "./config/container.ts";
+import { buildContainer } from "./container.ts";
 import { createPgStorage } from "./infrastructure/pg-storage.ts";
 import { Settings } from "./config/settings.ts";
 import { buildServer } from "./interface/http/server.ts";

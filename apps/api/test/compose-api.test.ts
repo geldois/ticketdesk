@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
 
-import { buildContainer } from "../src/config/container.ts";
+import { buildContainer } from "../src/container.ts";
 import { PgStorage } from "../src/infrastructure/pg-storage.ts";
 import { Settings } from "../src/config/settings.ts";
 import {

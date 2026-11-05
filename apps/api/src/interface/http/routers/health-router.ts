@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import type { Container } from "../../../config/container.ts";
+import type { Container } from "../../../application/contracts/container.ts";
 import { NotReadyError } from "../../errors.ts";
 
 export function registerHealthRouter(

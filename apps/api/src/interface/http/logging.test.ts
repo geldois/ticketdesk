@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import { createMigratedTestDatabase } from "../../../test/database.ts";
-import { buildContainer } from "../../config/container.ts";
+import { buildContainer } from "../../container.ts";
 import { PgStorage } from "../../infrastructure/pg-storage.ts";
 import type { LogLevel } from "../../config/settings.ts";
 import { createPgPool } from "../../infrastructure/pool.ts";

@@ -15,7 +15,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createMigratedTestDatabase } from "../../../test/database.ts";
 import { InvalidLimitError } from "../../application/errors.ts";
-import { buildContainer } from "../../config/container.ts";
+import { buildContainer } from "../../container.ts";
 import { PgStorage } from "../../infrastructure/pg-storage.ts";
 import { createPgPool } from "../../infrastructure/pool.ts";
 import { encodeCursor } from "./cursor.ts";

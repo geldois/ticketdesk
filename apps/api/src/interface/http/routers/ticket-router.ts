@@ -1,6 +1,6 @@
 import type { UUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
-import type { Container } from "../../../config/container.ts";
+import type { Container } from "../../../application/contracts/container.ts";
 import type { ListTicketsQuery } from "../../../application/stored-ticket.ts";
 import {
   InvalidCursorError,

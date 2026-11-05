@@ -5,7 +5,7 @@ import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createMigratedTestDatabase } from "../../../../test/database.ts";
-import { buildContainer } from "../../../config/container.ts";
+import { buildContainer } from "../../../container.ts";
 import { PgStorage } from "../../../infrastructure/pg-storage.ts";
 import { createPgPool } from "../../../infrastructure/pool.ts";
 import { buildServer } from "../server.ts";

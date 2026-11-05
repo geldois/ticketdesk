@@ -21,7 +21,7 @@ import {
   type TicketPage,
   transitTicket,
 } from "../../web/src/api/client.ts";
-import { buildContainer } from "../src/config/container.ts";
+import { buildContainer } from "../src/container.ts";
 import { PgStorage } from "../src/infrastructure/pg-storage.ts";
 import { createPgPool } from "../src/infrastructure/pool.ts";
 import { buildServer } from "../src/interface/http/server.ts";
