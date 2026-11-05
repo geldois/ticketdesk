@@ -1,12 +1,16 @@
-import type {
-  ListTicketsRequest,
-  TicketHistoryEntryResponse,
-  TicketResponse,
+import {
+  LIST_TICKET_HISTORY_ENTRIES_RESPONSE_SCHEMA,
+  LIST_TICKETS_RESPONSE_SCHEMA,
+  type ListTicketHistoryEntriesResponse,
+  type ListTicketsRequest,
+  TICKET_RESPONSE_SCHEMA,
+  type TicketResponse,
 } from "@ticketdesk/contract";
+import type { ZodType } from "zod";
 
-import { ApiError, NetworkError } from "./errors.ts";
+import { ApiError, InvalidResponseError, NetworkError } from "./errors.ts";
 
-export { ApiError, NetworkError } from "./errors.ts";
+export { ApiError, InvalidResponseError, NetworkError } from "./errors.ts";
 
 export interface TicketPage {
   readonly tickets: readonly TicketResponse[];
@@ -40,32 +44,49 @@ export function listNextTickets(nextLink: string): Promise<TicketPage> {
 export async function getTicket(id: string): Promise<TicketResponse> {
   const response = await request(`/tickets/${encodeURIComponent(id)}`);
 
-  return readJson<TicketResponse>(response);
+  return readBody(response, TICKET_RESPONSE_SCHEMA);
 }
 
 export async function listTicketHistoryEntries(
   id: string,
-): Promise<readonly TicketHistoryEntryResponse[]> {
+): Promise<ListTicketHistoryEntriesResponse> {
   const response = await request(`/tickets/${encodeURIComponent(id)}/history`);
 
-  return readJson<readonly TicketHistoryEntryResponse[]>(response);
+  return readBody(response, LIST_TICKET_HISTORY_ENTRIES_RESPONSE_SCHEMA);
 }
 
 async function readPage(path: string): Promise<TicketPage> {
   const response = await request(path);
 
   return {
-    tickets: await readJson<readonly TicketResponse[]>(response),
+    tickets: await readBody(response, LIST_TICKETS_RESPONSE_SCHEMA),
     nextLink: NEXT_LINK.exec(response.headers.get("link") ?? "")?.[1] ?? null,
   };
 }
 
-async function readJson<Body>(response: Response): Promise<Body> {
-  const body: unknown = await response.json();
+async function readBody<Body>(
+  response: Response,
+  schema: ZodType<Body>,
+): Promise<Body> {
+  let body: unknown;
 
-  // o pacote do contrato tipa o que a API envia, e o front não valida o corpo em tempo de execução
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-  return body as Body;
+  try {
+    body = await response.json();
+  } catch {
+    throw new InvalidResponseError("body");
+  }
+
+  const result = schema.safeParse(body);
+
+  if (!result.success) {
+    const path = result.error.issues[0]?.path ?? [];
+
+    throw new InvalidResponseError(
+      path.length === 0 ? "body" : path.map(String).join("."),
+    );
+  }
+
+  return result.data;
 }
 
 async function request(path: string): Promise<Response> {

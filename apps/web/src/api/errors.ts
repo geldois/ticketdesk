@@ -12,6 +12,16 @@ export class ApiError extends Error {
   }
 }
 
+export class InvalidResponseError extends Error {
+  readonly path: string;
+
+  constructor(path: string) {
+    super(`the api answered a body outside the contract at ${path}`);
+
+    this.path = path;
+  }
+}
+
 export class NetworkError extends Error {
   constructor(cause: unknown) {
     super("the request did not reach the api", { cause });
