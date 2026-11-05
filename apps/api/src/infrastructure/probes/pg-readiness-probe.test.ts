@@ -66,15 +66,13 @@ describe("PgReadinessProbe", () => {
     expect(await new PgReadinessProbe(closedPool).isReady()).toBe(false);
   });
 
-  it("is not ready, and returns, when the database accepts the connection and never answers", async () => {
+  it("is not ready, and gives the pool connection back, when the database accepts the connection and never answers", async () => {
     const silentPool = createPgPool(silentDatabaseUrl);
 
     expect(await new PgReadinessProbe(silentPool).isReady()).toBe(false);
 
-    for (const socket of sockets) {
-      socket.destroy();
-    }
+    await expect.poll(() => silentPool.totalCount, { timeout: 9000 }).toBe(0);
 
     await silentPool.end();
-  });
+  }, 15000);
 });
