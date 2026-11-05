@@ -2,6 +2,7 @@ import { createServer, type Server } from "node:http";
 
 import {
   TICKET_RESPONSE_SCHEMA,
+  type TicketResponse,
   VERSION_CONFLICT_RESPONSE_SCHEMA,
 } from "@ticketdesk/contract";
 import type { FastifyInstance } from "fastify";
@@ -9,11 +10,14 @@ import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import {
+  ApiError,
   getTicket,
   InvalidResponseError,
   listNextTickets,
   listTicketHistoryEntries,
   listTickets,
+  NetworkError,
+  type TicketPage,
 } from "../../web/src/api/client.ts";
 import { buildContainer } from "../src/config/container.ts";
 import { createPgPool } from "../src/infrastructure/pool.ts";
@@ -21,6 +25,7 @@ import { buildServer } from "../src/interface/http/server.ts";
 import { createMigratedTestDatabase } from "./database.ts";
 
 const JSON_HEADERS = { "content-type": "application/json" };
+const UNKNOWN_TICKET_ID = "019a0000-0000-7000-8000-000000000000";
 const TICKET = {
   id: "019a0000-0000-7000-8000-000000000001",
   customerName: "Ana",
@@ -39,10 +44,15 @@ const ENTRY = {
   reopenReason: null,
   at: "2026-11-04T22:00:00.000Z",
 };
+const CHANNELS = ["chat", "email", "phone"] as const;
+const PRIORITIES = ["low", "medium", "high"] as const;
 
-let pool: Pool;
-let api: FastifyInstance;
-let apiOrigin: string;
+interface RunningApi {
+  readonly pool: Pool;
+  readonly api: FastifyInstance;
+  readonly origin: string;
+}
+
 let origin = "";
 const realFetch = globalThis.fetch;
 
@@ -59,6 +69,25 @@ function fetchFromOrigin(
   );
 }
 
+async function startApi(): Promise<RunningApi> {
+  const pool = createPgPool(await createMigratedTestDatabase());
+  const api = buildServer({
+    container: buildContainer({ now: () => new Date(), pgPool: pool }),
+    webDistDir: null,
+  });
+
+  return {
+    pool,
+    api,
+    origin: await api.listen({ host: "127.0.0.1", port: 0 }),
+  };
+}
+
+async function stopApi({ api, pool }: RunningApi): Promise<void> {
+  await api.close();
+  await pool.end();
+}
+
 async function serveBody(
   body: string,
   status = 200,
@@ -73,45 +102,91 @@ async function serveBody(
     server.listen(0, "127.0.0.1", resolve);
   });
 
+  origin = `http://127.0.0.1:${String(portOf(server))}`;
+
+  return server;
+}
+
+function pick<Item>(items: readonly Item[], index: number): Item {
+  const item = items[index];
+
+  if (item === undefined) {
+    throw new Error(`no item at ${String(index)}`);
+  }
+
+  return item;
+}
+
+function portOf(server: Server): number {
   const address = server.address();
 
   if (typeof address !== "object" || address === null) {
     throw new Error("the local server has no port");
   }
 
-  origin = `http://127.0.0.1:${String(address.port)}`;
-
-  return server;
+  return address.port;
 }
 
-async function createTicketThroughApi(customerName: string): Promise<{
-  readonly id: string;
-  readonly version: number;
-}> {
-  const response = await realFetch(`${apiOrigin}/tickets`, {
+async function postJson(
+  apiOrigin: string,
+  path: string,
+  body: unknown,
+  headers: Record<string, string> = {},
+): Promise<Response> {
+  return realFetch(`${apiOrigin}${path}`, {
     method: "POST",
-    headers: JSON_HEADERS,
-    body: JSON.stringify({
-      customerName,
-      description: "Printer is down",
-      channel: "chat",
-      priority: "high",
-    }),
+    headers: { ...JSON_HEADERS, ...headers },
+    body: JSON.stringify(body),
+  });
+}
+
+async function createTicketThroughApi(
+  apiOrigin: string,
+  customerName: string,
+  channel = "chat",
+  priority = "high",
+): Promise<TicketResponse> {
+  const response = await postJson(apiOrigin, "/tickets", {
+    customerName,
+    description: "Printer is down",
+    channel,
+    priority,
   });
 
   return TICKET_RESPONSE_SCHEMA.parse(await response.json());
 }
 
-async function invalidResponseOf(
-  action: () => Promise<unknown>,
-): Promise<InvalidResponseError> {
-  let failure: unknown = null;
+async function transitThroughApi(
+  apiOrigin: string,
+  ticket: TicketResponse,
+  to: string,
+  resolutionNote: string | null,
+  reopenReason: string | null,
+): Promise<TicketResponse> {
+  const response = await postJson(
+    apiOrigin,
+    `/tickets/${ticket.id}/transitions`,
+    { to, resolutionNote, reopenReason },
+    { "if-match": `"${String(ticket.version)}"` },
+  );
 
+  return TICKET_RESPONSE_SCHEMA.parse(await response.json());
+}
+
+async function failureOf(action: () => Promise<unknown>): Promise<unknown> {
   try {
     await action();
   } catch (error) {
-    failure = error;
+    return error;
   }
+
+  return null;
+}
+
+async function invalidResponseOf(
+  action: () => Promise<unknown>,
+): Promise<InvalidResponseError> {
+  const failure = await failureOf(action);
 
   if (!(failure instanceof InvalidResponseError)) {
     throw new Error("the client did not throw InvalidResponseError");
@@ -120,64 +195,75 @@ async function invalidResponseOf(
   return failure;
 }
 
-describe("the web client against the api and against bodies the api never sends", () => {
-  beforeAll(async () => {
-    pool = createPgPool(await createMigratedTestDatabase());
-    api = buildServer({
-      container: buildContainer({ now: () => new Date(), pgPool: pool }),
-      webDistDir: null,
-    });
+async function apiErrorOf(action: () => Promise<unknown>): Promise<ApiError> {
+  const failure = await failureOf(action);
 
-    apiOrigin = await api.listen({ host: "127.0.0.1", port: 0 });
-    origin = apiOrigin;
+  if (!(failure instanceof ApiError)) {
+    throw new Error("the client did not throw ApiError");
+  }
+
+  return failure;
+}
+
+async function collectPages(first: TicketPage): Promise<{
+  readonly ids: readonly string[];
+  readonly sizes: readonly number[];
+  readonly lastLink: string | null;
+}> {
+  const ids: string[] = first.tickets.map(({ id }) => id);
+  const sizes = [first.tickets.length];
+  let link = first.nextLink;
+
+  while (link !== null) {
+    const page = await listNextTickets(link);
+
+    ids.push(...page.tickets.map(({ id }) => id));
+    sizes.push(page.tickets.length);
+    link = page.nextLink;
+  }
+
+  return { ids, sizes, lastLink: link };
+}
+
+describe("the web client", () => {
+  beforeAll(() => {
     vi.stubGlobal("fetch", fetchFromOrigin);
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     vi.unstubAllGlobals();
-    await api.close();
-    await pool.end();
   });
 
-  describe("with a body the api really sent", () => {
-    it("returns a ticket, the list and the history with the values the api sent", async () => {
-      origin = apiOrigin;
+  describe("on an empty database", () => {
+    let running: RunningApi;
 
-      const first = await createTicketThroughApi("Ana");
-      const second = await createTicketThroughApi("Bia");
-      const ticket = await getTicket(first.id);
+    beforeAll(async () => {
+      running = await startApi();
+      origin = running.origin;
+    });
+
+    afterAll(async () => {
+      await stopApi(running);
+    });
+
+    it("returns an empty list and no link for no tickets", async () => {
+      origin = running.origin;
+
       const page = await listTickets({});
-      const history = await listTicketHistoryEntries(second.id);
 
-      expect(ticket).toMatchObject({
-        id: first.id,
-        customerName: "Ana",
-        status: "open",
-        version: 1,
-      });
+      expect(page.tickets).toEqual([]);
       expect(page.nextLink).toBeNull();
-      expect(page.tickets.map(({ id }) => id).sort()).toEqual(
-        [first.id, second.id].sort(),
-      );
-      expect(history).toHaveLength(1);
-      expect(history[0]).toMatchObject({ from: null, to: "open" });
     });
 
     it("accepts the body of a conflict the api sent under its schema", async () => {
-      origin = apiOrigin;
+      origin = running.origin;
 
-      const { id } = await createTicketThroughApi("Caio");
-      const response = await realFetch(
-        `${apiOrigin}/tickets/${id}/transitions`,
-        {
-          method: "POST",
-          headers: { ...JSON_HEADERS, "if-match": '"99"' },
-          body: JSON.stringify({
-            to: "in_progress",
-            resolutionNote: null,
-            reopenReason: null,
-          }),
-        },
+      const ticket = await createTicketThroughApi(running.origin, "Caio");
+      const response = await postJson(
+        running.origin,
+        `/tickets/${ticket.id}/transitions`,
+        { to: "in_progress", resolutionNote: null, reopenReason: null },
+        { "if-match": '"99"' },
       );
       const parsed = VERSION_CONFLICT_RESPONSE_SCHEMA.safeParse(
         await response.json(),
@@ -188,7 +274,227 @@ describe("the web client against the api and against bodies the api never sends"
     });
   });
 
-  describe("with a body outside the contract", () => {
+  describe("on a database with 45 tickets", () => {
+    let running: RunningApi;
+    let created: readonly TicketResponse[];
+    let journey: TicketResponse;
+    let resolvedChat: TicketResponse;
+    let inProgressEmail: TicketResponse;
+
+    beforeAll(async () => {
+      running = await startApi();
+      origin = running.origin;
+
+      const seeded: TicketResponse[] = [];
+
+      for (let index = 0; index < 45; index += 1) {
+        seeded.push(
+          await createTicketThroughApi(
+            running.origin,
+            `Customer ${String(index)}`,
+            CHANNELS[index % 3],
+            PRIORITIES[index % 3],
+          ),
+        );
+      }
+
+      created = seeded;
+
+      const chat = created.filter(({ channel }) => channel === "chat");
+      const email = created.filter(({ channel }) => channel === "email");
+
+      journey = pick(chat, 0);
+      resolvedChat = pick(chat, 1);
+      inProgressEmail = pick(email, 0);
+
+      let current = await transitThroughApi(
+        running.origin,
+        journey,
+        "in_progress",
+        null,
+        null,
+      );
+
+      current = await transitThroughApi(
+        running.origin,
+        current,
+        "resolved",
+        "Replaced the cable",
+        null,
+      );
+      await transitThroughApi(
+        running.origin,
+        current,
+        "open",
+        null,
+        "It broke again",
+      );
+      await transitThroughApi(
+        running.origin,
+        await transitThroughApi(
+          running.origin,
+          resolvedChat,
+          "in_progress",
+          null,
+          null,
+        ),
+        "resolved",
+        "Done",
+        null,
+      );
+      await transitThroughApi(
+        running.origin,
+        inProgressEmail,
+        "in_progress",
+        null,
+        null,
+      );
+      await running.pool.query(
+        "UPDATE ticket SET created_at = date_trunc('minute', created_at)",
+      );
+    });
+
+    afterAll(async () => {
+      await stopApi(running);
+    });
+
+    it("walks every page to the last one, with ties in created_at, without a repeated or a missing ticket", async () => {
+      origin = running.origin;
+
+      const first = await listTickets({});
+      const limit = Number(
+        new URL(first.nextLink ?? "/", "http://client").searchParams.get(
+          "limit",
+        ),
+      );
+      const walked = await collectPages(first);
+
+      expect(first.nextLink).not.toBeNull();
+      expect(first.tickets).toHaveLength(limit);
+      expect(walked.ids).toHaveLength(45);
+      expect([...walked.ids].sort()).toEqual(
+        created.map(({ id }) => id).sort(),
+      );
+      expect(walked.lastLink).toBeNull();
+      expect(walked.sizes.at(-1)).toBeGreaterThan(0);
+      expect(walked.sizes.at(-1)).toBeLessThanOrEqual(limit);
+    });
+
+    it("returns only the tickets that match each filter and both together", async () => {
+      origin = running.origin;
+
+      const resolved = await listTickets({ status: "resolved" });
+      const chat = await listTickets({ channel: "chat" });
+      const both = await listTickets({
+        status: "in_progress",
+        channel: "email",
+      });
+      const none = await listTickets({ status: "resolved", channel: "email" });
+
+      expect(resolved.tickets.map(({ id }) => id)).toEqual([resolvedChat.id]);
+      expect(chat.tickets).toHaveLength(15);
+      expect(chat.tickets.every(({ channel }) => channel === "chat")).toBe(
+        true,
+      );
+      expect(both.tickets.map(({ id }) => id)).toEqual([inProgressEmail.id]);
+      expect(none.tickets).toEqual([]);
+      expect(none.nextLink).toBeNull();
+    });
+
+    it("returns a ticket with the values it was created with", async () => {
+      origin = running.origin;
+
+      const ticket = pick(created, 5);
+
+      expect(await getTicket(ticket.id)).toMatchObject({
+        id: ticket.id,
+        customerName: "Customer 5",
+        description: ticket.description,
+        channel: ticket.channel,
+        priority: ticket.priority,
+        status: "open",
+        resolutionNote: null,
+        version: 1,
+      });
+    });
+
+    it("returns the history oldest first, with the note and the reason in their places", async () => {
+      origin = running.origin;
+
+      const history = await listTicketHistoryEntries(journey.id);
+
+      expect(history.map(({ from, to }) => [from, to])).toEqual([
+        [null, "open"],
+        ["open", "in_progress"],
+        ["in_progress", "resolved"],
+        ["resolved", "open"],
+      ]);
+      expect(history[2]).toMatchObject({
+        resolutionNote: "Replaced the cable",
+        reopenReason: null,
+      });
+      expect(history[3]).toMatchObject({
+        resolutionNote: null,
+        reopenReason: "It broke again",
+      });
+    });
+
+    it("returns one entry with a null from for a ticket that was just created", async () => {
+      origin = running.origin;
+
+      const history = await listTicketHistoryEntries(pick(created, 7).id);
+
+      expect(history).toHaveLength(1);
+      expect(history[0]).toMatchObject({ from: null, to: "open" });
+    });
+
+    it("throws ApiError with the status and the code of the api for an unknown id", async () => {
+      origin = running.origin;
+
+      const error = await apiErrorOf(() => getTicket(UNKNOWN_TICKET_ID));
+
+      expect(error.status).toBe(404);
+      expect(error.code).toBe("ticket_not_found");
+      expect(error.detail).not.toBeNull();
+    });
+
+    it("throws ApiError with the status and the code of the api for a malformed id", async () => {
+      origin = running.origin;
+
+      const error = await apiErrorOf(() => getTicket("not-an-id"));
+
+      expect(error.status).toBe(400);
+      expect(error.code).toBe("invalid_ticket_id");
+    });
+  });
+
+  describe("on answers the api never sends", () => {
+    it("throws ApiError with only the status for a failure that is not problem+json", async () => {
+      const server = await serveBody("bad gateway", 502, "text/plain");
+
+      try {
+        const error = await apiErrorOf(() => getTicket(TICKET.id));
+
+        expect(error.status).toBe(502);
+        expect(error.code).toBeNull();
+        expect(error.detail).toBeNull();
+      } finally {
+        server.close();
+      }
+    });
+
+    it("throws NetworkError for a port with no server", async () => {
+      const closed = await serveBody("");
+      const port = portOf(closed);
+
+      closed.close();
+      origin = `http://127.0.0.1:${String(port)}`;
+
+      expect(await failureOf(() => getTicket(TICKET.id))).toBeInstanceOf(
+        NetworkError,
+      );
+    });
+
     it("drops a key the contract does not know and returns the rest", async () => {
       const server = await serveBody(JSON.stringify({ ...TICKET, extra: "x" }));
 

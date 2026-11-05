@@ -67,11 +67,12 @@ aponta para ele.
   decisão que outras specs consumam) ou `scaffold` (estrutura do repositório criada antes de existir a primeira spec;
   depois dela, nunca mais).
 - Commits pequenos e focados: um passo termina em um ou mais commits, todos com o rodapé da spec.
-- Todo commit que muda comportamento sobe com os testes que o provam, no mesmo commit; a única exceção é o `apps/web`,
-  que não tem teste automatizado por decisão do autor: a prova do commit é a sonda e a conferência guiada, relatadas em
-  "O que validei" do `IA.md`, e o `check` só tipa e compila o front. Não mudam comportamento, e por isso não levam
-  teste: documentação, formatação, `typo`, `spec`, `deps-bump`, `revert`, `scaffold` e ferramental ou configuração cujo
-  efeito o próprio `check` exercita. Gatilho: fechar o commit de um passo.
+- Todo commit que muda comportamento sobe com os testes que o provam, no mesmo commit; a única exceção é a tela do
+  `apps/web`, que não tem teste automatizado por decisão do autor: o cliente HTTP dela é testado contra a API real em
+  `apps/api/test/web-client.test.ts`, e a prova do resto é a sonda e a conferência guiada, relatadas em "O que validei"
+  do `IA.md`, e o `check` tipa e compila o front. Não mudam comportamento, e por isso não levam teste: documentação,
+  formatação, `typo`, `spec`, `deps-bump`, `revert`, `scaffold` e ferramental ou configuração cujo efeito o próprio
+  `check` exercita. Gatilho: fechar o commit de um passo.
 - Duas branches: todo commit e todo push vão para `dev`; a `main` só recebe o merge de `dev` e nunca um commit direto. A
   IA nunca pusha a `main` nem faz o merge para ela: é ordem do usuário.
 - O CI é o único portão do push para `dev`: o `check` roda nele a cada push, sem hook local, e um commit quebrado pode

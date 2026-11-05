@@ -19,8 +19,9 @@ No SDD, a spec vem antes do código: cada fatia nasce como uma spec congelada em
 trade-off decidido em entrevista, e cada passo dela vira um ou mais commits que citam a spec. No TDD, cada passo começa
 por uma sonda: um script, fora do repositório, que exercita o passo pela interface pública. Ela nasce vermelha e fica
 verde quando o código está pronto, e cada caso de borda descoberto pelo caminho entra nela e vira teste. Esses testes
-sobem no mesmo commit da mudança que provam, salvo no front, que não tem teste automatizado e se prova pela sonda e por
-uma conferência guiada. As regras de trabalho estão em [CLAUDE.md](CLAUDE.md).
+sobem no mesmo commit da mudança que provam, salvo na tela do front, que não tem teste automatizado e se prova pela
+sonda e por uma conferência guiada; o cliente HTTP dela é testado contra a API real. As regras de trabalho estão em
+[CLAUDE.md](CLAUDE.md).
 
 A IA pesquisa, aponta alternativas, revisa e escreve o que lhe cabe, e as decisões de domínio ficam com o autor. A
 autoria segue o quanto a peça exige de raciocínio sobre estado e falha: quanto mais exige, mais perto da mão do autor.
@@ -62,8 +63,8 @@ O `docker compose up -d` constrói as imagens, sobe o `db`, aplica as migrations
 do front. Nenhuma dependência é instalada no seu host.
 
 Com o `.env.example` sem alterar, a API responde em `http://127.0.0.1:3001` (`API_PUBLISH_HOST` e `API_PUBLISH_PORT`);
-se você mudou algum, use os seus. A tela de tickets ainda não existe: o endereço abre a página mínima do front, e as
-rotas da API devolvem JSON. Para conferir, um comando por vez:
+se você mudou algum, use os seus. O endereço abre a tela de tickets, que por enquanto só lista e filtra, e as rotas da
+API devolvem JSON. Para conferir, um comando por vez:
 
 ```sh
 curl -i http://127.0.0.1:3001/tickets/019a0000-0000-7000-8000-000000000000
@@ -200,5 +201,6 @@ Só as decisões de alto ROI, sem contradição entre linhas.
 | A versão esperada vai no `If-Match` e volta no `ETag`, com a `version` entre aspas, é checada antes da regra do domínio, e a que não bate responde 409, com o ticket atual relido no corpo | A versão no corpo da transição, o 412 que o HTTP reserva à pré-condição falhada, aplicar o domínio primeiro, ou devolver o ticket lido no começo | O 409 não é o código que o padrão indica ao `If-Match`, a corrida perdida custa uma releitura, e uma transição inválida sobre versão velha responde conflito, não recusa; em troca o conflito de versão e o de estado têm um código só, e quem está desatualizado vê o estado atual |
 | Um único índice sobre `created_at` e `id`, ambos decrescentes, sustenta a ordem e a posição do cursor, sem índice por filtro; a página seguinte parte da posição `(created_at, id)`, comparada em linha no `WHERE`, com o `created_at` em texto de seis casas de fração, como o banco o escreve | Um índice por `status` e por `channel`, paginar por `OFFSET`, ou guardar o instante como `Date` do JavaScript | Com filtro, o banco lê pela ordem e descarta o que não combina, o que pesa só se o filtro é raro e a tabela é grande, e o cursor depende do formato do texto do banco; em troca cada gravação mantém um índice só, nenhuma transição reescreve índice de `status`, e o `Date`, que perde os microssegundos, não faz a página pular nem repetir tickets de empate |
 | A resposta da lista é o array de tickets, e o cursor da próxima página vai no cabeçalho `Link` (`rel="next"`), em caminho relativo, com o erro próprio `invalid_cursor` para o cursor que não decodifica | Um envelope `{ items, nextCursor }` no corpo, ou um único `invalid_request` para tudo | O cliente lê o cabeçalho para paginar e não distingue o cursor ruim do parâmetro ruim sem olhar o `code`; em troca o corpo continua igual ao do `GET /tickets/:id` |
-| O front sem teste automatizado, provado pela sonda e por uma conferência guiada | Testar o front, ao menos o cliente HTTP | O `check` só tipa e compila o front, e um defeito do cliente só aparece na conferência; em troca nenhuma ferramenta de teste de front entra no projeto, e a rede de segurança do contrato fica nos testes da API |
+| O contrato com um esquema por resposta, no pacote compartilhado, de onde saem o tipo que a API devolve e a validação que o cliente faz de cada corpo | Tipos escritos à mão nos dois lados, confiar nos tipos sem validar o corpo, ou gerar um OpenAPI | O front carrega o esquema, e a API só pode acrescentar campo, nunca tirar (o esquema aceita chave a mais); em troca cada forma de resposta tem uma declaração só, e um corpo fora do contrato falha no cliente com o caminho do campo, em vez de chegar à tela |
+| A tela do front sem teste automatizado, provada pela sonda e por uma conferência guiada, e o cliente HTTP testado contra a API real | Testar também os componentes, ou não testar o front | O `check` só tipa e compila a tela, e um defeito dela só aparece na conferência; em troca nenhuma ferramenta de teste de componente entra no projeto, e o contrato com a API fica provado de ponta a ponta no teste do cliente |
 | O front compilado é servido pelo mesmo processo da API, a partir de uma pasta que só a configuração fixa, e a API não fica pronta se essa pasta não existe; no desenvolvimento, o servidor do front repassa `/tickets` à API por um proxy que lê `API_HOST` e `API_PORT` do `.env`, sem valor padrão | Liberar a origem do front com CORS, ou um servidor de arquivos à frente da API | A página e a API compartilham a origem, sem cabeçalho `access-control-*`, e o contêiner da `api` entrega as duas; em troca a API conhece o build do front, o que uma CDN evitaria, e o desenvolvimento do front pede um segundo processo, o proxy, que se recusa a subir sem as duas variáveis em vez de apontar para um lugar errado |
