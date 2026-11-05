@@ -4,7 +4,7 @@
 
 Dar à API dois endpoints de saúde, um de vida e um de prontidão do banco, e um log estruturado com uma linha JSON de
 conclusão por requisição e um identificador de correlação, e fazer o compose esperar a prontidão da API em vez de só a
-existência do processo. Fecha o bônus de logs estruturados e healthcheck do desafio.
+existência do processo. Fecha o bônus de logs estruturados e healthcheck.
 
 ## Fora do escopo
 
