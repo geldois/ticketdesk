@@ -10,6 +10,7 @@ import {
   InvalidRequestError,
   InvalidTicketIdError,
   MissingIfMatchError,
+  NotReadyError,
 } from "./errors.ts";
 
 const ERRORS = [
@@ -18,6 +19,7 @@ const ERRORS = [
   { error: InvalidCursorError, code: "invalid_cursor" },
   { error: MissingIfMatchError, code: "missing_if_match" },
   { error: InvalidIfMatchError, code: "invalid_if_match" },
+  { error: NotReadyError, code: "not_ready" },
 ] as const;
 
 describe("interface errors", () => {

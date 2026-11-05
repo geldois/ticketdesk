@@ -4,6 +4,7 @@ export const INTERFACE_ERROR_CODES = [
   "invalid_cursor",
   "missing_if_match",
   "invalid_if_match",
+  "not_ready",
 ] as const;
 
 export type InterfaceErrorCode = (typeof INTERFACE_ERROR_CODES)[number];
@@ -51,5 +52,13 @@ export class InvalidIfMatchError extends InterfaceError {
 
   constructor() {
     super("If-Match must be a positive integer between double quotes");
+  }
+}
+
+export class NotReadyError extends InterfaceError {
+  readonly code = "not_ready";
+
+  constructor() {
+    super("the database did not answer");
   }
 }

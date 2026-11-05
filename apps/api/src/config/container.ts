@@ -1,10 +1,12 @@
 import type { Pool } from "pg";
 import type { TicketRepository } from "../application/contracts/repositories/ticket-repository.ts";
+import { CheckReadinessUseCase } from "../application/use-cases/check-readiness.ts";
 import { CreateTicketUseCase } from "../application/use-cases/create-ticket.ts";
 import { GetTicketUseCase } from "../application/use-cases/get-ticket.ts";
 import { ListTicketHistoryEntriesUseCase } from "../application/use-cases/list-ticket-history-entries.ts";
 import { ListTicketsUseCase } from "../application/use-cases/list-tickets.ts";
 import { TransitTicketUseCase } from "../application/use-cases/transit-ticket.ts";
+import { PgReadinessProbe } from "../infrastructure/probes/pg-readiness-probe.ts";
 import { PgTicketRepository } from "../infrastructure/repositories/pg-ticket-repository.ts";
 
 export interface Container {
@@ -18,6 +20,7 @@ export interface Repositories {
 }
 
 export interface UseCases {
+  readonly checkReadinessUseCase: CheckReadinessUseCase;
   readonly createTicketUseCase: CreateTicketUseCase;
   readonly getTicketUseCase: GetTicketUseCase;
   readonly listTicketHistoryEntriesUseCase: ListTicketHistoryEntriesUseCase;
@@ -38,6 +41,9 @@ export function buildContainer({
     ticketRepository: pgTicketRepository,
   };
 
+  const checkReadinessUseCase = new CheckReadinessUseCase(
+    new PgReadinessProbe(pgPool),
+  );
   const createTicketUseCase = new CreateTicketUseCase(pgTicketRepository);
   const getTicketUseCase = new GetTicketUseCase(pgTicketRepository);
   const listTicketHistoryEntriesUseCase = new ListTicketHistoryEntriesUseCase(
@@ -47,6 +53,7 @@ export function buildContainer({
   const transitTicketUseCase = new TransitTicketUseCase(pgTicketRepository);
 
   const useCases: UseCases = {
+    checkReadinessUseCase,
     createTicketUseCase,
     getTicketUseCase,
     listTicketHistoryEntriesUseCase,

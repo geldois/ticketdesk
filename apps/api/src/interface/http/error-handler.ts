@@ -38,6 +38,7 @@ const STATUS_BY_FAMILY_ERROR_CODE = {
   invalid_cursor: 400,
   missing_if_match: 428,
   invalid_if_match: 400,
+  not_ready: 503,
 } as const satisfies Record<FamilyErrorCode, number>;
 
 export function handleError(
