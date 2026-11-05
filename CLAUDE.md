@@ -97,6 +97,10 @@ aponta para ele.
      mesmo commit.
 - Uma operação se nomeia por um verbo (`createTicketChange`, `transitTicketChange`, `validateTransition`), e o
   substantivo nomeia o conceito (`InvalidTransitionError`, `TRANSITION_TICKET_STATUSES`). Gatilho: nomear uma função.
+- `create` traz algo novo à existência: um valor do domínio (`createTicketChange`) ou um recurso que o chamador passa a
+  ter de fechar (`createPgPool`, `createPgStorage`). `build` monta algo a partir de partes já prontas, recebidas por
+  argumento, sem abrir recurso nem exigir fechamento (`buildContainer`, `buildServer`, `buildLoggerOptions`,
+  `buildDatabaseUrl`). Gatilho: nomear uma função que devolve um objeto.
 - Uma constraint do banco se nomeia `<tabela>_<coluna>[_<regra>]_<tipo>`, com o tipo `pkey`, `fkey` ou `check`, como o
   próprio PostgreSQL nomeia, e uma palavra por regra: `length`, `set`, `presence`, `pair` ou `min`. Uma regra nova
   reaproveita a palavra que já existe. Gatilho: escrever uma migration.

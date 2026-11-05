@@ -160,6 +160,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   converteu os outros quatro casos de uso e o container para o padrão, e escreveu a sonda, os testes do `PgUoW` e a
   adaptação dos testes que já existiam. Prompts relevantes: "estou procurando algo como um `__aenter__`, `__aexit__` e
   with aqui no TS" e "garanta absolutamente que funciona. nada pode regredir".
+- `spec: none (tweak)`: a IA respondeu à minha pergunta sobre o que é `create` e o que é `build`, achou no código que o
+  projeto já seguia a distinção (`create` traz algo novo, `build` monta a partir de partes prontas) e redigiu a regra no
+  `CLAUDE.md`.
 
 ## O que validei
 
@@ -677,6 +680,8 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   escrita, como uma chave de idempotência, também precisará, e o repositório não deve conhecer isso. A IA, quando
   perguntei, recomendou o mesmo. Perguntei também se os casos de uso de leitura precisavam do `commit` que a IA tinha
   posto neles e se não era melhor confiar no `rollback`; ficou assim, e só a escrita confirma.
+- `spec: none (tweak)`: mandei que a distinção entre `create` e `build` fosse o padrão de nomes do projeto, inclusive
+  para o `buildServer`.
 
 ## Onde a IA não entrou
 
