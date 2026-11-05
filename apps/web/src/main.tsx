@@ -1,6 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
+import { App } from "./App.tsx";
+import "./styles/global.css";
+
 const rootElement = document.getElementById("root");
 
 if (rootElement === null) {
@@ -9,6 +12,6 @@ if (rootElement === null) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <h1>ticketdesk</h1>
+    <App />
   </StrictMode>,
 );
