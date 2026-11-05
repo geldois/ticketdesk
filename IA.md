@@ -143,6 +143,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   lista, do painel, da criação e da transição, os componentes e o CSS responsivo, e, do lado da API, a apresentação que
   diz em cada ticket para onde ele pode ir. Cada passo partiu de uma sonda fora do repositório, e os testes do cliente
   rodam contra a API e o banco reais.
+- `spec: 00013`: a IA me entrevistou sobre o desenho da saúde e do log e redigiu o rascunho da spec, que o
+  `docs-auditor` revisou antes do commit; o catálogo de eventos de log, que o auditor mostrou depender de um logger
+  ainda não provado, guardei para depois.
+- `spec: 00013`, passos 1 a 3: sob as minhas decisões e correções, a IA implementou a saúde, o log e o healthcheck do
+  compose, com sondas e testes.
 
 ## O que validei
 
@@ -341,6 +346,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   "pronto" duas vezes na inicialização e o `pg_isready` por socket pode marcar o banco saudável por cerca de um décimo
   de segundo antes de a porta de rede abrir. A falha não reproduziu, então a causa segue como hipótese e o
   `compose.yaml` não mudou.
+- `spec: 00013`: cada passo partiu de uma sonda vermelha que ficou verde. A prontidão foi medida contra um Postgres de
+  verdade pausado com `docker pause`, um teste executa o comando do healthcheck contra uma API de pé e contra uma sem
+  banco, e o teste do log varre as linhas no nível `trace` atrás de texto do ticket e de query string.
 
 ## Um erro da IA
 
@@ -447,6 +455,12 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00010`, passos 4 e 5: a regra responsiva da tabela vinha antes da regra base de mesmo peso e era sobrescrita, e
   clicar de novo na linha já selecionada deixava o painel preso em "Carregando ticket…". A IA achou o primeiro ao
   escrever o painel e o auditor apontou o segundo antes do commit; os dois foram corrigidos.
+- `spec: 00013`, passo 1: a sonda de prontidão desistia da espera no prazo, mas a consulta pendurada seguia ocupando uma
+  vaga do pool, e um banco mudo podia esgotá-lo. Uma nota de outro agente apontou, e a IA reproduziu com o Postgres
+  pausado e fez o pool destruir a conexão e a consulta que não terminam no prazo.
+- `spec: 00013`, passo 2: o serializador de erro padrão do logger gravava o `detail` do Postgres, que traz a linha que
+  violou uma restrição, com o texto do ticket. Surgiu quando pedi a comparação com um logger profissional, e a IA o
+  trocou por um de lista fechada, com um teste que quebra uma restrição de propósito.
 
 ## Uma decisão minha
 
@@ -604,6 +618,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   o corpo sem validação e o cliente sem teste: o contrato virou um esquema por resposta, o cliente valida cada corpo e o
   teste dele roda contra a API real. Quando a IA propôs a opção mais simples, pedi a mais profissional e defensável, sem
   duplicar nenhuma fonte da verdade.
+- `spec: 00013`: escolhi os dois endpoints de saúde, um de vida e um de prontidão, e o logger embutido do Fastify em
+  JSON, em vez de uma biblioteca de log à parte.
+- `spec: 00013`, passo 3: apontei a porta repetida no comando do healthcheck, que passou a ler o `API_PORT`, e a ordem
+  que os prazos têm de guardar, que virou um teste; mandei padronizá-los em múltiplos de cinco segundos e renomear o
+  `withDeadline`, que a convenção de verbo não admitia.
 
 ## Onde a IA não entrou
 
@@ -649,3 +668,5 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00007`, passo 3: escrevi a estrutura do teste de conflito do repositório: as rodadas com um ticket novo cada,
   as duas gravações disparadas juntas no `Promise.all` com instantes diferentes e a contagem de quem perde.
 - `spec: 00008`, passo 1: a migration do índice, com o `CREATE INDEX` e o `DROP INDEX`, é minha.
+- `spec: 00013`, passo 1: o contrato `ReadinessProbe`, o `CheckReadinessUseCase` e o primeiro rascunho da
+  `PgReadinessProbe` (a primeira versão) são meus.
