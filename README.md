@@ -63,8 +63,8 @@ O `docker compose up -d` constrói as imagens, sobe o `db`, aplica as migrations
 do front. Nenhuma dependência é instalada no seu host.
 
 Com o `.env.example` sem alterar, a API responde em `http://127.0.0.1:3001` (`API_PUBLISH_HOST` e `API_PUBLISH_PORT`);
-se você mudou algum, use os seus. O endereço abre a tela de tickets, que por enquanto só lista e filtra, e as rotas da
-API devolvem JSON. Para conferir, um comando por vez:
+se você mudou algum, use os seus. O endereço abre a tela de tickets, que lista, filtra e mostra o ticket com o
+histórico, e as rotas da API devolvem JSON. Para conferir, um comando por vez:
 
 ```sh
 curl -i http://127.0.0.1:3001/tickets/019a0000-0000-7000-8000-000000000000

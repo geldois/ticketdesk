@@ -34,6 +34,6 @@ export const TICKET_CHANNELS: readonly TicketChannel[] = [
   "phone",
 ];
 
-export function formatCreatedAt(createdAt: string): string {
-  return new Date(createdAt).toLocaleString("pt-BR");
+export function formatInstant(instant: string): string {
+  return new Date(instant).toLocaleString("pt-BR");
 }

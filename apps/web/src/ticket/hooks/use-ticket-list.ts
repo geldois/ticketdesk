@@ -1,8 +1,9 @@
 import type { TicketResponse } from "@ticketdesk/contract";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { ApiError, listNextTickets, listTickets } from "../../api/client.ts";
+import { listNextTickets, listTickets } from "../../api/client.ts";
 import type { TicketFilterValues } from "../components/TicketFilters.tsx";
+import { describeError } from "../describe-error.ts";
 
 export type TicketListState =
   | { readonly kind: "loading" }
@@ -25,13 +26,7 @@ export interface TicketListController {
 
 const NO_FILTERS: TicketFilterValues = { status: null, channel: null };
 
-function describeError(error: unknown): string {
-  const base = "Não foi possível carregar os tickets.";
-
-  return error instanceof ApiError && error.detail !== null
-    ? `${base} ${error.detail}`
-    : base;
-}
+const LOAD_ERROR = "Não foi possível carregar os tickets.";
 
 export function useTicketList(): TicketListController {
   const [filters, changeFilters] = useState<TicketFilterValues>(NO_FILTERS);
@@ -62,7 +57,7 @@ export function useTicketList(): TicketListController {
       }
     } catch (error) {
       if (request === latestRequest.current) {
-        setState({ kind: "error", message: describeError(error) });
+        setState({ kind: "error", message: describeError(LOAD_ERROR, error) });
       }
     }
   }, [filters]);
@@ -109,7 +104,7 @@ export function useTicketList(): TicketListController {
             ? {
                 ...current,
                 loadingMore: false,
-                moreError: describeError(error),
+                moreError: describeError(LOAD_ERROR, error),
               }
             : current,
         );
