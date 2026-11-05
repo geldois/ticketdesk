@@ -1,14 +1,23 @@
+import type { TicketResponse } from "@ticketdesk/contract";
+
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string | null;
   readonly detail: string | null;
+  readonly currentTicket: TicketResponse | null;
 
-  constructor(status: number, code: string | null, detail: string | null) {
+  constructor(
+    status: number,
+    code: string | null,
+    detail: string | null,
+    currentTicket: TicketResponse | null = null,
+  ) {
     super(`the api answered ${String(status)}`);
 
     this.status = status;
     this.code = code;
     this.detail = detail;
+    this.currentTicket = currentTicket;
   }
 }
 

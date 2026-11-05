@@ -2,9 +2,12 @@ import {
   LIST_TICKET_HISTORY_ENTRIES_RESPONSE_SCHEMA,
   LIST_TICKETS_RESPONSE_SCHEMA,
   type ListTicketHistoryEntriesResponse,
+  type CreateTicketRequest,
   type ListTicketsRequest,
   TICKET_RESPONSE_SCHEMA,
   type TicketResponse,
+  type TransitTicketRequest,
+  VERSION_CONFLICT_RESPONSE_SCHEMA,
 } from "@ticketdesk/contract";
 import type { ZodType } from "zod";
 
@@ -15,6 +18,11 @@ export { ApiError, InvalidResponseError, NetworkError } from "./errors.ts";
 export interface TicketPage {
   readonly tickets: readonly TicketResponse[];
   readonly nextLink: string | null;
+}
+
+export interface TransitTicketInput extends TransitTicketRequest {
+  readonly id: string;
+  readonly version: number;
 }
 
 const NEXT_LINK = /<([^>]*)>\s*;\s*rel="next"/;
@@ -55,6 +63,38 @@ export async function listTicketHistoryEntries(
   return readBody(response, LIST_TICKET_HISTORY_ENTRIES_RESPONSE_SCHEMA);
 }
 
+export async function createTicket(
+  input: CreateTicketRequest,
+): Promise<TicketResponse> {
+  const response = await request("/tickets", postJson(input));
+
+  return readBody(response, TICKET_RESPONSE_SCHEMA);
+}
+
+export async function transitTicket({
+  id,
+  version,
+  ...transition
+}: TransitTicketInput): Promise<TicketResponse> {
+  const response = await request(
+    `/tickets/${encodeURIComponent(id)}/transitions`,
+    postJson(transition, { "if-match": `"${String(version)}"` }),
+  );
+
+  return readBody(response, TICKET_RESPONSE_SCHEMA);
+}
+
+function postJson(
+  body: unknown,
+  headers: Readonly<Record<string, string>> = {},
+): RequestInit {
+  return {
+    method: "POST",
+    headers: { "content-type": "application/json", ...headers },
+    body: JSON.stringify(body),
+  };
+}
+
 async function readPage(path: string): Promise<TicketPage> {
   const response = await request(path);
 
@@ -89,11 +129,11 @@ async function readBody<Body>(
   return result.data;
 }
 
-async function request(path: string): Promise<Response> {
+async function request(path: string, init?: RequestInit): Promise<Response> {
   let response: Response;
 
   try {
-    response = await fetch(path);
+    response = await fetch(path, init);
   } catch (cause) {
     throw new NetworkError(cause);
   }
@@ -116,11 +156,13 @@ async function readApiError(response: Response): Promise<ApiError> {
   }
 
   const body: unknown = await response.json().catch(() => null);
+  const conflict = VERSION_CONFLICT_RESPONSE_SCHEMA.safeParse(body);
 
   return new ApiError(
     response.status,
     readText(body, "code"),
     readText(body, "detail"),
+    conflict.success ? conflict.data.ticket : null,
   );
 }
 

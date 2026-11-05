@@ -11,6 +11,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import {
   ApiError,
+  createTicket,
   getTicket,
   InvalidResponseError,
   listNextTickets,
@@ -18,6 +19,7 @@ import {
   listTickets,
   NetworkError,
   type TicketPage,
+  transitTicket,
 } from "../../web/src/api/client.ts";
 import { buildContainer } from "../src/config/container.ts";
 import { createPgPool } from "../src/infrastructure/pool.ts";
@@ -466,6 +468,195 @@ describe("the web client", () => {
 
       expect(error.status).toBe(400);
       expect(error.code).toBe("invalid_ticket_id");
+    });
+  });
+
+  describe("on the write operations", () => {
+    let running: RunningApi;
+
+    const NEW_TICKET = {
+      customerName: "Ana",
+      description: "Printer is down",
+      channel: "chat",
+      priority: "high",
+    } as const;
+
+    function transit(
+      ticket: TicketResponse,
+      to: string,
+      resolutionNote: string | null = null,
+      reopenReason: string | null = null,
+    ): Promise<TicketResponse> {
+      return transitTicket({
+        id: ticket.id,
+        version: ticket.version,
+        to,
+        resolutionNote,
+        reopenReason,
+      });
+    }
+
+    beforeAll(async () => {
+      running = await startApi();
+      origin = running.origin;
+    });
+
+    afterAll(async () => {
+      await stopApi(running);
+    });
+
+    it("creates a ticket that opens at version 1 and reads back the same", async () => {
+      origin = running.origin;
+
+      const ticket = await createTicket(NEW_TICKET);
+
+      expect(ticket).toMatchObject({
+        customerName: "Ana",
+        status: "open",
+        version: 1,
+        resolutionNote: null,
+      });
+      expect(await getTicket(ticket.id)).toEqual(ticket);
+    });
+
+    it("refuses an empty customer name with the code and the detail of the api and no current ticket", async () => {
+      origin = running.origin;
+
+      const error = await apiErrorOf(() =>
+        createTicket({ ...NEW_TICKET, customerName: "" }),
+      );
+
+      expect(error.status).toBe(422);
+      expect(error.code).toBe("invalid_customer_name");
+      expect(error.detail).not.toBeNull();
+      expect(error.currentTicket).toBeNull();
+    });
+
+    it("throws NetworkError when a write does not reach the api", async () => {
+      const closed = await serveBody("");
+      const port = portOf(closed);
+
+      closed.close();
+      origin = `http://127.0.0.1:${String(port)}`;
+
+      expect(await failureOf(() => createTicket(NEW_TICKET))).toBeInstanceOf(
+        NetworkError,
+      );
+      expect(
+        await failureOf(() =>
+          transitTicket({
+            id: UNKNOWN_TICKET_ID,
+            version: 1,
+            to: "in_progress",
+            resolutionNote: null,
+            reopenReason: null,
+          }),
+        ),
+      ).toBeInstanceOf(NetworkError);
+    });
+
+    it("moves a ticket through its statuses with the text each destination requires", async () => {
+      origin = running.origin;
+
+      const open = await createTicket(NEW_TICKET);
+      const started = await transit(open, "in_progress");
+      const resolved = await transit(started, "resolved", "Replaced the cable");
+      const reopened = await transit(resolved, "open", null, "It broke again");
+      const history = await listTicketHistoryEntries(open.id);
+
+      expect(started).toMatchObject({ status: "in_progress", version: 2 });
+      expect(resolved).toMatchObject({
+        status: "resolved",
+        version: 3,
+        resolutionNote: "Replaced the cable",
+      });
+      expect(reopened).toMatchObject({
+        status: "open",
+        version: 4,
+        resolutionNote: null,
+      });
+      expect(history[2]).toMatchObject({
+        to: "resolved",
+        resolutionNote: "Replaced the cable",
+      });
+      expect(history[3]).toMatchObject({
+        to: "open",
+        resolutionNote: null,
+        reopenReason: "It broke again",
+      });
+    });
+
+    it("throws ApiError 409 version_conflict carrying the current ticket for a stale version", async () => {
+      origin = running.origin;
+
+      const open = await createTicket(NEW_TICKET);
+      const started = await transit(open, "in_progress");
+      const error = await apiErrorOf(() => transit(open, "in_progress"));
+
+      expect(error.status).toBe(409);
+      expect(error.code).toBe("version_conflict");
+      expect(error.currentTicket).toEqual(started);
+      expect(error.currentTicket?.version).toBe(2);
+    });
+
+    it("throws ApiError 404 with no current ticket for an unknown id", async () => {
+      origin = running.origin;
+
+      const error = await apiErrorOf(() =>
+        transitTicket({
+          id: UNKNOWN_TICKET_ID,
+          version: 1,
+          to: "in_progress",
+          resolutionNote: null,
+          reopenReason: null,
+        }),
+      );
+
+      expect(error.status).toBe(404);
+      expect(error.code).toBe("ticket_not_found");
+      expect(error.currentTicket).toBeNull();
+    });
+
+    it("lets one of two transitions fired together with the same version win and answers the other with a conflict, 20 rounds", async () => {
+      origin = running.origin;
+
+      for (let round = 0; round < 20; round += 1) {
+        const open = await createTicket(NEW_TICKET);
+        const results = await Promise.allSettled([
+          transit(open, "in_progress"),
+          transit(open, "in_progress"),
+        ]);
+        const fulfilled = results.filter(
+          ({ status }) => status === "fulfilled",
+        );
+        const rejected = results.filter(({ status }) => status === "rejected");
+
+        expect(fulfilled).toHaveLength(1);
+        expect(rejected).toHaveLength(1);
+        expect(rejected[0]).toMatchObject({
+          reason: { status: 409, code: "version_conflict" },
+        });
+      }
+    });
+
+    it("refuses a jump over a status and a blank or an empty resolution note", async () => {
+      origin = running.origin;
+
+      const open = await createTicket(NEW_TICKET);
+      const jump = await apiErrorOf(() => transit(open, "resolved", "Done"));
+      const started = await transit(open, "in_progress");
+      const blank = await apiErrorOf(() => transit(started, "resolved", "   "));
+      const empty = await apiErrorOf(() => transit(started, "resolved", ""));
+
+      expect([jump.status, jump.code]).toEqual([422, "invalid_transition"]);
+      expect([blank.status, blank.code]).toEqual([
+        422,
+        "missing_resolution_note",
+      ]);
+      expect([empty.status, empty.code]).toEqual([
+        422,
+        "missing_resolution_note",
+      ]);
     });
   });
 
