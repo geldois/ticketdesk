@@ -25,6 +25,7 @@ export function TicketList({
         <thead>
           <tr>
             <th>Cliente</th>
+            <th>Descrição</th>
             <th>Status</th>
             <th>Prioridade</th>
             <th>Canal</th>
@@ -44,6 +45,9 @@ export function TicketList({
                 <button type="button" className="row-button">
                   {ticket.customerName}
                 </button>
+              </td>
+              <td className="description" title={ticket.description}>
+                {ticket.description}
               </td>
               <td>{STATUS_LABELS[ticket.status]}</td>
               <td>{PRIORITY_LABELS[ticket.priority]}</td>

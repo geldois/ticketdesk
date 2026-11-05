@@ -103,6 +103,13 @@ button:disabled {
   cursor: pointer;
 }
 
+.tickets td.description {
+  max-width: 18rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .tickets tbody tr:hover,
 .tickets tbody tr.selected {
   background-color: #e6f0fa;
