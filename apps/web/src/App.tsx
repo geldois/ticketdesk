@@ -6,6 +6,7 @@ import { TicketList } from "./ticket/components/TicketList.tsx";
 import { TicketPanel } from "./ticket/components/TicketPanel.tsx";
 import { useTicketList } from "./ticket/hooks/use-ticket-list.ts";
 import { useTicketPanel } from "./ticket/hooks/use-ticket-panel.ts";
+import { CONFLICT_NOTICE } from "./ticket/labels.ts";
 
 export function App(): ReactElement {
   const { filters, state, changeFilters, reload, loadMore } = useTicketList();
@@ -63,6 +64,10 @@ export function App(): ReactElement {
               onRetry={panel.reload}
               onTransited={(ticket) => {
                 panel.replace(ticket);
+                reload();
+              }}
+              onConflict={(currentTicket) => {
+                panel.replace(currentTicket, CONFLICT_NOTICE);
                 reload();
               }}
             />

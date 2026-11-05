@@ -14,6 +14,7 @@ export type TicketPanelState =
       readonly kind: "ready";
       readonly ticket: TicketResponse;
       readonly history: ListTicketHistoryEntriesResponse;
+      readonly notice: string | null;
     };
 
 export interface TicketPanelController {
@@ -21,7 +22,7 @@ export interface TicketPanelController {
   readonly state: TicketPanelState | null;
   readonly select: (id: string) => void;
   readonly reload: () => void;
-  readonly replace: (ticket: TicketResponse) => void;
+  readonly replace: (ticket: TicketResponse, notice?: string) => void;
 }
 
 const LOAD_ERROR = "Não foi possível carregar o ticket.";
@@ -45,7 +46,7 @@ export function useTicketPanel(): TicketPanelController {
       ]);
 
       if (request === latestRequest.current) {
-        setState({ kind: "ready", ticket, history });
+        setState({ kind: "ready", ticket, history, notice: null });
       }
     } catch (error) {
       if (request === latestRequest.current) {
@@ -57,30 +58,33 @@ export function useTicketPanel(): TicketPanelController {
     }
   }, []);
 
-  const replace = useCallback(async (ticket: TicketResponse) => {
-    latestRequest.current += 1;
+  const replace = useCallback(
+    async (ticket: TicketResponse, notice: string | null) => {
+      latestRequest.current += 1;
 
-    const request = latestRequest.current;
+      const request = latestRequest.current;
 
-    setState((current) =>
-      current.kind === "ready" ? { ...current, ticket } : current,
-    );
+      setState((current) =>
+        current.kind === "ready" ? { ...current, ticket, notice } : current,
+      );
 
-    try {
-      const history = await listTicketHistoryEntries(ticket.id);
+      try {
+        const history = await listTicketHistoryEntries(ticket.id);
 
-      if (request === latestRequest.current) {
-        setState({ kind: "ready", ticket, history });
+        if (request === latestRequest.current) {
+          setState({ kind: "ready", ticket, history, notice });
+        }
+      } catch (error) {
+        if (request === latestRequest.current) {
+          setState({
+            kind: "error",
+            message: describeError(LOAD_ERROR, error),
+          });
+        }
       }
-    } catch (error) {
-      if (request === latestRequest.current) {
-        setState({
-          kind: "error",
-          message: describeError(LOAD_ERROR, error),
-        });
-      }
-    }
-  }, []);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (selectedId !== null) {
@@ -106,8 +110,8 @@ export function useTicketPanel(): TicketPanelController {
         void load(selectedId);
       }
     },
-    replace: (ticket) => {
-      void replace(ticket);
+    replace: (ticket, notice) => {
+      void replace(ticket, notice ?? null);
     },
   };
 }

@@ -15,12 +15,14 @@ interface TicketPanelProps {
   readonly state: TicketPanelState;
   readonly onRetry: () => void;
   readonly onTransited: (ticket: TicketResponse) => void;
+  readonly onConflict: (currentTicket: TicketResponse) => void;
 }
 
 export function TicketPanel({
   state,
   onRetry,
   onTransited,
+  onConflict,
 }: TicketPanelProps): ReactElement {
   if (state.kind === "loading") {
     return <p role="status">Carregando ticket…</p>;
@@ -37,11 +39,12 @@ export function TicketPanel({
     );
   }
 
-  const { ticket, history } = state;
+  const { ticket, history, notice } = state;
 
   return (
     <section className="panel">
       <h2>Ticket</h2>
+      {notice !== null && <p role="alert">{notice}</p>}
       <dl className="fields">
         <dt>Cliente</dt>
         <dd>{ticket.customerName}</dd>
@@ -68,6 +71,7 @@ export function TicketPanel({
         key={`${ticket.id}-${String(ticket.version)}`}
         ticket={ticket}
         onTransited={onTransited}
+        onConflict={onConflict}
       />
       <TicketHistory history={history} />
     </section>

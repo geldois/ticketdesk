@@ -39,6 +39,8 @@ export const TEXT_LABELS: Readonly<
   reopenReason: "Motivo da reabertura",
 };
 
+export const CONFLICT_NOTICE = "Este ticket foi alterado por outra pessoa.";
+
 export const TICKET_STATUSES = TICKET_STATUS_SCHEMA.options;
 export const TICKET_CHANNELS = TICKET_CHANNEL_SCHEMA.options;
 export const TICKET_PRIORITIES = TICKET_PRIORITY_SCHEMA.options;

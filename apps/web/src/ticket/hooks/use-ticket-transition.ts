@@ -4,7 +4,7 @@ import type {
 } from "@ticketdesk/contract";
 import { useState } from "react";
 
-import { transitTicket } from "../../api/client.ts";
+import { ApiError, transitTicket } from "../../api/client.ts";
 import { describeError } from "../describe-error.ts";
 
 export interface TicketTransitionController {
@@ -22,6 +22,7 @@ const TRANSIT_ERROR = "Não foi possível alterar o ticket.";
 export function useTicketTransition(
   ticket: TicketResponse,
   onTransited: (ticket: TicketResponse) => void,
+  onConflict: (currentTicket: TicketResponse) => void,
 ): TicketTransitionController {
   const [chosen, setChosen] = useState<NextTransitionResponse | null>(null);
   const [text, changeText] = useState("");
@@ -47,7 +48,11 @@ export function useTicketTransition(
         }),
       );
     } catch (failure) {
-      setError(describeError(TRANSIT_ERROR, failure));
+      if (failure instanceof ApiError && failure.currentTicket !== null) {
+        onConflict(failure.currentTicket);
+      } else {
+        setError(describeError(TRANSIT_ERROR, failure));
+      }
     } finally {
       setSending(false);
     }

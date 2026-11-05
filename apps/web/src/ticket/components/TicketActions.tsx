@@ -7,14 +7,16 @@ import { TEXT_LABELS, TRANSITION_LABELS } from "../labels.ts";
 interface TicketActionsProps {
   readonly ticket: TicketResponse;
   readonly onTransited: (ticket: TicketResponse) => void;
+  readonly onConflict: (currentTicket: TicketResponse) => void;
 }
 
 export function TicketActions({
   ticket,
   onTransited,
+  onConflict,
 }: TicketActionsProps): ReactElement {
   const { chosen, text, sending, error, choose, changeText, confirm } =
-    useTicketTransition(ticket, onTransited);
+    useTicketTransition(ticket, onTransited, onConflict);
 
   return (
     <div className="actions">
