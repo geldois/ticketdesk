@@ -11,9 +11,9 @@ services:
       - db-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
-      interval: 2s
-      timeout: 2s
-      retries: 30
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
   migrate:
     build:
@@ -46,8 +46,21 @@ services:
       PGUSER: ${PGUSER:?set PGUSER in .env}
       PGPASSWORD: ${PGPASSWORD:?set PGPASSWORD in .env}
       PGDATABASE: ${PGDATABASE:?set PGDATABASE in .env}
+      LOG_LEVEL: ${LOG_LEVEL:-}
     ports:
       - "${API_PUBLISH_HOST:?set API_PUBLISH_HOST in .env}:${API_PUBLISH_PORT:?set API_PUBLISH_PORT in .env}:3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:' + process.env.API_PORT + '/health/ready').then((response) => process.exit(response.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 6
+      start_period: 10s
     depends_on:
       migrate:
         condition: service_completed_successfully

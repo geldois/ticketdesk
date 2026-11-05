@@ -49,6 +49,7 @@ Três propriedades seguram o sistema, e o [Registro de decisões](#registro-de-d
 | `GET /tickets/:id` | Devolve o ticket e o `ETag` com a `version` |
 | `POST /tickets/:id/transitions` | Transita, com `If-Match`; `resolved` exige `note` e a reabertura exige `reason` |
 | `GET /tickets/:id/history` | Devolve as mudanças de status, na ordem em que foram gravadas |
+| `GET /health` e `GET /health/ready` | Vida do processo, sem tocar o banco, e prontidão, com uma consulta constante ao banco; sem resposta no prazo, a prontidão devolve `503` |
 
 Toda falha sai como `application/problem+json` com um `code` estável (`invalid_transition`, `missing_resolution_note`,
 `version_conflict`, `invalid_cursor` e os demais): `400` para a requisição malformada, `404`, `409` para o conflito,
@@ -86,6 +87,10 @@ curl -i -X POST http://127.0.0.1:3001/tickets -H 'content-type: application/json
 
 O primeiro devolve `404`, porque esse `id` não existe, e prova que a API alcança o banco. O segundo devolve `201` com o
 ticket criado, cujo `id` abre em `GET /tickets/<id>` e em `GET /tickets/<id>/history`.
+
+O serviço `api` só fica `healthy` quando `GET /health/ready` responde `200`, e `docker compose ps` mostra isso. A API
+escreve uma linha JSON por requisição, menos as das rotas de saúde, na saída padrão, com o `reqId`, que é o
+`X-Request-Id` da resposta; para ver, use `docker compose logs api`.
 
 | Para parar | O que faz |
 | --- | --- |
@@ -275,3 +280,5 @@ Só as decisões de alto ROI, sem contradição entre linhas.
 | A tela do front sem teste automatizado, provada pela sonda e por uma conferência guiada, e o cliente HTTP testado contra a API real | Testar também os componentes, ou não testar o front | O `check` só tipa e compila a tela, e um defeito dela só aparece na conferência; em troca nenhuma ferramenta de teste de componente entra no projeto, e o contrato com a API fica provado de ponta a ponta no teste do cliente |
 | O front compilado é servido pelo mesmo processo da API, a partir de uma pasta que só a configuração fixa, e a API não fica pronta se essa pasta não existe; no desenvolvimento, o servidor do front repassa `/tickets` à API por um proxy que lê `API_HOST` e `API_PORT` do `.env`, sem valor padrão | Liberar a origem do front com CORS, ou um servidor de arquivos à frente da API | A página e a API compartilham a origem, sem cabeçalho `access-control-*`, e o contêiner da `api` entrega as duas; em troca a API conhece o build do front, o que uma CDN evitaria, e o desenvolvimento do front pede um segundo processo, o proxy, que se recusa a subir sem as duas variáveis em vez de apontar para um lugar errado |
 | `stylelint` e `html-validate` no `check` e no `fix`, com a configuração mais rigorosa que reprovou todos os defeitos provocados e aprovou os arquivos do projeto, nas versões que as configurações de ordem das propriedades aceitam como par | Só o Prettier para o CSS e o HTML, ou uma configuração mais frouxa | Uma regra nova pode reprovar um arquivo que antes passava, e o `html-validate` só lê os HTML que o git versiona, porque o `check` lista os arquivos por `git ls-files`; em troca o CSS e o HTML ganham o mesmo portão do restante do código |
+| Dois endpoints de saúde, vida sem banco e prontidão com uma consulta constante e prazo, o healthcheck do compose na prontidão, e os prazos aninhados: a sonda responde dentro do `timeout` do healthcheck, que cabe no `interval`, que cobre os prazos do pool, que destrói a conexão e a consulta que não terminam | Um só `/health` que consulta o banco, ou um healthcheck só de processo, sem prazo no pool | Um banco mudo mantém uma conexão do pool presa até o prazo dela, e quem mudar um prazo precisa manter a ordem, que um teste guarda; em troca um banco travado derruba só a prontidão, nunca reinicia a API à toa, e as rotas de ticket deixam de esperar para sempre |
+| O log é o do Fastify, em JSON, uma linha de conclusão por requisição com o `reqId` do `X-Request-Id` (aceito só em lista fechada de caracteres), e o erro serializado sem o `detail` do banco, que traz a linha que violou a restrição | Biblioteca de log à parte, o serializador padrão de erro, ou registrar o corpo e a query | Só a requisição tem `reqId`; os eventos de ticket e de banco ainda não existem; em troca o log não carrega texto do ticket nem query string, provado por teste no nível mais verboso |
