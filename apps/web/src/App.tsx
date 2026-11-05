@@ -14,7 +14,7 @@ export function App(): ReactElement {
 
   return (
     <main className="screen">
-      <h1>ticketdesk</h1>
+      <h1>TicketDesk</h1>
       <CreateTicketForm onCreated={reload} />
       <TicketFilters values={filters} onChange={changeFilters} />
       <div className="workspace">
