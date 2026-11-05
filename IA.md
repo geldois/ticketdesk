@@ -55,7 +55,7 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   o caminho (função de gatilho e gatilho) e um exemplo de sintaxe sobre outra tabela. O SQL é meu. Por ordem minha, a IA
   escreveu os corpos dos testes de integração, no mesmo commit, e rodou o linter para explicar os avisos dos gatilhos.
 - `spec: 00005`, passo 5: por ordem minha, a IA escreveu o serviço `migrate` passo a passo, explicando cada peça: a
-  sonda fora do repositório com os casos do critério 14, o script de entrada `migrate.ts`, o `apps/api/Dockerfile`, o
+  sonda fora do repositório com os casos do critério 14, o script de entrada `migrate.ts`, o `Dockerfile`, o
   `.dockerignore`, o serviço no `compose.yaml`, os corpos dos testes do script e as seções do `README.md`. Conferiu ao
   vivo que a tag da imagem do Node existe.
 - `spec: 00005`, passo 1, reaberto: a meu pedido, a IA trocou o leitor da imagem do `compose.yaml` por um parser de
@@ -166,13 +166,19 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: none (tweak)`: a ideia de tirar o pool do container e de fazer da sonda de prontidão uma porta de armazenamento
   foi minha, e escolhi só o PostgreSQL, sem implementação em memória. A IA propôs pôr o `openUnitOfWork` ao lado de
   `isReady` e `close`, escreveu a porta `Storage`, o `PgStorage` e o `createPgStorage`, refez o `buildContainer` e o
-  `main.ts` sobre ela, escreveu os testes do `PgStorage` e trocou as dez chamadas de `buildContainer` nos testes. A
+  `main.ts` sobre ela, escreveu os testes do `PgStorage` e trocou as nove chamadas de `buildContainer` nos testes. A
   separação da base em `UseCase` e `UoWUseCase` é desenho meu: a IA apontou que o `CheckReadinessUseCase` não precisa da
   fábrica do Unit of Work, e eu mandei a separação, com o `execute` abstrato obrigatório.
 - `spec: 00005`: a IA verificou quem dependia de o `check` rodar os testes (o `CLAUDE.md`, o README e uma verificação de
   spec congelada), separou o `npm test` do `npm run check`, escreveu o workflow `test.yml` e ajustou os documentos.
   Prompt relevante: "verifique a necessidade de desacoplar o vitest do npm run check, para não rodar linting
   necessitando de container runtime".
+- `spec: none (tweak)`: a IA me entrevistou, em duas rodadas, sobre a estrutura do README (duas seções novas, o que sai
+  por baixo retorno, o estilo do diagrama e as linhas novas do Registro) e reescreveu, a partir das minhas respostas, o
+  diagrama Mermaid, a tabela de autoria, "Filosofia de engenharia", "O que eu cortaria com um prazo mais curto" e "O que
+  faria com mais tempo", com o diferencial do teste de mutação com catraca. Dois agentes de IA rodaram em paralelo: um
+  auditou os documentos atrás de inconsistências e de informação que não cabe num repositório público, e outro depurou o
+  sistema num clone limpo.
 
 ## O que validei
 
@@ -370,7 +376,7 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   pilha: em 44 subidas do zero, nenhuma falhou. A mesma medição mostrou o mecanismo possível, em que o Postgres declara
   "pronto" duas vezes na inicialização e o `pg_isready` por socket pode marcar o banco saudável por cerca de um décimo
   de segundo antes de a porta de rede abrir. A falha não reproduziu, então a causa segue como hipótese e o
-  `compose.yaml` não mudou.
+  `compose.yaml` não mudou naquele passo; o healthcheck do `db` só passou a testar a rede num commit posterior.
 - `spec: 00013`: cada passo partiu de uma sonda vermelha que ficou verde. A prontidão foi medida contra um Postgres de
   verdade pausado com `docker pause`, um teste executa o comando do healthcheck contra uma API de pé e contra uma sem
   banco, e o teste do log varre as linhas no nível `trace` atrás de texto do ticket e de query string.
@@ -407,6 +413,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   `stop` terminou com código 0, sem linha de erro.
 - `spec: 00005`: o `npm run check` passou a rodar sem container runtime, e o `npm test` roda os testes com a cobertura e
   para com a mensagem de sempre quando não há; o novo workflow passou no validador de workflows do próprio `check`.
+- `spec: none (tweak)`: o agente de depuração seguiu o README ao pé da letra num clone limpo (compose, `npm run check`
+  sem `.env`, `npx vitest run`, `migrate`, `npm run dev` e `npm run dev:web`) e usou a tela no Chromium, com criação,
+  transição, conflito em duas abas, filtros, paginação, texto com HTML e a API parada; leu também os logs, que não
+  tiveram nenhum `5xx`. Os defeitos de tela que achou entraram em "Problemas em aberto". O `docs-auditor` achou nove
+  pontos de gravidade média, e todos foram corrigidos antes do commit.
 
 ## Um erro da IA
 
@@ -529,6 +540,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: none (tweak)`: ao separar a base dos casos de uso, a IA deixou a `UseCase` como uma classe vazia, que o ESLint
   recusa, e pôs a `UoWUseCase` num arquivo novo. O ESLint apontou a classe vazia, e eu mandei o `execute` abstrato e a
   `UoWUseCase` no mesmo arquivo da superclasse; a IA corrigiu.
+- `spec: none (tweak)`: no README que a IA reescreveu, ela atribuiu ao autor o teste com defeito de propósito, que este
+  diário atribui à IA, e escreveu que a API não tem limite de tamanho do corpo, quando tem (o `413`). O `docs-auditor`
+  apontou os dois, e a IA corrigiu.
 
 ## Uma decisão minha
 
@@ -615,9 +629,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   aceitei; o parâmetro da função comum é uma união de texto em vez do `bool` que eu tinha proposto.
 - `spec: 00005`, passo 5: a IA recomendava uma imagem do Node com o repositório montado, e escolhi o `Dockerfile`
   próprio, porque quero que quem clonar rode o comando sem nada instalado além do container runtime, e aceitei o custo
-  de um build. O caminho `apps/api/Dockerfile`, com o contexto na raiz, também é decisão minha. Mantive
-  `PGPASSWORD=postgres` no `.env.example` por ergonomia, contra o critério 15 da spec, e tirei o teste que o provava,
-  por frágil; a IA tinha escrito esse teste e o apontou como reprovado.
+  de um build. O lugar do `Dockerfile`, com o contexto na raiz, também é decisão minha. Mantive `PGPASSWORD=postgres` no
+  `.env.example` por ergonomia, contra o critério 15 da spec, e tirei o teste que o provava, por frágil; a IA tinha
+  escrito esse teste e o apontou como reprovado.
 - `spec: 00005`, passo 1, reaberto: apontei que o leitor da imagem dependia de o `db` vir primeiro no arquivo e propus
   fixar a versão do PostgreSQL numa variável do `.env.example`. A IA recomendou contra (o `.env` é por máquina, o CI não
   o tem e o `compose.yaml` deixaria de ser dono da imagem) e propôs ler o serviço `db` pelo nome. Aceitei e escolhi o
@@ -706,6 +720,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   usa a fábrica, e adotei a separação em `UseCase` e `UoWUseCase`.
 - `spec: 00005`: decidi desacoplar os testes do `npm run check`, para o lint e os tipos rodarem sem container runtime, e
   pedi um job `test` próprio no CI, também obrigatório na `main`, com um selo no README.
+- `spec: none (tweak)`: decidi que o README ganha duas seções, a filosofia e o que eu cortaria com menos prazo, e
+  escolhi o que cortar primeiro e o que nunca cortar. Mandei manter todos os comandos de "Como rodar", porque rodar tem
+  que ser muito fácil, e cortar só o que não ajuda a rodar. Pedi também o diferencial do teste de mutação com catraca.
 
 ## Onde a IA não entrou
 
@@ -760,3 +777,7 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   tipo inferível de `finished`), trocou o tipo da fábrica do `UseCase` por uma que devolve `Promise` e converteu os
   outros quatro casos de uso e as chamadas do container. A sonda e os testes do `PgUoW`, e a adaptação dos testes dos
   casos de uso e do repositório, foram escritos pela IA.
+- `spec: 00007`, passo 1: o `updateTicketChange`, com o `UPDATE` condicional à `version` e ao status de origem, é meu. A
+  IA escreveu a sonda e os testes dele.
+- `spec: 00008`, passo 2: a consulta `listTickets`, com a comparação em linha do cursor sobre `(created_at, id)`, é
+  minha. A IA escreveu a sonda e os testes dela.

@@ -11,6 +11,9 @@ Sistema de tickets de atendimento full-stack em TypeScript, Node e PostgreSQL: u
 clientes, acompanha o andamento até a resolução, consulta o histórico de cada mudança e nunca sobrescreve, sem aviso, a
 alteração de outra operadora.
 
+O foco foi o rigor onde uma falha custa dado: a concorrência, o histórico e o erro consistente, cada um provado por
+teste contra um PostgreSQL real. A [filosofia](#filosofia-de-engenharia) explica por que isso veio antes dos opcionais.
+
 ## Visão geral da arquitetura
 
 A API é hexagonal: o domínio não importa nada de fora, os casos de uso falam com o banco por uma porta, e só a
@@ -19,14 +22,29 @@ para fora dele. O front é um pacote à parte, `apps/web`, e os dois lados leem 
 
 ```mermaid
 flowchart LR
-    Web("Front React<br/>apps/web") -->|"HTTP, mesma origem"| Interface("Interface HTTP<br/>rotas, Zod, problem+json")
-    Contract("Contrato<br/>esquemas Zod") -.-> Web
-    Contract -.-> Interface
-    Interface --> Application("Casos de uso<br/>e porta TicketRepository")
-    Application --> Domain("Domínio<br/>ciclo de vida e invariantes")
-    Infra("Infraestrutura<br/>PgTicketRepository") -.->|"implementa a porta"| Application
-    Infra --> Db[("PostgreSQL<br/>migrations e gatilhos")]
+    Navegador(["Navegador<br/>React, apps/web"])
+    subgraph API["API Node, apps/api"]
+        direction TB
+        Interface["Interface<br/>rotas, Zod, problem+json"]
+        Aplicacao["Aplicação<br/>casos de uso"]
+        Dominio["Domínio<br/>ciclo de vida, invariantes"]
+        Portas{{"Portas<br/>TicketRepository · UoW · Storage"}}
+        Infra["Infraestrutura<br/>PgUoW · PgTicketRepository · PgStorage"]
+    end
+    Contrato[/"Contrato<br/>esquemas Zod"/]
+    Banco[("PostgreSQL<br/>tickets e histórico imutável")]
+    Navegador -->|"HTTP, mesma origem"| Interface --> Aplicacao --> Dominio
+    Aplicacao --- Portas
+    Infra -.->|"implementa"| Portas
+    Infra --> Banco
+    Contrato -.-> Navegador
+    Contrato -.-> Interface
 ```
+
+A requisição entra pela interface, que só valida a forma, e desce pela aplicação até o domínio, onde moram as regras. A
+aplicação define as portas, e a infraestrutura as implementa sobre o PostgreSQL, então nada acima dela sabe que o banco
+existe. O `main.ts` é a única peça que liga as duas pontas: cria o `PgStorage` e chama o `buildContainer`, que monta os
+casos de uso à mão, sem framework de injeção. O pacote de contrato é lido pelos dois lados, o front e a API.
 
 | Camada | O que decide | Onde |
 | --- | --- | --- |
@@ -54,11 +72,12 @@ Três propriedades seguram o sistema, e o [Registro de decisões](#registro-de-d
 
 Toda falha sai como `application/problem+json` com um `code` estável (`invalid_transition`, `missing_resolution_note`,
 `version_conflict`, `invalid_cursor` e os demais): `400` para a requisição malformada, `404`, `409` para o conflito,
-`422` para a regra de negócio que o domínio recusa e `428` para a transição sem `If-Match`.
+`413` para o corpo grande demais, `415` para o tipo de conteúdo que a API não lê, `422` para a regra de negócio que o
+domínio recusa, `428` para a transição sem `If-Match` e `503` para a prontidão sem banco.
 
 ## Como rodar
 
-Há dois caminhos, ambos na raiz do repositório, e `docker compose` é o comando de compose do seu container runtime.
+Há três caminhos, todos na raiz do repositório, e `docker compose` é o comando de compose do seu container runtime.
 
 | Quero | Preciso de | Vá para |
 | --- | --- | --- |
@@ -113,6 +132,9 @@ npm ci
 npm run check
 ```
 
+O `npm ci` pode listar avisos de vulnerabilidade de gravidade moderada: o workflow `audit` do CI só reprova a partir de
+`high`.
+
 Os testes são outra etapa, porque os de banco sobem um PostgreSQL num contêiner e o container runtime precisa estar
 acessível; com o socket fora do lugar padrão, `DOCKER_HOST` aponta para ele, como a documentação do `testcontainers`
 descreve. O `npm test` roda todos, com o piso de cobertura que o CI exige, e para no começo, com uma mensagem, se não
@@ -153,8 +175,9 @@ Para ver o front enquanto se desenvolve, num segundo terminal, com a API do host
 npm run dev:web
 ```
 
-O `npm run dev:web` sobe o servidor de desenvolvimento do front no endereço que ele imprime, recarrega a página a cada
-mudança e repassa `/tickets` à API em `API_HOST` e `API_PORT`, então a página e a API compartilham a origem, sem CORS.
+O `npm run dev:web` sobe o servidor de desenvolvimento do front no endereço que ele imprime (por padrão,
+`http://localhost:5173`), recarrega a página a cada mudança e repassa `/tickets` à API em `API_HOST` e `API_PORT`, então
+a página e a API compartilham a origem, sem CORS.
 
 | Comando | O que faz |
 | --- | --- |
@@ -177,31 +200,23 @@ delas, o compose recusa subir e diz qual falta. Cada processo tem o seu endereç
 
 | Variável | Quem lê | Para quê |
 | --- | --- | --- |
-| `PGHOST`, `PGPORT` | O compose, o `npm run dev` e o editor | O endereço do `db` no host; `PGHOST` precisa ser um IP, e o do exemplo é o de loopback, que mantém o banco fora da rede |
-| `PGUSER`, `PGPASSWORD`, `PGDATABASE` | O compose, o `npm run dev` e o editor | O usuário, a senha e o banco: o `db` os cria na primeira vez, e o `migrate` e a `api` conectam com eles |
+| `PGHOST`, `PGPORT` | O compose e o `npm run dev` | O endereço do `db` no host; `PGHOST` precisa ser um IP, e o do exemplo é o de loopback, que mantém o banco fora da rede |
+| `PGUSER`, `PGPASSWORD`, `PGDATABASE` | O compose e o `npm run dev` | O usuário, a senha e o banco: o `db` os cria na primeira vez, e o `migrate` e a `api` conectam com eles |
 | `API_PUBLISH_HOST`, `API_PUBLISH_PORT` | O compose | O endereço da `api` do contêiner no host |
 | `API_HOST`, `API_PORT` | O `npm run dev` e o `npm run dev:web` | Onde a API do host escuta e para onde o proxy do front aponta; o `npm run dev` usa o padrão de `apps/api/src/config/settings.ts` quando elas faltam, mas o `npm run dev:web` as exige, sem valor padrão; o prefixo `API_` evita que um `HOST` ou `PORT` de outra ferramenta mude onde a API escuta |
-| `LOG_LEVEL` | O `npm run dev` | O nível do log da API, entre `fatal`, `error`, `warn`, `info`, `debug`, `trace` e `silent`; opcional, e ausente, vazio ou só de espaços vale `info`; um valor fora da lista impede a API de subir |
+| `LOG_LEVEL` | O compose e o `npm run dev` | O nível do log da API, entre `fatal`, `error`, `warn`, `info`, `debug`, `trace` e `silent`; opcional, e ausente, vazio ou só de espaços vale `info`; um valor fora da lista impede a API de subir |
 | `WEB_DIST_DIR` | O `npm run dev` | A pasta do front compilado que a API serve; opcional, e ausente ou vazia a API serve só as rotas, como no exemplo; uma pasta que não existe impede a API de subir |
 
-Dentro dos contêineres, e só ali, o `compose.yaml` fixa estes valores, que nunca vêm do `.env`: o `migrate` e a `api`
-acham o banco em `db:5432`, a `api` escuta em `0.0.0.0:3000`, e o `WEB_DIST_DIR` dela é o front que o `Dockerfile`
-constrói. O `migrate` termina com 0 e rodar de novo não muda nada; a `api` só sobe depois dele, reconstruída a cada
-`docker compose up -d` (`pull_policy: build`), e ao receber `SIGTERM` fecha o servidor, depois o pool, e sai com 0. Para
-aplicar as migrations de novo, o comando é `docker compose run --rm migrate`.
+Dentro dos contêineres o `compose.yaml` fixa os endereços (o banco em `db:5432`, a API em `0.0.0.0:3000`), e o `migrate`
+roda de novo sem mudar nada.
 
-Duas armadilhas do compose. Uma variável já exportada no shell vence a do `.env`, e o banco e o `migrate` podem divergir
-da API sem aviso. E o `db` lê usuário, senha e banco só na primeira inicialização do volume `db-data`: mudá-los depois
-não altera um banco que já existe, e a conexão falha até o volume ser recriado. Se uma porta estiver ocupada
-(`address already in use`, ou o erro de porta ocupada do container runtime), pare o outro programa ou mude, no `.env`, a
-variável que dá o endereço dela.
+Se algo não subir:
 
-### Editor com SQL (opcional)
-
-O `postgres-language-server.jsonc` guarda as regras de lint e de formato do SQL, as mesmas que o `npm run check` aplica
-sem banco; o editor as lê pelo servidor de linguagem do mesmo pacote (`npx postgres-language-server lsp-proxy`). Para
-completar tabelas e colunas, o servidor precisa das variáveis `PG*` do `.env` no ambiente do editor, que ele lê sozinho,
-e do serviço `db` no ar; o banco começa sem tabelas, e só o que as migrations aplicadas criaram completa.
+| Sintoma | Causa e saída |
+| --- | --- |
+| `address already in use` | Uma porta está ocupada: pare o outro programa ou mude, no `.env`, a variável que dá o endereço dela |
+| O banco e a API divergem sem aviso | Uma variável já exportada no shell vence a do `.env`: desfaça a exportação |
+| A conexão falha depois de mudar usuário, senha ou banco | O `db` só lê esses valores na primeira inicialização do volume `db-data`: recrie o volume com `docker compose down --volumes` |
 
 ## Como este projeto é desenvolvido
 
@@ -221,13 +236,15 @@ autoria segue o quanto a peça exige de raciocínio sobre estado e falha: quanto
 
 | À mão | Semimanual | Delegado à IA, revisado |
 | --- | --- | --- |
-| As regras do domínio | O tratamento de erros | Ferramentas e CI |
-| O SQL do esquema (migrations, constraints e gatilhos) e das consultas | Os casos de uso | As rotas |
-| A concorrência: o `UPDATE` condicional e a unidade de trabalho | O front-end | O corpo dos testes (a montagem) e a documentação |
-| | A estrutura dos testes (o que se afirma) | |
+| As regras do domínio: os tipos, a normalização do texto, a máquina de transições e a ordem das checagens | As classes de erro, do domínio e da aplicação | Ferramentas e CI |
+| O esquema do banco: as tabelas, os `CHECK`, as chaves e os gatilhos que tornam o histórico imutável | Os casos de uso | As rotas e o mapeador de erros HTTP |
+| A concorrência: o `UPDATE` condicional e a unidade de trabalho | A estrutura dos testes (o que se afirma) | O corpo dos testes (a montagem) e a documentação |
+| O contrato do repositório, as consultas e a raiz de composição | O front-end, orquestrado pelo autor: ele disse onde cada peça fica e como o código se organiza, e a IA o escreveu | |
+| O índice da listagem, o contrato e o caso de uso da prontidão e a estrutura do teste de conflito | | |
 
 No semimanual, o autor decide o desenho e escreve o núcleo da peça, a IA escreve o mecânico, e o autor revisa cada
-parte.
+parte. No front-end o autor foi o orquestrador: decidiu onde cada coisa mora e como o código se organiza, e revisou o
+que a IA escreveu.
 
 A linguagem é ubíqua e rigorosa: cada conceito tem um nome só, na spec, no código, nos testes e nos documentos, e um
 nome que sugere outro significado do que o valor guarda é tratado como defeito.
@@ -249,14 +266,98 @@ cada linha diz o que mudaria.
 | Cada texto (nome, descrição, nota e motivo) tem um tamanho mínimo e máximo, contado em pontos de código, e cabe em uma linha só | O enunciado pede os campos sem limite, e um limite explícito evita texto sem fim; o banco e o domínio concordam | Outro limite é um número em um lugar do domínio e uma migration |
 | A lista ordena do ticket mais novo ao mais antigo, com um tamanho de página padrão e um máximo | A user story pede paginação sem dizer o tamanho; quem atende olha primeiro o que chegou agora | Outra ordem muda o índice e o cursor |
 
+## Filosofia de engenharia
+
+Escolhi rigor em vez de amplitude. Num sistema de atendimento, o que custa caro quando falha é o dado: duas operadoras
+que se sobrescrevem sem saber, um histórico que alguém consegue alterar, um erro que cada rota devolve de um jeito. Por
+isso gastei o tempo no essencial até ele ficar provado, e não em cobrir os opcionais por cima de um essencial só
+razoável. O objetivo foi um back-end rigoroso onde uma falha custa dado, e o rigor tem prova: cada ponto abaixo tem um
+teste que o sustenta.
+
+- **A concorrência é provada, não suposta.** A transição é um `UPDATE` condicional à versão lida. Duas unidades de
+  trabalho e duas requisições HTTP disparadas juntas terminam com um vencedor e uma só entrada nova no histórico, em
+  vinte rodadas contra um PostgreSQL real.
+- **O que o banco pode garantir, ele garante.** Os tamanhos, as transições aceitas e a imutabilidade do histórico estão
+  em constraints e gatilhos, além de estarem no domínio, e o histórico recusa até uma alteração feita direto no banco.
+- **A transação é explícita.** O caso de uso decide o que é atômico: sair sem confirmar desfaz tudo e devolve a conexão
+  ao pool, e os testes cobrem a escrita que falha no meio.
+- **O erro é parte do contrato.** Toda falha esperada tem um status e um `code` estáveis, no mesmo formato.
+- **Um teste que nunca falha não prova nada.** Nas peças mais recentes, a unidade de trabalho e o esquema, um defeito
+  introduzido de propósito fez o teste falhar, como deveria.
+
+Sobre os cinco opcionais que o enunciado lista (documentação da API, atualização em tempo real, idempotência na criação,
+CI e logs com healthcheck): entendo o que cada um pede e deixei o repositório preparado para recebê-los, e optei por não
+entregá-los. A unidade de trabalho e a porta de armazenamento dão a mesma transação a uma chave de idempotência ou a uma
+notificação de tempo real, e o contrato compartilhado, com os `code` estáveis, é a base de uma documentação OpenAPI. Não
+entreguei nenhum porque um opcional sem o rigor do essencial seria dívida, e uma idempotência feita pela metade é pior
+que nenhuma: promete uma garantia que não cumpre. Entreguei os dois bônus que consegui provar com o mesmo rigor, o CI e
+os logs estruturados com healthcheck. O que ficou de fora, e como eu o faria, está em
+[O que faria com mais tempo](#o-que-faria-com-mais-tempo).
+
+## O que eu cortaria com um prazo mais curto
+
+O rigor tem custo, e com menos tempo eu o pouparia onde ele protege menos o essencial. Do primeiro corte ao último:
+
+1. **Os linters extras de SQL, CSS e HTML** (`postgres-language-server`, `stylelint` e `html-validate`). Pegam defeito
+   real, mas longe do domínio; ficariam o ESLint, o `tsc` e o Prettier.
+2. **Os prazos aninhados da saúde e os logs estruturados.** A prontidão com prazo, o healthcheck do compose e o log JSON
+   com `reqId` valem em produção, mas são bônus: um `/health` simples e o log padrão bastariam.
+3. **O rigor do processo, não o do código.** Hoje cada fatia tem uma spec congelada e uma sonda vermelha antes da
+   implementação, e cada caso de borda descoberto vira teste na hora. Com pressa, as specs ficariam curtas, os casos de
+   borda sairiam de uma lista feita à mão antes de codificar, e os testes viriam depois da implementação, com menos
+   critério. É uma troca de rigor por velocidade, e eu a aceitaria só fora do núcleo.
+
+O que eu não cortaria: as regras do domínio, a concorrência otimista, a imutabilidade do histórico no banco e os testes
+que provam essas três coisas. São o motivo de o sistema existir, e um defeito nelas custa dado.
+
 ## O que faria com mais tempo
+
+### Opcionais que ficaram de fora
+
+- **Idempotência na criação.** Um cabeçalho `Idempotency-Key` opcional, para um reenvio ou um clique duplo não criar
+  dois tickets. Eu reservaria a chave dentro da transação da unidade de trabalho, com um bloqueio por chave, e guardaria
+  a resposta de sucesso numa tabela para devolvê-la igual na repetição. O ponto delicado é a espera da segunda
+  requisição, que segura uma conexão do pool: eu a limitaria com um `lock_timeout` curto, que responderia conflito, e
+  mediria uma rajada de duplicatas antes de confiar nela. É o opcional que eu faria primeiro.
+- **Atualização da lista em tempo real (SSE).** O `LISTEN/NOTIFY` do PostgreSQL, com o `NOTIFY` dentro da mesma
+  transação da unidade de trabalho, que só dispara no `COMMIT` e funciona entre várias instâncias da API. O custo está
+  em volta: uma conexão dedicada à escuta, o batimento do fluxo, um desligamento que fecha as conexões abertas e testes
+  que dependem de tempo.
+- **Documentação OpenAPI.** Gerada de um catálogo único das operações e dos esquemas do pacote de contrato, com um teste
+  que prova que o documento descreve as rotas de verdade; hoje o contrato compartilhado e os `code` estáveis são a base.
+
+### Diferenciais que eu acrescentaria
+
+- **Teste de mutação com catraca (Stryker).** O TDD com sondas já garante que cada passo nasce vermelho e termina verde,
+  e a catraca de mutação é o complemento natural: o Stryker, ou outra ferramenta de mutação, introduz defeitos no código
+  e confere que algum teste falha, e um mutante que sobrevive aponta um teste que não afirma o que deveria. Eu a
+  aplicaria sobretudo aos testes que delego à IA, que passariam por esse crivo uma segunda vez, para garantir que os
+  mutantes são mesmo pegos. A catraca fixaria a pontuação mínima de mutação no CI e só a subiria, nunca a baixaria, até
+  não restar sobrevivente no código que importa: cada commit deixaria o repositório mais íntegro que o anterior. Hoje
+  isso é feito à mão, em algumas peças, sem automação nem piso.
+- **Duas instâncias da API de verdade.** Hoje a corrida decide só pelo `UPDATE` condicional, e eu a provaria com um
+  teste que sobe duas instâncias sobre o mesmo banco.
+
+### Problemas em aberto
+
+- **O pool do banco.** Usa o tamanho padrão do `pg`, de 10 conexões, e não limita a espera: cada caso de uso segura uma
+  conexão durante a transação, então, sob uma rajada, as requisições esperam até o prazo de conexão do pool
+  (`CONNECTION_TIMEOUT_MS`, em `apps/api/src/infrastructure/pool.ts`) e depois falham. Eu configuraria o tamanho e o
+  limite de espera e mediria uma rajada.
+- **Arestas da tela**, achadas na depuração manual: o aviso de erro de uma criação ou de uma transição fica até a
+  próxima ação nele; a validação dos campos acontece só no servidor, sem `maxlength` e sem o limite na mensagem; e, em
+  celular, o painel abre abaixo da lista, fora da vista, e um texto muito longo sem espaços faz a tabela rolar por
+  dentro. A API trata todos esses casos certo, e a correção é de tela.
+- **O front sem teste de componente nem de acessibilidade.** É uma decisão registrada: só o cliente HTTP é testado,
+  contra a API real, e a tela se prova por conferência guiada. Com mais tempo, entrariam testes de componente e uma
+  varredura de acessibilidade.
+
+### Evolução do produto
 
 - A API não tem login nem operadora identificada (ver as premissas): com identidade, o histórico diria quem mudou cada
   ticket e o conflito poderia nomear quem chegou primeiro.
-- A API não tem limite de taxa nem cabeçalhos de segurança, e confia em quem a alcança; numa rede aberta, entrariam à
-  frente dela, junto com o limite de tamanho do corpo.
-- Duas instâncias da API sobre o mesmo banco dependem só do `UPDATE` condicional para decidir a corrida; eu provaria
-  isso com um teste que sobe duas instâncias de verdade.
+- A API não tem limite de taxa nem cabeçalhos de segurança, e confia em quem a alcança; o corpo só tem o limite padrão
+  do Fastify, que responde `413`. Numa rede aberta, o limite de taxa e os cabeçalhos entrariam à frente dela.
 - A listagem só avança, pelo `rel="next"` do cabeçalho `Link`. Voltar uma página ou ir à última exigiria os `rel="prev"`
   e `rel="last"`: o `prev` pede um cursor no sentido oposto (a posição do primeiro ticket, com a comparação e a ordem
   invertidas), e o `last` pede saber onde a lista acaba. Hoje quem volta é o cliente, que guarda as URLs das páginas que
@@ -268,6 +369,13 @@ Só as decisões de alto ROI, sem contradição entre linhas.
 
 | Decisão | Alternativa descartada | Trade-off aceito |
 | --- | --- | --- |
+| Cada fatia nasce numa spec congelada, e cada passo parte de uma sonda vermelha, fora do repositório, antes do código | Specs vivas, editadas ao longo do trabalho, ou testes escritos só depois da implementação | Mais cerimônia por fatia, e uma spec errada pede uma spec nova; em troca o histórico conta a intenção de cada commit, e o que o código faz tem um contrato anterior a ele |
+| TypeScript executado direto pelo Node, sem etapa de compilação no back-end | Compilar com `tsc` ou um empacotador antes de rodar | Exige a versão exata do Node e imports com a extensão `.ts`; em troca não há artefato gerado, e o que roda é o que está no repositório |
+| Arquitetura hexagonal enxuta, em quatro camadas, sem DDD tático | Agregados, objetos de valor, eventos de domínio e um container de injeção | Menos formalismo que um domínio rico; em troca um domínio pequeno, puro e testável, que cabe na cabeça de quem lê |
+| Injeção de dependência manual, com uma raiz de composição explícita: o `main.ts` cria o `PgStorage` e o `buildContainer` monta os casos de uso | Um framework de injeção, com decoradores ou um container que descobre as peças sozinho | A fiação é código que alguém escreve e mantém, e cada caso de uso novo pede uma linha; em troca nada acontece por mágica: o grafo de dependências se lê em um arquivo, e os testes montam o próprio sem framework |
+| `pg` com SQL escrito à mão, sem ORM, e migrations em SQL puro, com reversão | Um ORM ou um construtor de consultas | Mais SQL para escrever e testar; em troca controle exato do `UPDATE` condicional, dos gatilhos e do cursor, e uma abstração a menos entre o código e o banco |
+| O `id` do ticket é um UUID v7 gerado pelo banco (`uuidv7()`), e a `version` é um inteiro que sobe de um em um | Um id sequencial, um UUID v4 gerado pela aplicação, ou a versão como instante | Depende do PostgreSQL 18; em troca os ids são ordenáveis no tempo, a aplicação não inventa identidade, e a versão é um número comparável |
+| Fastify como servidor HTTP | Express, ou um framework com módulos e decoradores | Um ecossistema menor que o do Express; em troca o ciclo de vida e o logger vêm embutidos, e a superfície da API é pequena |
 | Versões exatas, sem scripts de instalação (`ignore-scripts`), Node exato recusado por `engine-strict` e `audit` em workflow próprio, não obrigatório | Faixas semver, scripts liberados, uma faixa de Node e `audit` como etapa do `check` | Toda atualização é um commit `deps-bump`, quem tem outro Node não instala, e um advisory novo não trava o push e pode passar despercebido |
 | O CI é o único portão, sem hook local, em jobs separados: `check` (lint, tipos e formato), `test` (testes com cobertura mínima desde o primeiro teste) e `audit`, e `check` e `test` obrigatórios só na `main` (ruleset `protect-main`) | Hook de pre-commit, os dois obrigatórios também na `dev`, um job só para tudo, ou cobertura sem mínimo | Um commit quebrado entra em `dev`, cada arquivo novo exige teste e o `check` exige shell POSIX; em troca a `main` só aceita um commit cujo `check` e `test` já passaram na `dev`, e quem não tem container runtime ainda roda o lint e os tipos |
 | Falha lançada como erro tipado: `DomainError` e `ApplicationError` irmãs, sem ancestral comum, uma subclasse por `code` e mensagem fixa | Devolver sucesso ou falha como resultado, uma classe de erro única, ou uma só hierarquia | Quem traduz o erro em resposta trata as duas famílias e cada código custa uma classe; em troca `instanceof` distingue a camada, e código e mensagem moram num lugar só |

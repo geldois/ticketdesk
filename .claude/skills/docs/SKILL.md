@@ -73,7 +73,9 @@ regra de autoria (a intenção do autor) e nunca relata o que a IA fez. Seções
 | Como rodar | Só comandos que existem e que uma pessoa digita (o back, o front e os testes), e o apontamento para os workflows |
 | Como este projeto é desenvolvido | O método (SDD e TDD), a regra de autoria (o que se escreve à mão, o que é semimanual e o que se delega) e a linguagem ubíqua, em voz impessoal, com apontamento para `docs/specs/`, `CLAUDE.md` e `IA.md`; o relato do que a IA fez fica no `IA.md` |
 | Premissas | Uma tabela: "assumi X", o porquê e o que muda se for outra |
-| O que faria com mais tempo | Evolução e o que ficou de fora |
+| Filosofia de engenharia | Por que o rigor do essencial veio antes da cobertura dos opcionais, e o que cada garantia tem como prova |
+| O que eu cortaria com um prazo mais curto | O pragmatismo: o que sairia primeiro, em ordem, e o que nunca sairia |
+| O que faria com mais tempo | Os opcionais que ficaram de fora, os diferenciais, os problemas em aberto e a evolução, cada um com o porquê |
 | Registro de decisões | Último; só decisões de alto ROI, da mais antiga para a mais recente |
 
 - Só o que uma pessoa toca: comandos, arquivos, rotas, esquemas, variáveis. Nenhum passo oculto.
