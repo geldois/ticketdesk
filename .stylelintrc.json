@@ -1,0 +1,18 @@
+{
+  "extends": ["stylelint-config-standard", "stylelint-config-recess-order"],
+  "allowEmptyInput": false,
+  "reportDescriptionlessDisables": true,
+  "reportInvalidScopeDisables": true,
+  "reportNeedlessDisables": true,
+  "ignoreFiles": ["**/dist/**", "**/.cache/**", "**/node_modules/**"],
+  "rules": {
+    "declaration-no-important": true,
+    "selector-max-id": 0,
+    "selector-max-universal": 0,
+    "max-nesting-depth": 2,
+    "selector-max-compound-selectors": 3,
+    "declaration-block-no-redundant-longhand-properties": true,
+    "no-unknown-custom-properties": true,
+    "color-named": "never"
+  }
+}
