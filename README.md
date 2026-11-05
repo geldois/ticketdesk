@@ -163,6 +163,7 @@ delas, o compose recusa subir e diz qual falta. Cada processo tem o seu endereç
 | `PGUSER`, `PGPASSWORD`, `PGDATABASE` | O compose, o `npm run dev` e o editor | O usuário, a senha e o banco: o `db` os cria na primeira vez, e o `migrate` e a `api` conectam com eles |
 | `API_PUBLISH_HOST`, `API_PUBLISH_PORT` | O compose | O endereço da `api` do contêiner no host |
 | `API_HOST`, `API_PORT` | O `npm run dev` e o `npm run dev:web` | Onde a API do host escuta e para onde o proxy do front aponta; o `npm run dev` usa o padrão de `apps/api/src/config/settings.ts` quando elas faltam, mas o `npm run dev:web` as exige, sem valor padrão; o prefixo `API_` evita que um `HOST` ou `PORT` de outra ferramenta mude onde a API escuta |
+| `LOG_LEVEL` | O `npm run dev` | O nível do log da API, entre `fatal`, `error`, `warn`, `info`, `debug`, `trace` e `silent`; opcional, e ausente, vazio ou só de espaços vale `info`; um valor fora da lista impede a API de subir |
 | `WEB_DIST_DIR` | O `npm run dev` | A pasta do front compilado que a API serve; opcional, e ausente ou vazia a API serve só as rotas, como no exemplo; uma pasta que não existe impede a API de subir |
 
 Dentro dos contêineres, e só ali, o `compose.yaml` fixa estes valores, que nunca vêm do `.env`: o `migrate` e a `api`

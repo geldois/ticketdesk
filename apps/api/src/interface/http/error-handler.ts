@@ -83,6 +83,8 @@ export function handleError(
     );
   }
 
+  request.log.error({ err: error }, "unexpected error");
+
   return sendError(response, status, "internal_error", "internal server error");
 }
 

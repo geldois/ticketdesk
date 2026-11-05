@@ -121,4 +121,34 @@ describe("Settings.fromEnv", () => {
       "API_PORT must be an integer from 1 to 65535",
     ]);
   });
+
+  it.each([undefined, "", "   "])(
+    "logs at info when LOG_LEVEL is %j",
+    (value) => {
+      const env =
+        value === undefined
+          ? DATABASE_ENV
+          : { ...DATABASE_ENV, LOG_LEVEL: value };
+
+      expect(Settings.fromEnv(env).logLevel).toBe("info");
+    },
+  );
+
+  it.each(["fatal", "error", "warn", "info", "debug", "trace", "silent"])(
+    "reads LOG_LEVEL %s as the logLevel",
+    (value) => {
+      expect(
+        Settings.fromEnv({ ...DATABASE_ENV, LOG_LEVEL: value }).logLevel,
+      ).toBe(value);
+    },
+  );
+
+  it.each(["verbose", "INFO", "1"])(
+    "throws naming LOG_LEVEL when it is %j",
+    (value) => {
+      expect(problemsOf({ ...DATABASE_ENV, LOG_LEVEL: value })).toEqual([
+        "LOG_LEVEL must be one of fatal, error, warn, info, debug, trace, silent",
+      ]);
+    },
+  );
 });

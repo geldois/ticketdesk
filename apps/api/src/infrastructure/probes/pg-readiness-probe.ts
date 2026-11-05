@@ -1,6 +1,7 @@
-const READINESS_DEADLINE_MS = 2000;
 import type { Pool } from "pg";
 import type { ReadinessProbe } from "../../application/contracts/probes/readiness-probe.ts";
+
+const READINESS_DEADLINE_MS = 2000;
 
 export class PgReadinessProbe implements ReadinessProbe {
   readonly #pgPool: Pool;

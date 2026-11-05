@@ -104,6 +104,7 @@ describe("the HTTP server", () => {
     server = buildServer({
       container: buildContainer({ now: () => INSTANT, pgPool }),
       webDistDir: null,
+      logger: { level: "silent" },
     });
     unreachableServer = buildServer({
       container: buildContainer({
@@ -111,6 +112,7 @@ describe("the HTTP server", () => {
         pgPool: unreachablePgPool,
       }),
       webDistDir: null,
+      logger: { level: "silent" },
     });
   });
 
@@ -697,6 +699,7 @@ describe("the HTTP server", () => {
       listServer = buildServer({
         container: buildContainer({ now: () => INSTANT, pgPool: listPgPool }),
         webDistDir: null,
+        logger: { level: "silent" },
       });
     });
 
@@ -1072,6 +1075,7 @@ describe("the HTTP server", () => {
       webServer = buildServer({
         container: buildContainer({ now: () => INSTANT, pgPool: webPgPool }),
         webDistDir,
+        logger: { level: "silent" },
       });
     });
 
@@ -1138,6 +1142,7 @@ describe("the HTTP server", () => {
       const unready = buildServer({
         container: buildContainer({ now: () => INSTANT, pgPool: webPgPool }),
         webDistDir: pathOf(webDistDir),
+        logger: { level: "silent" },
       });
 
       await expect(unready.ready()).rejects.toThrow(InvalidWebDistDirError);

@@ -77,6 +77,7 @@ async function startApi(): Promise<RunningApi> {
   const api = buildServer({
     container: buildContainer({ now: () => new Date(), pgPool: pool }),
     webDistDir: null,
+    logger: { level: "silent" },
   });
 
   return {

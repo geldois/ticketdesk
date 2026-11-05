@@ -38,6 +38,7 @@ describe("the health routes", () => {
     const server = buildServer({
       container: buildContainer({ now: () => INSTANT, pgPool }),
       webDistDir: null,
+      logger: { level: "silent" },
     });
 
     pools.push(pgPool);
