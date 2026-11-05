@@ -2,7 +2,12 @@ import { randomUUID } from "node:crypto";
 import type { IncomingMessage } from "node:http";
 import type { Writable } from "node:stream";
 import { LogController } from "fastify";
-import type { FastifyReply, FastifyRequest } from "fastify";
+import type {
+  FastifyError,
+  FastifyReply,
+  FastifyRequest,
+  HookHandlerDoneFunction,
+} from "fastify";
 import type { LogLevel } from "../../config/settings.ts";
 
 const REQUEST_ID_HEADER = "x-request-id";
@@ -14,10 +19,20 @@ export interface LoggerOptions {
   readonly destination?: Writable;
 }
 
+interface SerializedError {
+  readonly type: string;
+  readonly message: string;
+  readonly stack: string;
+  readonly [key: string]: unknown;
+}
+
 interface PinoOptions {
   readonly level: LogLevel;
   readonly formatters: {
     readonly level: (label: string) => { level: string };
+  };
+  readonly serializers: {
+    readonly err: (error: FastifyError) => SerializedError;
   };
   readonly stream?: Writable;
 }
@@ -29,12 +44,11 @@ export function buildLoggerOptions({
   return {
     level,
     formatters: { level: (label: string) => ({ level: label }) },
+    serializers: { err: serializeError },
     ...(destination === undefined ? {} : { stream: destination }),
   };
 }
 
-// O identificador vem do cliente e vai para o log e para a resposta: só a lista fechada de caracteres e o limite de
-// tamanho o tornam seguro. Um cabeçalho repetido chega como texto com vírgula e cai no padrão.
 export function generateRequestId(request: IncomingMessage): string {
   const requestId = request.headers[REQUEST_ID_HEADER];
 
@@ -46,10 +60,25 @@ export function generateRequestId(request: IncomingMessage): string {
 export function presentRequestId(
   request: FastifyRequest,
   response: FastifyReply,
-): Promise<void> {
+  done: HookHandlerDoneFunction,
+): void {
   void response.header(REQUEST_ID_HEADER, request.id);
 
-  return Promise.resolve();
+  done();
+}
+
+export function serializeError(error: FastifyError): SerializedError {
+  return {
+    type: error.constructor.name,
+    message: error.message,
+    stack: error.stack ?? "",
+    ...("code" in error && typeof error.code === "string"
+      ? { code: error.code }
+      : {}),
+    ...("constraint" in error && typeof error.constraint === "string"
+      ? { constraint: error.constraint }
+      : {}),
+  };
 }
 
 export class RequestLogController extends LogController {
@@ -60,7 +89,6 @@ export class RequestLogController extends LogController {
     });
   }
 
-  // Cada requisição escreve só a linha de conclusão: a de entrada e a de rota inexistente trazem a URL com a query.
   override incomingRequest(): void {
     return;
   }

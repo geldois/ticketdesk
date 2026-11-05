@@ -71,8 +71,8 @@ describe("PgReadinessProbe", () => {
 
     expect(await new PgReadinessProbe(silentPool).isReady()).toBe(false);
 
-    await expect.poll(() => silentPool.totalCount, { timeout: 9000 }).toBe(0);
+    await expect.poll(() => silentPool.totalCount, { timeout: 10000 }).toBe(0);
 
     await silentPool.end();
-  }, 15000);
+  }, 25000);
 });

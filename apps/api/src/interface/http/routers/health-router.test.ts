@@ -186,7 +186,7 @@ describe("the health routes", () => {
         status: 503,
         code: "not_ready",
       });
-    });
+    }, 15000);
 
     it("answers 404 route_not_found for the trailing slash", async () => {
       const response = await upServer.inject({

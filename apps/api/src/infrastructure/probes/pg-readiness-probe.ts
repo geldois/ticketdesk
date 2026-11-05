@@ -1,7 +1,7 @@
 import type { Pool } from "pg";
 import type { ReadinessProbe } from "../../application/contracts/probes/readiness-probe.ts";
 
-const READINESS_DEADLINE_MS = 2000;
+export const READINESS_DEADLINE_MS = 5000;
 
 export class PgReadinessProbe implements ReadinessProbe {
   readonly #pgPool: Pool;
@@ -12,7 +12,7 @@ export class PgReadinessProbe implements ReadinessProbe {
 
   async isReady(): Promise<boolean> {
     try {
-      const result = await withDeadline(
+      const result = await enforceDeadline(
         this.#pgPool.query(`SELECT 1`),
         READINESS_DEADLINE_MS,
       );
@@ -24,7 +24,10 @@ export class PgReadinessProbe implements ReadinessProbe {
   }
 }
 
-function withDeadline<T>(work: Promise<T>, milliseconds: number): Promise<T> {
+async function enforceDeadline<T>(
+  work: Promise<T>,
+  milliseconds: number,
+): Promise<T> {
   let timer: NodeJS.Timeout | undefined;
 
   const deadline = new Promise<never>((_, reject) => {
@@ -33,7 +36,9 @@ function withDeadline<T>(work: Promise<T>, milliseconds: number): Promise<T> {
     }, milliseconds);
   });
 
-  return Promise.race([work, deadline]).finally(() => {
+  try {
+    return await Promise.race([work, deadline]);
+  } finally {
     clearTimeout(timer);
-  });
+  }
 }

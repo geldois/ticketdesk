@@ -314,6 +314,25 @@ describe("the request log", () => {
       expect(JSON.stringify(errors[0])).toContain("ECONNREFUSED");
       expect(JSON.stringify(errors[0])).toContain("stack");
     });
+
+    it("never writes the row that a database error carries in its detail", async () => {
+      const { server, lines } = capture(upPool, "trace");
+
+      server.get("/boom", async () => {
+        await upPool.query(
+          `INSERT INTO ticket (customer_name, description, channel, priority, status, created_at)
+           VALUES ('Zelda Fitzgerald', 'Printer secret-xyz', 'chat', 'high', 'closed', now())`,
+        );
+      });
+
+      const response = await server.inject({ method: "GET", url: "/boom" });
+      const everything = lines().join("\n");
+
+      expect(response.statusCode).toBe(500);
+      expect(everything).toContain("ticket_status_set_check");
+      expect(everything).toContain("23514");
+      expect(everything).not.toMatch(/Zelda|Fitzgerald|secret-xyz|Failing row/);
+    });
   });
 
   it("writes no line at all at the silent level", async () => {

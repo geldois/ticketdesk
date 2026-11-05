@@ -1,7 +1,7 @@
 import { Pool } from "pg";
 
-const CONNECTION_TIMEOUT_MS = 5000;
-const QUERY_TIMEOUT_MS = 10000;
+export const CONNECTION_TIMEOUT_MS = 5000;
+export const QUERY_TIMEOUT_MS = 10000;
 
 export function createPgPool(databaseUrl?: string): Pool {
   return new Pool({
