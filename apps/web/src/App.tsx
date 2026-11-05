@@ -16,9 +16,9 @@ export function App(): ReactElement {
     <main className="screen">
       <h1>TicketDesk</h1>
       <CreateTicketForm onCreated={reload} />
-      <TicketFilters values={filters} onChange={changeFilters} />
       <div className="workspace">
-        <div>
+        <div className="tickets-card">
+          <TicketFilters values={filters} onChange={changeFilters} />
           {state.kind === "loading" && <p role="status">Carregando tickets…</p>}
           {state.kind === "error" && (
             <div role="alert">

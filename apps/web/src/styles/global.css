@@ -1,27 +1,181 @@
+:root {
+  --color-text: #1c2024;
+  --color-muted: #60646c;
+  --color-border: #d9d9e0;
+  --color-control-border: #b9bbc6;
+  --color-surface: #fff;
+  --color-background: #f9f9fb;
+  --color-hover: #f0f0f3;
+  --color-accent: #107d98;
+  --color-accent-strong: #0c6a82;
+  --color-accent-soft: #def7f9;
+  --color-danger: #ce2c31;
+  --color-danger-soft: #feebec;
+  --color-warning: #8f5400;
+  --color-warning-soft: #fff1cc;
+  --color-success: #297c3b;
+  --color-success-soft: #e6f6eb;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --control-height: 2.25rem;
+  --radius: 0.4rem;
+  --shadow: 0 1px 2px rgb(16 24 40 / 8%);
+}
+
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
-  color: #1f2933;
-  background-color: #f5f7fa;
+  font:
+    0.875rem/1.4 system-ui,
+    sans-serif;
+  color: var(--color-text);
+  background-color: var(--color-background);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: 1.25rem;
+}
+
+h2 {
+  font-size: 1rem;
+}
+
+h3 {
+  font-size: 0.875rem;
 }
 
 .screen {
-  max-width: 72rem;
-  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  max-width: 80rem;
+  padding: var(--space-4) var(--space-6);
   margin: 0 auto;
 }
 
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-block: 1rem;
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
 }
 
-button {
-  padding: 0.5rem 1rem;
-  margin-top: 1rem;
+/* O painel só existe com um ticket aberto; sem ele a tabela ocupa a linha inteira. */
+.workspace:has(aside) {
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 20rem);
+}
+
+.create-ticket,
+.panel,
+.tickets-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.create-ticket,
+.panel {
+  padding: var(--space-3);
+}
+
+.tickets-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tickets-card > :not(.filters, .tickets-scroll) {
+  align-self: flex-start;
+  margin: var(--space-3);
+}
+
+.create-ticket {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) 9rem 9rem auto;
+  gap: var(--space-3) var(--space-4);
+  align-items: end;
+}
+
+.create-ticket h2 {
+  grid-column: 1 / -1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+input,
+textarea,
+select {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--control-height);
+  padding: var(--space-1) var(--space-3);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius);
+}
+
+/* O campo cresce com o texto onde o navegador sabe fazer isso; nos demais fica de uma linha, redimensionável. */
+textarea {
+  min-height: var(--control-height);
+  max-height: 10rem;
+  field-sizing: content;
+  resize: vertical;
+}
+
+select {
+  padding-right: var(--space-6);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2360646c' stroke-width='2'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-2) center;
+  background-size: 1rem;
+}
+
+input:hover,
+textarea:hover,
+select:hover {
+  border-color: var(--color-muted);
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 0;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+button:not(.row-button, [aria-pressed]) {
+  height: var(--control-height);
+  padding: 0 var(--space-4);
+  font: inherit;
+  font-weight: 500;
+  color: var(--color-surface);
   cursor: pointer;
+  background-color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius);
 }
 
 button:disabled {
@@ -29,51 +183,146 @@ button:disabled {
   opacity: 0.6;
 }
 
-.workspace {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-  gap: 1.5rem;
-  align-items: start;
+[role="alert"] button {
+  margin-top: var(--space-2);
 }
 
-.create-ticket {
-  display: grid;
-  gap: 0.75rem;
-  padding: 1rem;
-  background-color: #fff;
-  border: 1px solid #e4e7eb;
-}
-
-.create-ticket h2 {
+[role="alert"] p {
   margin: 0;
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.875rem;
+.action-buttons button:not(.row-button, [aria-pressed]) {
+  color: var(--color-accent);
+  background-color: var(--color-surface);
 }
 
-.field input,
-.field textarea,
-.field select {
-  padding: 0.5rem;
+button:not(.row-button, [aria-pressed]):hover:enabled {
+  background-color: var(--color-accent-strong);
+  border-color: var(--color-accent-strong);
+}
+
+.action-buttons button:not(.row-button, [aria-pressed]):hover:enabled {
+  color: var(--color-surface);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+[role="alert"] {
+  padding: var(--space-2) var(--space-3);
+  margin: 0;
+  color: var(--color-danger);
+  background-color: var(--color-danger-soft);
+  border-left: 4px solid var(--color-danger);
+  border-radius: var(--radius);
+}
+
+.create-ticket [role="alert"] {
+  grid-column: 1 / -1;
+}
+
+[role="status"] {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+[data-status] {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  border-radius: var(--radius);
+}
+
+[data-status="open"] {
+  color: var(--color-accent-strong);
+  background-color: var(--color-accent-soft);
+}
+
+[data-status="in_progress"] {
+  color: var(--color-warning);
+  background-color: var(--color-warning-soft);
+}
+
+[data-status="resolved"] {
+  color: var(--color-success);
+  background-color: var(--color-success-soft);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  align-items: center;
+}
+
+.filter-group span {
+  margin-right: var(--space-1);
+  font-size: 0.6875rem;
+  color: var(--color-muted);
+  text-transform: uppercase;
+}
+
+[aria-pressed] {
+  height: 1.75rem;
+  padding: 0 var(--space-3);
   font: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-muted);
+  cursor: pointer;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+[aria-pressed="false"]:hover {
+  color: var(--color-text);
+  background-color: var(--color-hover);
+}
+
+[aria-pressed="true"] {
+  color: var(--color-accent-strong);
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-accent);
 }
 
 .actions {
-  margin-block: 1rem;
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.actions form {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+}
+
+.actions .field {
+  justify-self: stretch;
+}
+
+.actions textarea {
+  min-height: 5rem;
 }
 
 .action-buttons {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.action-buttons button {
-  margin-top: 0;
+  gap: var(--space-2);
 }
 
 .tickets-scroll {
@@ -83,72 +332,74 @@ button:disabled {
 .tickets {
   width: 100%;
   border-collapse: collapse;
-  background-color: #fff;
 }
 
 .tickets th,
 .tickets td {
-  padding: 0.5rem 0.75rem;
+  padding: var(--space-2) var(--space-3);
   text-align: left;
-  border-bottom: 1px solid #e4e7eb;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Com o max-width em zero a descrição ocupa só a sobra da linha e corta com reticências, em vez de alargar a tabela. */
+.tickets td.description {
+  width: 100%;
+  min-width: 8rem;
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tickets tr:last-child td {
+  border-bottom: 0;
 }
 
 .tickets th {
-  font-size: 0.75rem;
-  color: #52606d;
+  font-size: 0.6875rem;
+  color: var(--color-muted);
   text-transform: uppercase;
+  background-color: var(--color-background);
 }
 
 .tickets tbody tr {
   cursor: pointer;
 }
 
-.tickets td.description {
-  max-width: 18rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .tickets tbody tr:hover,
 .tickets tbody tr.selected {
-  background-color: #e6f0fa;
+  background-color: var(--color-hover);
 }
 
 .tickets tbody tr.selected {
-  box-shadow: inset 3px 0 0 #2f6fb5;
+  box-shadow: inset 3px 0 0 var(--color-accent);
 }
 
 .row-button {
   padding: 0;
-  margin: 0;
   font: inherit;
+  font-weight: 500;
   color: inherit;
   text-align: left;
+  cursor: pointer;
   background: none;
   border: 0;
 }
 
 .panel {
-  padding: 1rem;
-  background-color: #fff;
-  border: 1px solid #e4e7eb;
-}
-
-.panel h2,
-.panel h3 {
-  margin-block: 0 0.75rem;
+  display: grid;
+  gap: var(--space-3);
 }
 
 .fields {
   display: grid;
   grid-template-columns: max-content 1fr;
-  gap: 0.25rem 1rem;
-  margin: 0 0 1.5rem;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
 }
 
 .fields dt {
-  color: #52606d;
+  color: var(--color-muted);
 }
 
 .fields dd {
@@ -156,37 +407,46 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
+.panel section {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
 .history {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding-left: 1.25rem;
+  gap: var(--space-3);
+  padding-left: var(--space-6);
   margin: 0;
 }
 
 .history p {
-  margin: 0.25rem 0 0;
-  color: #52606d;
+  margin: var(--space-1) 0 0;
+  color: var(--color-muted);
 }
 
-@media (width <= 48rem) {
-  .workspace {
+@media (width <= 64rem) {
+  .workspace:has(aside) {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .create-ticket {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .create-ticket :is(.field:nth-of-type(-n + 2), button) {
+    grid-column: 1 / -1;
   }
 }
 
 @media (width <= 40rem) {
   .screen {
-    padding: 1rem;
+    padding: var(--space-4);
   }
 
-  .filters .field {
-    flex: 1 1 100%;
-  }
-
-  .tickets th,
-  .tickets td {
-    padding: 0.5rem;
-    white-space: nowrap;
+  .create-ticket {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

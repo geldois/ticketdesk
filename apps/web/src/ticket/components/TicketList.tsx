@@ -49,7 +49,11 @@ export function TicketList({
               <td className="description" title={ticket.description}>
                 {ticket.description}
               </td>
-              <td>{STATUS_LABELS[ticket.status]}</td>
+              <td>
+                <span data-status={ticket.status}>
+                  {STATUS_LABELS[ticket.status]}
+                </span>
+              </td>
               <td>{PRIORITY_LABELS[ticket.priority]}</td>
               <td>{CHANNEL_LABELS[ticket.channel]}</td>
               <td>{formatInstant(ticket.createdAt)}</td>

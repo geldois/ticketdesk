@@ -55,7 +55,11 @@ export function TicketPanel({
         <dt>Prioridade</dt>
         <dd>{PRIORITY_LABELS[ticket.priority]}</dd>
         <dt>Status</dt>
-        <dd>{STATUS_LABELS[ticket.status]}</dd>
+        <dd>
+          <span data-status={ticket.status}>
+            {STATUS_LABELS[ticket.status]}
+          </span>
+        </dd>
         {ticket.resolutionNote !== null && (
           <>
             <dt>Nota de resolução</dt>

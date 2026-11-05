@@ -148,6 +148,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   ainda não provado, guardei para depois.
 - `spec: 00013`, passos 1 a 3: sob as minhas decisões e correções, a IA implementou a saúde, o log e o healthcheck do
   compose, com sondas e testes.
+- `spec: none (tweak)`: a IA reescreveu o CSS do front com variáveis de cor, espaço e tamanho num só lugar, deu à tabela
+  e ao painel o mesmo desenho de cartão, acrescentou o `data-status` que colore o status e trocou os dois `select` de
+  filtro por grupos de botões dentro do cartão da tabela, a partir do que pedi.
 
 ## O que validei
 
@@ -361,6 +364,12 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   recusa. Uma sonda de 33 casos nasceu vermelha (emoji composto, marca combinante de vários idiomas, apóstrofo curvo e
   ponto no nome) e ficou verde; um caso da própria sonda estava errado (cento e vinte famílias de cinco pontos de código
   não cabem em 120) e foi corrigido na sonda, não no código.
+- `spec: none (tweak)`: a tela nova foi conferida no Chromium contra a API real, com 26 tickets: "Carregar mais" dentro
+  do cartão da tabela, cada filtro, a combinação de filtros e o estado vazio, cliques rápidos nos filtros (fica o
+  último), o hover do botão marcado, o ciclo de criar, iniciar, resolver e reabrir, a nota de resolução obrigatória, o
+  conflito 409 e a API parada com "Tentar de novo". A página não ganha rolagem horizontal em 1280, 1024, 820, 600 e 375
+  pixels, os campos, os selects e o botão do formulário têm 36 pixels de altura, e não houve exceção no console nem
+  resposta 5xx.
 
 ## Um erro da IA
 
@@ -473,6 +482,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00013`, passo 2: o serializador de erro padrão do logger gravava o `detail` do Postgres, que traz a linha que
   violou uma restrição, com o texto do ticket. Surgiu quando pedi a comparação com um logger profissional, e a IA o
   trocou por um de lista fechada, com um teste que quebra uma restrição de propósito.
+- `spec: none (tweak)`: o primeiro CSS da IA deixava a página mais larga que a janela (847 pixels de largura a 600),
+  porque a grade da tela não limitava a coluna ao espaço disponível, e deixava estreito o campo da nota de resolução do
+  painel. Apareceram ao medir a página no Chromium, e a IA corrigiu os dois antes do commit.
 
 ## Uma decisão minha
 
@@ -635,6 +647,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00013`, passo 3: apontei a porta repetida no comando do healthcheck, que passou a ler o `API_PORT`, e a ordem
   que os prazos têm de guardar, que virou um teste; mandei padronizá-los em múltiplos de cinco segundos e renomear o
   `withDeadline`, que a convenção de verbo não admitia.
+- `spec: none (tweak)`: recusei o primeiro resultado do CSS por parecer cru e mandei um layout mais compacto e coeso,
+  com tabela, painel e formulários do mesmo desenho e os filtros como botões integrados à tabela; escolhi o CSS sem
+  dependência, sem biblioteca, entre as três opções que a IA apresentou.
 
 ## Onde a IA não entrou
 

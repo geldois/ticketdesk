@@ -18,56 +18,73 @@ interface TicketFiltersProps {
   readonly onChange: (values: TicketFilterValues) => void;
 }
 
+interface FilterGroupProps<Option extends string> {
+  readonly label: string;
+  readonly options: readonly Option[];
+  readonly labels: Readonly<Record<Option, string>>;
+  readonly value: Option | null;
+  readonly onChange: (value: Option | null) => void;
+}
+
+function FilterGroup<Option extends string>({
+  label,
+  options,
+  labels,
+  value,
+  onChange,
+}: FilterGroupProps<Option>): ReactElement {
+  return (
+    <div role="group" aria-label={label} className="filter-group">
+      <span aria-hidden="true">{label}</span>
+      <button
+        type="button"
+        aria-pressed={value === null}
+        onClick={() => {
+          onChange(null);
+        }}
+      >
+        Todos
+      </button>
+      {options.map((option) => (
+        <button
+          key={option}
+          type="button"
+          aria-pressed={value === option}
+          onClick={() => {
+            onChange(option);
+          }}
+        >
+          {labels[option]}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function TicketFilters({
   values,
   onChange,
 }: TicketFiltersProps): ReactElement {
   return (
     <div className="filters">
-      <label className="field">
-        <span>Status</span>
-        <select
-          value={values.status ?? ""}
-          onChange={(event) => {
-            onChange({
-              ...values,
-              status:
-                TICKET_STATUSES.find(
-                  (status) => status === event.target.value,
-                ) ?? null,
-            });
-          }}
-        >
-          <option value="">Todos</option>
-          {TICKET_STATUSES.map((status) => (
-            <option key={status} value={status}>
-              {STATUS_LABELS[status]}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="field">
-        <span>Canal</span>
-        <select
-          value={values.channel ?? ""}
-          onChange={(event) => {
-            onChange({
-              ...values,
-              channel:
-                TICKET_CHANNELS.find(
-                  (channel) => channel === event.target.value,
-                ) ?? null,
-            });
-          }}
-        >
-          <option value="">Todos</option>
-          {TICKET_CHANNELS.map((channel) => (
-            <option key={channel} value={channel}>
-              {CHANNEL_LABELS[channel]}
-            </option>
-          ))}
-        </select>
-      </label>
+      <FilterGroup
+        label="Status"
+        options={TICKET_STATUSES}
+        labels={STATUS_LABELS}
+        value={values.status}
+        onChange={(status) => {
+          onChange({ ...values, status });
+        }}
+      />
+      <FilterGroup
+        label="Canal"
+        options={TICKET_CHANNELS}
+        labels={CHANNEL_LABELS}
+        value={values.channel}
+        onChange={(channel) => {
+          onChange({ ...values, channel });
+        }}
+      />
     </div>
   );
 }
