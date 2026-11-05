@@ -69,10 +69,10 @@ regra de autoria (a intenção do autor) e nunca relata o que a IA fez. Seções
 | Seção | Papel |
 | --- | --- |
 | Título e resumo | O que o sistema é |
+| Visão geral da arquitetura | Prosa curta, um Mermaid enxuto, as camadas e as rotas em tabelas, e as propriedades que seguram o sistema |
+| Como rodar | Só comandos que existem e que uma pessoa digita (o back, o front e os testes), e o apontamento para os workflows |
 | Como este projeto é desenvolvido | O método (SDD e TDD), a regra de autoria (o que se escreve à mão, o que é semimanual e o que se delega) e a linguagem ubíqua, em voz impessoal, com apontamento para `docs/specs/`, `CLAUDE.md` e `IA.md`; o relato do que a IA fez fica no `IA.md` |
-| Como rodar | Só comandos que existem e que uma pessoa digita, e o apontamento para os workflows |
-| Visão geral da arquitetura | Prosa curta e, se preciso, um Mermaid enxuto |
-| Premissas | Cada uma como "assumi X porque Y" |
+| Premissas | Uma tabela: "assumi X", o porquê e o que muda se for outra |
 | O que faria com mais tempo | Evolução e o que ficou de fora |
 | Registro de decisões | Último; só decisões de alto ROI, da mais antiga para a mais recente |
 

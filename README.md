@@ -10,36 +10,49 @@ Sistema de tickets de atendimento full-stack em TypeScript, Node e PostgreSQL: u
 clientes, acompanha o andamento até a resolução, consulta o histórico de cada mudança e nunca sobrescreve, sem aviso, a
 alteração de outra operadora.
 
-## Como este projeto é desenvolvido
+## Visão geral da arquitetura
 
-O ticketdesk é um projeto montado para tirar o máximo de produtividade da IA sem abrir mão do rigor, e para isso segue
-dois métodos: SDD (desenvolvimento orientado por especificação) e TDD (desenvolvimento orientado por testes).
+A API é hexagonal: o domínio não importa nada de fora, os casos de uso falam com o banco por uma porta, e só a
+infraestrutura conhece o PostgreSQL. As quatro camadas moram em `apps/api/src/`, e o ESLint reprova um import do domínio
+para fora dele. O front é um pacote à parte, `apps/web`, e os dois lados leem o mesmo contrato, em `packages/contract`.
 
-No SDD, a spec vem antes do código: cada fatia nasce como uma spec congelada em [docs/specs/](docs/specs/), com cada
-trade-off decidido em entrevista, e cada passo dela vira um ou mais commits que citam a spec. No TDD, cada passo começa
-por uma sonda: um script, fora do repositório, que exercita o passo pela interface pública. Ela nasce vermelha e fica
-verde quando o código está pronto, e cada caso de borda descoberto pelo caminho entra nela e vira teste. Esses testes
-sobem no mesmo commit da mudança que provam, salvo na tela do front, que não tem teste automatizado e se prova pela
-sonda e por uma conferência guiada; o cliente HTTP dela é testado contra a API real. As regras de trabalho estão em
-[CLAUDE.md](CLAUDE.md).
+```mermaid
+flowchart LR
+    Web("Front React<br/>apps/web") -->|"HTTP, mesma origem"| Interface("Interface HTTP<br/>rotas, Zod, problem+json")
+    Contract("Contrato<br/>esquemas Zod") -.-> Web
+    Contract -.-> Interface
+    Interface --> Application("Casos de uso<br/>e porta TicketRepository")
+    Application --> Domain("Domínio<br/>ciclo de vida e invariantes")
+    Infra("Infraestrutura<br/>PgTicketRepository") -.->|"implementa a porta"| Application
+    Infra --> Db[("PostgreSQL<br/>migrations e gatilhos")]
+```
 
-A IA pesquisa, aponta alternativas, revisa e escreve o que lhe cabe, e as decisões de domínio ficam com o autor. A
-autoria segue o quanto a peça exige de raciocínio sobre estado e falha: quanto mais exige, mais perto da mão do autor.
-
-| À mão | Semimanual | Delegado à IA, revisado |
+| Camada | O que decide | Onde |
 | --- | --- | --- |
-| As regras do domínio | O tratamento de erros | Ferramentas e CI |
-| O SQL do esquema (migrations, constraints e gatilhos) e das consultas | Os casos de uso | As rotas |
-| A concorrência: o `UPDATE` condicional e a unidade de trabalho | O front-end | O corpo dos testes (a montagem) e a documentação |
-| | A estrutura dos testes (o que se afirma) | |
+| Domínio | As transições permitidas, a nota e o motivo que cada destino exige, a normalização e os limites do texto | `domain/` |
+| Aplicação | Orquestra uma operação e decide o 404 e o conflito; define a porta do repositório | `application/` |
+| Infraestrutura | A transação que grava ticket e histórico, o `UPDATE` condicional à `version` e as migrations | `infrastructure/` |
+| Interface | Rotas, validação da forma, `If-Match`/`ETag`, `Link` da paginação e o erro em `application/problem+json` | `interface/` |
 
-No semimanual, o autor decide o desenho e escreve o núcleo da peça, a IA escreve o mecânico, e o autor revisa cada
-parte.
+Três propriedades seguram o sistema, e o [Registro de decisões](#registro-de-decisões) traz o porquê de cada uma:
 
-A linguagem é ubíqua e rigorosa: cada conceito tem um nome só, na spec, no código, nos testes e nos documentos, e um
-nome que sugere outro significado do que o valor guarda é tratado como defeito.
+- **Uma corrida tem um só vencedor.** A transição é um `UPDATE` condicional à `version` que a operadora leu. Quem perde
+  recebe `409 version_conflict` com o ticket atual, e a tela avisa e mostra o estado novo.
+- **A regra mora num lugar só.** A tela não guarda máquina de estados: cada ticket diz para onde pode ir e que texto a
+  transição exige (`nextTransitions`), lido das mesmas tabelas do domínio que validam a escrita.
+- **O histórico não se altera.** Gatilhos do banco recusam `UPDATE`, `DELETE` e `TRUNCATE` em `ticket_history_entry`.
 
-A prova de cada passo e o que a IA de fato fez em cada spec estão em [IA.md](IA.md).
+| Rota | O que faz |
+| --- | --- |
+| `POST /tickets` | Cria o ticket, sempre `open`, e devolve `201` |
+| `GET /tickets` | Lista com filtro por `status` e `channel`, paginada por cursor: a próxima página vem no `Link` |
+| `GET /tickets/:id` | Devolve o ticket e o `ETag` com a `version` |
+| `POST /tickets/:id/transitions` | Transita, com `If-Match`; `resolved` exige `note` e a reabertura exige `reason` |
+| `GET /tickets/:id/history` | Devolve as mudanças de status, na ordem em que foram gravadas |
+
+Toda falha sai como `application/problem+json` com um `code` estável (`invalid_transition`, `missing_resolution_note`,
+`version_conflict`, `invalid_cursor` e os demais): `400` para a requisição malformada, `404`, `409` para o conflito,
+`422` para a regra de negócio que o domínio recusa e `428` para a transição sem `If-Match`.
 
 ## Como rodar
 
@@ -93,6 +106,17 @@ Instale as dependências, uma vez, e confira o repositório, o que não precisa 
 npm ci
 npm run check
 ```
+
+Para rodar só os testes:
+
+```sh
+npx vitest run
+```
+
+As regras do domínio, as transições inválidas incluídas, são testadas em `apps/api/src/domain/`; o conflito de
+concorrência, nas duas requisições disparadas juntas de `apps/api/src/interface/http/server.test.ts` e na corrida entre
+duas gravações de `apps/api/src/infrastructure/repositories/pg-ticket-repository.test.ts`; e o cliente da tela, contra a
+API real, em `apps/api/test/web-client.test.ts`.
 
 Para rodar a API no host, com o banco em contêiner, um comando por vez, depois do `npm ci`:
 
@@ -160,16 +184,60 @@ sem banco; o editor as lê pelo servidor de linguagem do mesmo pacote (`npx post
 completar tabelas e colunas, o servidor precisa das variáveis `PG*` do `.env` no ambiente do editor, que ele lê sozinho,
 e do serviço `db` no ar; o banco começa sem tabelas, e só o que as migrations aplicadas criaram completa.
 
-## Visão geral da arquitetura
+## Como este projeto é desenvolvido
 
-Ainda sem conteúdo.
+O ticketdesk é um projeto montado para tirar o máximo de produtividade da IA sem abrir mão do rigor, e para isso segue
+dois métodos: SDD (desenvolvimento orientado por especificação) e TDD (desenvolvimento orientado por testes).
+
+No SDD, a spec vem antes do código: cada fatia nasce como uma spec congelada em [docs/specs/](docs/specs/), com cada
+trade-off decidido em entrevista, e cada passo dela vira um ou mais commits que citam a spec. No TDD, cada passo começa
+por uma sonda: um script, fora do repositório, que exercita o passo pela interface pública. Ela nasce vermelha e fica
+verde quando o código está pronto, e cada caso de borda descoberto pelo caminho entra nela e vira teste. Esses testes
+sobem no mesmo commit da mudança que provam, salvo na tela do front, que não tem teste automatizado e se prova pela
+sonda e por uma conferência guiada; o cliente HTTP dela é testado contra a API real. As regras de trabalho estão em
+[CLAUDE.md](CLAUDE.md).
+
+A IA pesquisa, aponta alternativas, revisa e escreve o que lhe cabe, e as decisões de domínio ficam com o autor. A
+autoria segue o quanto a peça exige de raciocínio sobre estado e falha: quanto mais exige, mais perto da mão do autor.
+
+| À mão | Semimanual | Delegado à IA, revisado |
+| --- | --- | --- |
+| As regras do domínio | O tratamento de erros | Ferramentas e CI |
+| O SQL do esquema (migrations, constraints e gatilhos) e das consultas | Os casos de uso | As rotas |
+| A concorrência: o `UPDATE` condicional e a unidade de trabalho | O front-end | O corpo dos testes (a montagem) e a documentação |
+| | A estrutura dos testes (o que se afirma) | |
+
+No semimanual, o autor decide o desenho e escreve o núcleo da peça, a IA escreve o mecânico, e o autor revisa cada
+parte.
+
+A linguagem é ubíqua e rigorosa: cada conceito tem um nome só, na spec, no código, nos testes e nos documentos, e um
+nome que sugere outro significado do que o valor guarda é tratado como defeito.
+
+A prova de cada passo e o que a IA de fato fez em cada spec estão em [IA.md](IA.md).
 
 ## Premissas
 
-Ainda sem conteúdo.
+Onde a user story deixa uma lacuna, assumi uma resposta e a registro aqui. Cada uma vale até alguém dizer outra coisa, e
+cada linha diz o que mudaria.
+
+| Assumi que | Porque | Se for outra, muda |
+| --- | --- | --- |
+| Reabrir um ticket resolvido o devolve a `open` sem a nota de resolução, que fica só no histórico; o motivo da reabertura é obrigatório e também vai ao histórico | A nota descreve uma resolução que deixou de valer, e o histórico, que ninguém altera, já a guarda | A nota vira campo do ticket que sobrevive à reabertura: muda o esquema e um teste do domínio |
+| Não há operadora identificada: sem login, e o histórico não diz quem fez cada mudança | A user story não pede autenticação, e o conflito só precisa dizer que "outra pessoa" alterou | Entra uma coluna de autora no histórico e um cabeçalho de identificação na API, e a mensagem de conflito pode nomear quem alterou |
+| "Ao mesmo tempo" são duas escritas sobre a mesma versão do ticket que cada operadora leu; a primeira vence e a segunda recebe `409`, mesmo que a sua transição fosse válida | É a única definição que a API consegue observar, sem relógio compartilhado entre as operadoras | Outra definição de "ao mesmo tempo" pede outro mecanismo, como bloqueio da linha |
+| A transição só aceita o texto do seu destino: `resolved` exige a nota, a reabertura exige o motivo, e `in_progress` não aceita nenhum; texto a mais é recusado, nunca ignorado | Um dado enviado que some sem aviso é pior que um erro, e a validação fica previsível | Ignorar o texto a mais afrouxa o contrato sem custo para quem já envia certo |
+| Os códigos da API estão em inglês (`open`, `in_progress`, `resolved`; `email`, `chat`, `phone`; `low`, `medium`, `high`), e o português só aparece nos rótulos da tela | O código e o contrato têm um vocabulário só, e a tradução é problema de quem exibe | Um cliente em outro idioma traduz os rótulos, sem tocar na API |
+| Cada texto (nome, descrição, nota e motivo) tem um tamanho mínimo e máximo, contado em pontos de código, e cabe em uma linha só | O enunciado pede os campos sem limite, e um limite explícito evita texto sem fim; o banco e o domínio concordam | Outro limite é um número em um lugar do domínio e uma migration |
+| A lista ordena do ticket mais novo ao mais antigo, com um tamanho de página padrão e um máximo | A user story pede paginação sem dizer o tamanho; quem atende olha primeiro o que chegou agora | Outra ordem muda o índice e o cursor |
 
 ## O que faria com mais tempo
 
+- A API não tem login nem operadora identificada (ver as premissas): com identidade, o histórico diria quem mudou cada
+  ticket e o conflito poderia nomear quem chegou primeiro.
+- A API não tem limite de taxa nem cabeçalhos de segurança, e confia em quem a alcança; numa rede aberta, entrariam à
+  frente dela, junto com o limite de tamanho do corpo.
+- Duas instâncias da API sobre o mesmo banco dependem só do `UPDATE` condicional para decidir a corrida; eu provaria
+  isso com um teste que sobe duas instâncias de verdade.
 - A listagem só avança, pelo `rel="next"` do cabeçalho `Link`. Voltar uma página ou ir à última exigiria os `rel="prev"`
   e `rel="last"`: o `prev` pede um cursor no sentido oposto (a posição do primeiro ticket, com a comparação e a ordem
   invertidas), e o `last` pede saber onde a lista acaba. Hoje quem volta é o cliente, que guarda as URLs das páginas que

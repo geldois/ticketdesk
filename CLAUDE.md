@@ -18,7 +18,7 @@ aponta para ele.
 | As regras de processo: dependências e gatilhos de commit e de documentação | `CLAUDE.md` | a skill `docs`, `README.md` |
 | Como um teste é escrito | `CLAUDE.md` | a skill `docs` |
 | Como cada documento é escrito | a skill `docs` | `CLAUDE.md` |
-| O que o sistema faz hoje | o código | qualquer documento |
+| O que o sistema faz hoje | o código | qualquer documento, salvo o resumo da visão geral do `README.md` |
 
 ## Documentação
 
