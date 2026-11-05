@@ -418,6 +418,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   transição, conflito em duas abas, filtros, paginação, texto com HTML e a API parada; leu também os logs, que não
   tiveram nenhum `5xx`. Os defeitos de tela que achou entraram em "Problemas em aberto". O `docs-auditor` achou nove
   pontos de gravidade média, e todos foram corrigidos antes do commit.
+- `spec: none (tweak)`: pedi um avaliador de IA sem nenhum contexto sobre mim ou sobre o projeto, só com o enunciado e o
+  repositório, que rodou `npm ci`, `npm run check` e `npm test` num clone, subiu o sistema e disparou rodadas de
+  requisições paralelas. Ele confirmou a concorrência, apontou contradições de autoria e de redação, e o que coube em
+  documentação foi corrigido antes do envio.
 
 ## Um erro da IA
 
@@ -543,6 +547,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: none (tweak)`: no README que a IA reescreveu, ela atribuiu ao autor o teste com defeito de propósito, que este
   diário atribui à IA, e escreveu que a API não tem limite de tamanho do corpo, quando tem (o `413`). O `docs-auditor`
   apontou os dois, e a IA corrigiu.
+- `spec: none (tweak)`: o README da IA ainda dizia que a API responde `415` para um tipo de conteúdo que não lê, mas um
+  `text/plain` recebe `400`, e o parágrafo sobre os opcionais dizia ao mesmo tempo "não entreguei nenhum" e "entreguei
+  os dois". Um avaliador de IA sem nenhum contexto do projeto achou os dois ao rodar o sistema e ler o texto, e a IA os
+  corrigiu.
 
 ## Uma decisão minha
 

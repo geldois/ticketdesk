@@ -72,8 +72,8 @@ Três propriedades seguram o sistema, e o [Registro de decisões](#registro-de-d
 
 Toda falha sai como `application/problem+json` com um `code` estável (`invalid_transition`, `missing_resolution_note`,
 `version_conflict`, `invalid_cursor` e os demais): `400` para a requisição malformada, `404`, `409` para o conflito,
-`413` para o corpo grande demais, `415` para o tipo de conteúdo que a API não lê, `422` para a regra de negócio que o
-domínio recusa, `428` para a transição sem `If-Match` e `503` para a prontidão sem banco.
+`413` para o corpo grande demais, `422` para a regra de negócio que o domínio recusa, `428` para a transição sem
+`If-Match` e `503` para a prontidão sem banco.
 
 ## Como rodar
 
@@ -236,15 +236,16 @@ autoria segue o quanto a peça exige de raciocínio sobre estado e falha: quanto
 
 | À mão | Semimanual | Delegado à IA, revisado |
 | --- | --- | --- |
-| As regras do domínio: os tipos, a normalização do texto, a máquina de transições e a ordem das checagens | As classes de erro, do domínio e da aplicação | Ferramentas e CI |
+| As regras do domínio: os tipos, as etapas de normalização do texto, a máquina de transições e a ordem das checagens | As classes de erro, do domínio e da aplicação | Ferramentas e CI |
 | O esquema do banco: as tabelas, os `CHECK`, as chaves e os gatilhos que tornam o histórico imutável | Os casos de uso | As rotas e o mapeador de erros HTTP |
 | A concorrência: o `UPDATE` condicional e a unidade de trabalho | A estrutura dos testes (o que se afirma) | O corpo dos testes (a montagem) e a documentação |
-| O contrato do repositório, as consultas e a raiz de composição | O front-end, orquestrado pelo autor: ele disse onde cada peça fica e como o código se organiza, e a IA o escreveu | |
+| O contrato do repositório e as consultas | O front-end, orquestrado pelo autor: ele disse onde cada peça fica e como o código se organiza, e a IA o escreveu | |
+| | A raiz de composição: o `main.ts` e o `buildContainer` | |
 | O índice da listagem, o contrato e o caso de uso da prontidão e a estrutura do teste de conflito | | |
 
 No semimanual, o autor decide o desenho e escreve o núcleo da peça, a IA escreve o mecânico, e o autor revisa cada
-parte. No front-end o autor foi o orquestrador: decidiu onde cada coisa mora e como o código se organiza, e revisou o
-que a IA escreveu.
+parte. A regra única de caracteres que o texto recusa foi decisão do autor, e a IA a escreveu. No front-end o autor foi
+o orquestrador: decidiu onde cada coisa mora e como o código se organiza, e revisou o que a IA escreveu.
 
 A linguagem é ubíqua e rigorosa: cada conceito tem um nome só, na spec, no código, nos testes e nos documentos, e um
 nome que sugere outro significado do que o valor guarda é tratado como defeito.
@@ -263,7 +264,7 @@ cada linha diz o que mudaria.
 | "Ao mesmo tempo" são duas escritas sobre a mesma versão do ticket que cada operadora leu; a primeira vence e a segunda recebe `409`, mesmo que a sua transição fosse válida | É a única definição que a API consegue observar, sem relógio compartilhado entre as operadoras | Outra definição de "ao mesmo tempo" pede outro mecanismo, como bloqueio da linha |
 | A transição só aceita o texto do seu destino: `resolved` exige a nota, a reabertura exige o motivo, e `in_progress` não aceita nenhum; texto a mais é recusado, nunca ignorado | Um dado enviado que some sem aviso é pior que um erro, e a validação fica previsível | Ignorar o texto a mais afrouxa o contrato sem custo para quem já envia certo |
 | Os códigos da API estão em inglês (`open`, `in_progress`, `resolved`; `email`, `chat`, `phone`; `low`, `medium`, `high`), e o português só aparece nos rótulos da tela | O código e o contrato têm um vocabulário só, e a tradução é problema de quem exibe | Um cliente em outro idioma traduz os rótulos, sem tocar na API |
-| Cada texto (nome, descrição, nota e motivo) tem um tamanho mínimo e máximo, contado em pontos de código, e cabe em uma linha só | O enunciado pede os campos sem limite, e um limite explícito evita texto sem fim; o banco e o domínio concordam | Outro limite é um número em um lugar do domínio e uma migration |
+| Cada texto (nome, descrição, nota e motivo) tem um tamanho mínimo e máximo, contado em pontos de código, e cabe em uma linha só: a normalização troca quebras de linha e espaços repetidos por um espaço, em vez de recusar | O enunciado pede os campos sem limite, e um limite explícito evita texto sem fim; o banco e o domínio concordam | Outro limite é um número em um lugar do domínio e uma migration |
 | A lista ordena do ticket mais novo ao mais antigo, com um tamanho de página padrão e um máximo | A user story pede paginação sem dizer o tamanho; quem atende olha primeiro o que chegou agora | Outra ordem muda o índice e o cursor |
 
 ## Filosofia de engenharia
@@ -288,10 +289,11 @@ teste que o sustenta.
 Sobre os cinco opcionais que o enunciado lista (documentação da API, atualização em tempo real, idempotência na criação,
 CI e logs com healthcheck): entendo o que cada um pede e deixei o repositório preparado para recebê-los, e optei por não
 entregá-los. A unidade de trabalho e a porta de armazenamento dão a mesma transação a uma chave de idempotência ou a uma
-notificação de tempo real, e o contrato compartilhado, com os `code` estáveis, é a base de uma documentação OpenAPI. Não
-entreguei nenhum porque um opcional sem o rigor do essencial seria dívida, e uma idempotência feita pela metade é pior
-que nenhuma: promete uma garantia que não cumpre. Entreguei os dois bônus que consegui provar com o mesmo rigor, o CI e
-os logs estruturados com healthcheck. O que ficou de fora, e como eu o faria, está em
+notificação de tempo real, e o contrato compartilhado, com os `code` estáveis, é a base de uma documentação OpenAPI. Dos
+cinco, entreguei os dois que consegui provar com o mesmo rigor, o CI e os logs estruturados com healthcheck, e não
+entreguei os outros três (OpenAPI, tempo real e idempotência), porque um opcional sem o rigor do essencial seria dívida,
+e uma idempotência feita pela metade é pior que nenhuma: promete uma garantia que não cumpre. O que ficou de fora, e
+como eu o faria, está em
 [O que faria com mais tempo](#o-que-faria-com-mais-tempo).
 
 ## O que eu cortaria com um prazo mais curto
@@ -336,7 +338,8 @@ que provam essas três coisas. São o motivo de o sistema existir, e um defeito 
   não restar sobrevivente no código que importa: cada commit deixaria o repositório mais íntegro que o anterior. Hoje
   isso é feito à mão, em algumas peças, sem automação nem piso.
 - **Duas instâncias da API de verdade.** Hoje a corrida decide só pelo `UPDATE` condicional, e eu a provaria com um
-  teste que sobe duas instâncias sobre o mesmo banco.
+  teste que sobe duas instâncias sobre o mesmo banco. Com várias instâncias, o `created_at` e o instante do histórico
+  vêm do relógio de cada uma, então a ordem exata pode divergir entre elas; o desempate por `id` mantém a lista estável.
 
 ### Problemas em aberto
 
@@ -344,6 +347,9 @@ que provam essas três coisas. São o motivo de o sistema existir, e um defeito 
   conexão durante a transação, então, sob uma rajada, as requisições esperam até o prazo de conexão do pool
   (`CONNECTION_TIMEOUT_MS`, em `apps/api/src/infrastructure/pool.ts`) e depois falham. Eu configuraria o tamanho e o
   limite de espera e mediria uma rajada.
+- **O histórico sem índice por ticket.** O `GET /tickets/:id/history` filtra por `ticket_id` e ordena por `id`, e o
+  PostgreSQL não cria índice para uma chave estrangeira: com milhões de entradas, ele passaria a varrer a tabela. Falta
+  um índice em `ticket_history_entry(ticket_id, id)`, uma migration pequena que eu mediria antes.
 - **Arestas da tela**, achadas na depuração manual: o aviso de erro de uma criação ou de uma transição fica até a
   próxima ação nele; a validação dos campos acontece só no servidor, sem `maxlength` e sem o limite na mensagem; e, em
   celular, o painel abre abaixo da lista, fora da vista, e um texto muito longo sem espaços faz a tabela rolar por
