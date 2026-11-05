@@ -21,6 +21,7 @@ export interface TicketPanelController {
   readonly state: TicketPanelState | null;
   readonly select: (id: string) => void;
   readonly reload: () => void;
+  readonly replace: (ticket: TicketResponse) => void;
 }
 
 const LOAD_ERROR = "Não foi possível carregar o ticket.";
@@ -42,6 +43,31 @@ export function useTicketPanel(): TicketPanelController {
         getTicket(id),
         listTicketHistoryEntries(id),
       ]);
+
+      if (request === latestRequest.current) {
+        setState({ kind: "ready", ticket, history });
+      }
+    } catch (error) {
+      if (request === latestRequest.current) {
+        setState({
+          kind: "error",
+          message: describeError(LOAD_ERROR, error),
+        });
+      }
+    }
+  }, []);
+
+  const replace = useCallback(async (ticket: TicketResponse) => {
+    latestRequest.current += 1;
+
+    const request = latestRequest.current;
+
+    setState((current) =>
+      current.kind === "ready" ? { ...current, ticket } : current,
+    );
+
+    try {
+      const history = await listTicketHistoryEntries(ticket.id);
 
       if (request === latestRequest.current) {
         setState({ kind: "ready", ticket, history });
@@ -79,6 +105,9 @@ export function useTicketPanel(): TicketPanelController {
       if (selectedId !== null) {
         void load(selectedId);
       }
+    },
+    replace: (ticket) => {
+      void replace(ticket);
     },
   };
 }

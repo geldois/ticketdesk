@@ -1,7 +1,11 @@
-import type {
-  TicketChannel,
-  TicketPriority,
-  TicketStatus,
+import {
+  type NextTransitionResponse,
+  TICKET_CHANNEL_SCHEMA,
+  TICKET_PRIORITY_SCHEMA,
+  TICKET_STATUS_SCHEMA,
+  type TicketChannel,
+  type TicketPriority,
+  type TicketStatus,
 } from "@ticketdesk/contract";
 
 export const STATUS_LABELS: Readonly<Record<TicketStatus, string>> = {
@@ -22,17 +26,22 @@ export const CHANNEL_LABELS: Readonly<Record<TicketChannel, string>> = {
   phone: "Telefone",
 };
 
-export const TICKET_STATUSES: readonly TicketStatus[] = [
-  "open",
-  "in_progress",
-  "resolved",
-];
+export const TRANSITION_LABELS: Readonly<Record<TicketStatus, string>> = {
+  open: "Reabrir",
+  in_progress: "Iniciar atendimento",
+  resolved: "Resolver",
+};
 
-export const TICKET_CHANNELS: readonly TicketChannel[] = [
-  "chat",
-  "email",
-  "phone",
-];
+export const TEXT_LABELS: Readonly<
+  Record<NonNullable<NextTransitionResponse["requires"]>, string>
+> = {
+  resolutionNote: "Nota de resolução",
+  reopenReason: "Motivo da reabertura",
+};
+
+export const TICKET_STATUSES = TICKET_STATUS_SCHEMA.options;
+export const TICKET_CHANNELS = TICKET_CHANNEL_SCHEMA.options;
+export const TICKET_PRIORITIES = TICKET_PRIORITY_SCHEMA.options;
 
 export function formatInstant(instant: string): string {
   return new Date(instant).toLocaleString("pt-BR");

@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import { CreateTicketForm } from "./ticket/components/CreateTicketForm.tsx";
 import { TicketFilters } from "./ticket/components/TicketFilters.tsx";
 import { TicketList } from "./ticket/components/TicketList.tsx";
 import { TicketPanel } from "./ticket/components/TicketPanel.tsx";
@@ -13,6 +14,7 @@ export function App(): ReactElement {
   return (
     <main className="screen">
       <h1>ticketdesk</h1>
+      <CreateTicketForm onCreated={reload} />
       <TicketFilters values={filters} onChange={changeFilters} />
       <div className="workspace">
         <div>
@@ -56,7 +58,14 @@ export function App(): ReactElement {
         </div>
         {panel.state !== null && (
           <aside>
-            <TicketPanel state={panel.state} onRetry={panel.reload} />
+            <TicketPanel
+              state={panel.state}
+              onRetry={panel.reload}
+              onTransited={(ticket) => {
+                panel.replace(ticket);
+                reload();
+              }}
+            />
           </aside>
         )}
       </div>

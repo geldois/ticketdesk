@@ -24,7 +24,7 @@ export function TicketFilters({
 }: TicketFiltersProps): ReactElement {
   return (
     <div className="filters">
-      <label className="filter">
+      <label className="field">
         <span>Status</span>
         <select
           value={values.status ?? ""}
@@ -46,7 +46,7 @@ export function TicketFilters({
           ))}
         </select>
       </label>
-      <label className="filter">
+      <label className="field">
         <span>Canal</span>
         <select
           value={values.channel ?? ""}

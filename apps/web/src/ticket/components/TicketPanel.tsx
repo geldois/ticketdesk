@@ -1,3 +1,4 @@
+import type { TicketResponse } from "@ticketdesk/contract";
 import type { ReactElement } from "react";
 
 import type { TicketPanelState } from "../hooks/use-ticket-panel.ts";
@@ -7,16 +8,19 @@ import {
   PRIORITY_LABELS,
   STATUS_LABELS,
 } from "../labels.ts";
+import { TicketActions } from "./TicketActions.tsx";
 import { TicketHistory } from "./TicketHistory.tsx";
 
 interface TicketPanelProps {
   readonly state: TicketPanelState;
   readonly onRetry: () => void;
+  readonly onTransited: (ticket: TicketResponse) => void;
 }
 
 export function TicketPanel({
   state,
   onRetry,
+  onTransited,
 }: TicketPanelProps): ReactElement {
   if (state.kind === "loading") {
     return <p role="status">Carregando ticket…</p>;
@@ -60,6 +64,11 @@ export function TicketPanel({
         <dt>Criado em</dt>
         <dd>{formatInstant(ticket.createdAt)}</dd>
       </dl>
+      <TicketActions
+        key={`${ticket.id}-${String(ticket.version)}`}
+        ticket={ticket}
+        onTransited={onTransited}
+      />
       <TicketHistory history={history} />
     </section>
   );
