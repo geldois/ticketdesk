@@ -1,4 +1,4 @@
-import type { TicketRepository } from "../contracts/repositories/ticket-repository.ts";
+import { UseCase } from "../contracts/use-case.ts";
 import { InvalidLimitError } from "../errors.ts";
 import type {
   ListedTicket,
@@ -14,11 +14,13 @@ export interface TicketPage {
   readonly afterPosition: TicketPosition | null;
 }
 
-export class ListTicketsUseCase {
-  readonly #ticketRepository: TicketRepository;
+export class ListTicketsUseCase extends UseCase {
+  async #fetchTickets(query: ListTicketsQuery): Promise<ListedTicket[]> {
+    await using uow = await this.uowFactory();
 
-  constructor(ticketRepository: TicketRepository) {
-    this.#ticketRepository = ticketRepository;
+    const fetchedTickets = await uow.ticketRepository.listTickets(query);
+
+    return fetchedTickets;
   }
 
   async execute(query: ListTicketsQuery): Promise<TicketPage> {
@@ -39,8 +41,7 @@ export class ListTicketsUseCase {
       limit: lookaheadLimit,
     };
 
-    const fetchedTickets =
-      await this.#ticketRepository.listTickets(lookaheadQuery);
+    const fetchedTickets = await this.#fetchTickets(lookaheadQuery);
 
     if (fetchedTickets.length < lookaheadLimit) {
       const lastPage: TicketPage = {

@@ -1,17 +1,13 @@
 import type { UUID } from "node:crypto";
-import type { TicketRepository } from "../contracts/repositories/ticket-repository.ts";
 import type { StoredTicket } from "../stored-ticket.ts";
 import { TicketNotFoundError } from "../errors.ts";
+import { UseCase } from "../contracts/use-case.ts";
 
-export class GetTicketUseCase {
-  readonly #ticketRepository: TicketRepository;
-
-  constructor(ticketRepository: TicketRepository) {
-    this.#ticketRepository = ticketRepository;
-  }
-
+export class GetTicketUseCase extends UseCase {
   async execute(ticketId: UUID): Promise<StoredTicket> {
-    const storedTicket = await this.#ticketRepository.findTicketById(ticketId);
+    await using uow = await this.uowFactory();
+
+    const storedTicket = await uow.ticketRepository.findTicketById(ticketId);
 
     if (storedTicket === null) {
       throw new TicketNotFoundError();

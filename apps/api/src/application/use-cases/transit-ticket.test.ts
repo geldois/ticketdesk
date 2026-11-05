@@ -1,9 +1,10 @@
-import type { Pool } from "pg";
+import type { Pool, PoolClient } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createMigratedTestDatabase } from "../../../test/database.ts";
 import { DomainError } from "../../domain/errors.ts";
 import { createPgPool } from "../../infrastructure/pool.ts";
+import { PgUoW } from "../../infrastructure/pg-uow.ts";
 import { PgTicketRepository } from "../../infrastructure/repositories/pg-ticket-repository.ts";
 import {
   ApplicationError,
@@ -27,6 +28,7 @@ const TO_IN_PROGRESS: TransitTicketInput = {
 
 describe("TransitTicketUseCase", () => {
   let pgPool: Pool;
+  let pgClient: PoolClient;
   let repository: PgTicketRepository;
   let createTicket: CreateTicketUseCase;
   let transitTicket: TransitTicketUseCase;
@@ -34,12 +36,15 @@ describe("TransitTicketUseCase", () => {
   beforeAll(async () => {
     const databaseUrl = await createMigratedTestDatabase();
     pgPool = createPgPool(databaseUrl);
-    repository = new PgTicketRepository(pgPool);
-    createTicket = new CreateTicketUseCase(repository);
-    transitTicket = new TransitTicketUseCase(repository);
+    pgClient = await pgPool.connect();
+    repository = new PgTicketRepository(pgClient);
+    const uowFactory = (): Promise<PgUoW> => PgUoW.begin(pgPool);
+    createTicket = new CreateTicketUseCase(uowFactory);
+    transitTicket = new TransitTicketUseCase(uowFactory);
   });
 
   afterAll(async () => {
+    pgClient.release();
     await pgPool.end();
   });
 
@@ -220,5 +225,36 @@ describe("TransitTicketUseCase", () => {
         repository.listTicketHistoryEntries(created.ref.id),
       ).resolves.toHaveLength(2);
     }
+  });
+
+  it("gives every connection back to the pool and leaves no transaction open after a conflict, a refusal and a ticket that does not exist", async () => {
+    const created = await createOpenTicket();
+    const busyBefore = pgPool.totalCount - pgPool.idleCount;
+
+    await failureOf(
+      transitTicket.execute(created.ref.id, 9, TO_IN_PROGRESS, LATER_INSTANT),
+    );
+    await failureOf(
+      transitTicket.execute(
+        created.ref.id,
+        1,
+        { to: "resolved", resolutionNote: null, reopenReason: null },
+        LATER_INSTANT,
+      ),
+    );
+    await failureOf(
+      transitTicket.execute(
+        UNKNOWN_TICKET_ID,
+        1,
+        TO_IN_PROGRESS,
+        LATER_INSTANT,
+      ),
+    );
+
+    const openTransactions = await pgClient.query(
+      "SELECT pid FROM pg_stat_activity WHERE datname = current_database() AND state = 'idle in transaction'",
+    );
+    expect(openTransactions.rows).toEqual([]);
+    expect(pgPool.totalCount - pgPool.idleCount).toBe(busyBefore);
   });
 });

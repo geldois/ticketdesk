@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createMigratedTestDatabase } from "../../../test/database.ts";
 import { DomainError } from "../../domain/errors.ts";
 import { createPgPool } from "../../infrastructure/pool.ts";
-import { PgTicketRepository } from "../../infrastructure/repositories/pg-ticket-repository.ts";
+import { PgUoW } from "../../infrastructure/pg-uow.ts";
 import { ApplicationError, TicketNotFoundError } from "../errors.ts";
 import { CreateTicketUseCase } from "./create-ticket.ts";
 import { GetTicketUseCase } from "./get-ticket.ts";
@@ -20,9 +20,9 @@ describe("GetTicketUseCase", () => {
   beforeAll(async () => {
     const databaseUrl = await createMigratedTestDatabase();
     pgPool = createPgPool(databaseUrl);
-    const repository = new PgTicketRepository(pgPool);
-    createTicket = new CreateTicketUseCase(repository);
-    getTicket = new GetTicketUseCase(repository);
+    const uowFactory = (): Promise<PgUoW> => PgUoW.begin(pgPool);
+    createTicket = new CreateTicketUseCase(uowFactory);
+    getTicket = new GetTicketUseCase(uowFactory);
   });
 
   afterAll(async () => {

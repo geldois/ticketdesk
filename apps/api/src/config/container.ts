@@ -1,5 +1,4 @@
 import type { Pool } from "pg";
-import type { TicketRepository } from "../application/contracts/repositories/ticket-repository.ts";
 import { CheckReadinessUseCase } from "../application/use-cases/check-readiness.ts";
 import { CreateTicketUseCase } from "../application/use-cases/create-ticket.ts";
 import { GetTicketUseCase } from "../application/use-cases/get-ticket.ts";
@@ -7,16 +6,14 @@ import { ListTicketHistoryEntriesUseCase } from "../application/use-cases/list-t
 import { ListTicketsUseCase } from "../application/use-cases/list-tickets.ts";
 import { TransitTicketUseCase } from "../application/use-cases/transit-ticket.ts";
 import { PgReadinessProbe } from "../infrastructure/probes/pg-readiness-probe.ts";
-import { PgTicketRepository } from "../infrastructure/repositories/pg-ticket-repository.ts";
+import type { UoW } from "../application/contracts/uow.ts";
+import { PgUoW } from "../infrastructure/pg-uow.ts";
 
 export interface Container {
   readonly now: () => Date;
-  readonly repositories: Repositories;
+  readonly pgPool: Pool;
+  readonly uowFactory: () => Promise<UoW>;
   readonly useCases: UseCases;
-}
-
-export interface Repositories {
-  readonly ticketRepository: TicketRepository;
 }
 
 export interface UseCases {
@@ -35,22 +32,18 @@ export function buildContainer({
   now: () => Date;
   pgPool: Pool;
 }): Container {
-  const pgTicketRepository = new PgTicketRepository(pgPool);
-
-  const repositories: Repositories = {
-    ticketRepository: pgTicketRepository,
-  };
+  const uowFactory = async (): Promise<PgUoW> => await PgUoW.begin(pgPool);
 
   const checkReadinessUseCase = new CheckReadinessUseCase(
     new PgReadinessProbe(pgPool),
   );
-  const createTicketUseCase = new CreateTicketUseCase(pgTicketRepository);
-  const getTicketUseCase = new GetTicketUseCase(pgTicketRepository);
+  const createTicketUseCase = new CreateTicketUseCase(uowFactory);
+  const getTicketUseCase = new GetTicketUseCase(uowFactory);
   const listTicketHistoryEntriesUseCase = new ListTicketHistoryEntriesUseCase(
-    pgTicketRepository,
+    uowFactory,
   );
-  const listTicketsUseCase = new ListTicketsUseCase(pgTicketRepository);
-  const transitTicketUseCase = new TransitTicketUseCase(pgTicketRepository);
+  const listTicketsUseCase = new ListTicketsUseCase(uowFactory);
+  const transitTicketUseCase = new TransitTicketUseCase(uowFactory);
 
   const useCases: UseCases = {
     checkReadinessUseCase,
@@ -61,9 +54,12 @@ export function buildContainer({
     transitTicketUseCase,
   };
 
-  return {
+  const container: Container = {
     now,
-    repositories,
+    pgPool,
+    uowFactory,
     useCases,
   };
+
+  return container;
 }

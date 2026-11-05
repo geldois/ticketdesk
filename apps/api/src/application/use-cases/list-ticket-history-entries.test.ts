@@ -6,7 +6,7 @@ import {
   queryRows,
 } from "../../../test/database.ts";
 import { createPgPool } from "../../infrastructure/pool.ts";
-import { PgTicketRepository } from "../../infrastructure/repositories/pg-ticket-repository.ts";
+import { PgUoW } from "../../infrastructure/pg-uow.ts";
 import { TicketNotFoundError } from "../errors.ts";
 import type { CreateTicketInput } from "./create-ticket.ts";
 import { CreateTicketUseCase } from "./create-ticket.ts";
@@ -32,9 +32,9 @@ describe("ListTicketHistoryEntriesUseCase", () => {
   beforeAll(async () => {
     databaseUrl = await createMigratedTestDatabase();
     pgPool = createPgPool(databaseUrl);
-    const repository = new PgTicketRepository(pgPool);
-    createTicket = new CreateTicketUseCase(repository);
-    listTicketHistoryEntries = new ListTicketHistoryEntriesUseCase(repository);
+    const uowFactory = (): Promise<PgUoW> => PgUoW.begin(pgPool);
+    createTicket = new CreateTicketUseCase(uowFactory);
+    listTicketHistoryEntries = new ListTicketHistoryEntriesUseCase(uowFactory);
   });
 
   afterAll(async () => {

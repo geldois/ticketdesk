@@ -15,7 +15,7 @@ import type {
   TicketPriority,
   TicketStatus,
 } from "../../domain/ticket.ts";
-import type { Pool, PoolClient } from "pg";
+import type { PoolClient } from "pg";
 
 interface InsertedTicketRow {
   id: UUID;
@@ -51,14 +51,14 @@ interface UpdatedTicketRow {
 }
 
 export class PgTicketRepository implements TicketRepository {
-  readonly #pgPool: Pool;
+  readonly #client: PoolClient;
 
-  constructor(pgPool: Pool) {
-    this.#pgPool = pgPool;
+  constructor(client: PoolClient) {
+    this.#client = client;
   }
 
   async findTicketById(ticketId: UUID): Promise<StoredTicket | null> {
-    const result = await this.#pgPool.query<TicketRow>(
+    const result = await this.#client.query<TicketRow>(
       `SELECT id, customer_name, description, channel, priority, status, resolution_note, version, created_at FROM ticket WHERE id = $1`,
       [ticketId],
     );
@@ -89,56 +89,42 @@ export class PgTicketRepository implements TicketRepository {
   async insertTicketChange(
     ticketChange: TicketChange,
   ): Promise<StoredTicketRef> {
-    const client = await this.#pgPool.connect();
+    const ticket = ticketChange.ticket;
+    const ticketHistoryEntry = ticketChange.ticketHistoryEntry;
 
-    try {
-      await client.query(`BEGIN`);
+    const result = await this.#client.query<InsertedTicketRow>(
+      `INSERT INTO ticket (customer_name, description, channel, priority, status, resolution_note, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, version`,
+      [
+        ticket.customerName,
+        ticket.description,
+        ticket.channel,
+        ticket.priority,
+        ticket.status,
+        ticket.resolutionNote,
+        ticket.createdAt,
+      ],
+    );
+    const row = result.rows[0];
 
-      const ticket = ticketChange.ticket;
-      const ticketHistoryEntry = ticketChange.ticketHistoryEntry;
-
-      const result = await client.query<InsertedTicketRow>(
-        `INSERT INTO ticket (customer_name, description, channel, priority, status, resolution_note, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, version`,
-        [
-          ticket.customerName,
-          ticket.description,
-          ticket.channel,
-          ticket.priority,
-          ticket.status,
-          ticket.resolutionNote,
-          ticket.createdAt,
-        ],
-      );
-      const row = result.rows[0];
-
-      if (row === undefined) {
-        throw new Error("ticket insert returned no row");
-      }
-
-      const ticketId = row.id;
-      const ticketVersion = row.version;
-
-      await this.#insertTicketHistoryEntry(
-        client,
-        ticketId,
-        ticketHistoryEntry,
-      );
-
-      const storedTicketRef: StoredTicketRef = {
-        id: ticketId,
-        version: ticketVersion,
-      };
-
-      await client.query(`COMMIT`);
-
-      return storedTicketRef;
-    } catch (error) {
-      await client.query(`ROLLBACK`);
-
-      throw error;
-    } finally {
-      client.release();
+    if (row === undefined) {
+      throw new Error("ticket insert returned no row");
     }
+
+    const ticketId = row.id;
+    const ticketVersion = row.version;
+
+    await this.#insertTicketHistoryEntry(
+      this.#client,
+      ticketId,
+      ticketHistoryEntry,
+    );
+
+    const storedTicketRef: StoredTicketRef = {
+      id: ticketId,
+      version: ticketVersion,
+    };
+
+    return storedTicketRef;
   }
 
   async #insertTicketHistoryEntry(
@@ -166,7 +152,7 @@ export class PgTicketRepository implements TicketRepository {
   async listTicketHistoryEntries(
     ticketId: UUID,
   ): Promise<TicketHistoryEntry[]> {
-    const result = await this.#pgPool.query<TicketHistoryEntryRow>(
+    const result = await this.#client.query<TicketHistoryEntryRow>(
       `SELECT from_status, to_status, resolution_note, reopen_reason, at FROM ticket_history_entry WHERE ticket_id = $1 ORDER BY id`,
       [ticketId],
     );
@@ -211,7 +197,7 @@ export class PgTicketRepository implements TicketRepository {
     const where =
       conditions.length === 0 ? "" : ` WHERE ${conditions.join(" AND ")}`;
 
-    const result = await this.#pgPool.query<ListedTicketRow>(
+    const result = await this.#client.query<ListedTicketRow>(
       `SELECT id, customer_name, description, channel, priority, status, resolution_note, version, created_at, to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS created_at_text FROM ticket${where} ORDER BY created_at DESC, id DESC LIMIT ${placeholder()}`,
       values,
     );
@@ -260,49 +246,33 @@ export class PgTicketRepository implements TicketRepository {
     const ticket = ticketChange.ticket;
     const ticketHistoryEntry = ticketChange.ticketHistoryEntry;
 
-    const client = await this.#pgPool.connect();
-
-    try {
-      await client.query(`BEGIN`);
-
-      const result = await client.query<UpdatedTicketRow>(
-        `UPDATE ticket SET status = $1, resolution_note = $2, version = version + 1 WHERE (id = $3 AND status = $4 AND version = $5) RETURNING version`,
-        [
-          ticket.status,
-          ticket.resolutionNote,
-          ticketId,
-          ticketHistoryEntry.from,
-          expectedVersion,
-        ],
-      );
-      const row = result.rows[0];
-
-      if (row === undefined) {
-        await client.query(`ROLLBACK`);
-
-        return null;
-      }
-
-      await this.#insertTicketHistoryEntry(
-        client,
+    const result = await this.#client.query<UpdatedTicketRow>(
+      `UPDATE ticket SET status = $1, resolution_note = $2, version = version + 1 WHERE (id = $3 AND status = $4 AND version = $5) RETURNING version`,
+      [
+        ticket.status,
+        ticket.resolutionNote,
         ticketId,
-        ticketHistoryEntry,
-      );
+        ticketHistoryEntry.from,
+        expectedVersion,
+      ],
+    );
+    const row = result.rows[0];
 
-      const storedTicketRef: StoredTicketRef = {
-        id: ticketId,
-        version: row.version,
-      };
-
-      await client.query(`COMMIT`);
-
-      return storedTicketRef;
-    } catch (error) {
-      await client.query(`ROLLBACK`);
-
-      throw error;
-    } finally {
-      client.release();
+    if (row === undefined) {
+      return null;
     }
+
+    await this.#insertTicketHistoryEntry(
+      this.#client,
+      ticketId,
+      ticketHistoryEntry,
+    );
+
+    const storedTicketRef: StoredTicketRef = {
+      id: ticketId,
+      version: row.version,
+    };
+
+    return storedTicketRef;
   }
 }

@@ -1,5 +1,5 @@
 import { createTicketChange } from "../../domain/lifecycle.ts";
-import type { TicketRepository } from "../contracts/repositories/ticket-repository.ts";
+import { UseCase } from "../contracts/use-case.ts";
 import type { StoredTicket } from "../stored-ticket.ts";
 
 export interface CreateTicketInput {
@@ -9,16 +9,15 @@ export interface CreateTicketInput {
   readonly priority: string;
 }
 
-export class CreateTicketUseCase {
-  readonly #ticketRepository: TicketRepository;
-
-  constructor(ticketRepository: TicketRepository) {
-    this.#ticketRepository = ticketRepository;
-  }
-
+export class CreateTicketUseCase extends UseCase {
   async execute(input: CreateTicketInput, now: Date): Promise<StoredTicket> {
     const ticketChange = createTicketChange(input, now);
-    const ref = await this.#ticketRepository.insertTicketChange(ticketChange);
+
+    await using uow = await this.uowFactory();
+
+    const ref = await uow.ticketRepository.insertTicketChange(ticketChange);
+
+    await uow.commit();
 
     const storedTicket: StoredTicket = {
       ref: ref,

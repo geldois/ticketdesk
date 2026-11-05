@@ -6,7 +6,7 @@ import {
   queryRows,
 } from "../../../test/database.ts";
 import { createPgPool } from "../../infrastructure/pool.ts";
-import { PgTicketRepository } from "../../infrastructure/repositories/pg-ticket-repository.ts";
+import { PgUoW } from "../../infrastructure/pg-uow.ts";
 import { ApplicationError, InvalidLimitError } from "../errors.ts";
 import type { ListTicketsQuery } from "../stored-ticket.ts";
 import { ListTicketsUseCase, type TicketPage } from "./list-tickets.ts";
@@ -58,7 +58,7 @@ describe("ListTicketsUseCase", () => {
   beforeAll(async () => {
     databaseUrl = await createMigratedTestDatabase();
     pgPool = createPgPool(databaseUrl);
-    listTicketsUseCase = new ListTicketsUseCase(new PgTicketRepository(pgPool));
+    listTicketsUseCase = new ListTicketsUseCase(() => PgUoW.begin(pgPool));
   });
 
   afterAll(async () => {

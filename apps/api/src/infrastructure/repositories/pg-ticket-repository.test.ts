@@ -1,4 +1,4 @@
-import type { Pool } from "pg";
+import type { Pool, PoolClient } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import {
@@ -43,15 +43,18 @@ function newTicketChange(customerName = "Ana"): TicketChange {
 describe("PgTicketRepository", () => {
   let databaseUrl: string;
   let pgPool: Pool;
+  let pgClient: PoolClient;
   let repository: PgTicketRepository;
 
   beforeAll(async () => {
     databaseUrl = await createMigratedTestDatabase();
     pgPool = createPgPool(databaseUrl);
-    repository = new PgTicketRepository(pgPool);
+    pgClient = await pgPool.connect();
+    repository = new PgTicketRepository(pgClient);
   });
 
   afterAll(async () => {
+    pgClient.release();
     await pgPool.end();
   });
 
@@ -95,8 +98,8 @@ describe("PgTicketRepository", () => {
       ]);
     });
 
-    it("leaves no ticket behind when the entry is refused by the database", async () => {
-      const change = newTicketChange("Atomic Ana");
+    it("refuses an entry the database does not accept with the constraint violation", async () => {
+      const change = newTicketChange("Refused Insert Ana");
       const refusedChange: TicketChange = {
         ticket: change.ticket,
         ticketHistoryEntry: {
@@ -108,32 +111,6 @@ describe("PgTicketRepository", () => {
       await expect(
         repository.insertTicketChange(refusedChange),
       ).rejects.toMatchObject({ code: "23514" });
-
-      const tickets = await queryRows(
-        databaseUrl,
-        "SELECT id FROM ticket WHERE customer_name = $1",
-        ["Atomic Ana"],
-      );
-      expect(tickets).toEqual([]);
-    });
-
-    it("keeps working after a refused insert, because the connection goes back to the pool", async () => {
-      const change = newTicketChange("Recovery Ana");
-      const refusedChange: TicketChange = {
-        ticket: change.ticket,
-        ticketHistoryEntry: {
-          ...change.ticketHistoryEntry,
-          to: "in_progress",
-        },
-      };
-
-      await expect(
-        repository.insertTicketChange(refusedChange),
-      ).rejects.toMatchObject({ code: "23514" });
-
-      await expect(
-        repository.insertTicketChange(change),
-      ).resolves.toMatchObject({ version: 1 });
     });
   });
 
@@ -226,8 +203,8 @@ describe("PgTicketRepository", () => {
       expect(entries[3]?.reopenReason).toBe("Broke again");
     });
 
-    it("leaves the ticket and the history as they were when the entry is refused by the database", async () => {
-      const { change, stored } = await storeTicket("Refused Ana");
+    it("refuses an entry the database does not accept with the constraint violation", async () => {
+      const { change, stored } = await storeTicket("Refused Update Ana");
       const refusedChange: TicketChange = {
         ticket: {
           ...change.ticket,
@@ -245,12 +222,6 @@ describe("PgTicketRepository", () => {
       await expect(
         repository.updateTicketChange(stored.id, 1, refusedChange),
       ).rejects.toMatchObject({ code: "23514" });
-
-      await expect(repository.findTicketById(stored.id)).resolves.toEqual({
-        ref: stored,
-        ticket: change.ticket,
-      });
-      expect(await countEntries(stored.id)).toBe(1);
     });
 
     it("returns null and changes nothing when the expected version is not the current one", async () => {
@@ -312,73 +283,6 @@ describe("PgTicketRepository", () => {
         repository.updateTicketChange(UNKNOWN_TICKET_ID, 1, transition),
       ).resolves.toBeNull();
     });
-
-    it("leaves no transaction open on the connection it returns to the pool after a null", async () => {
-      const { change, stored } = await storeTicket("Open Transaction Ana");
-      const transition = transitTicketChange(
-        change.ticket,
-        { to: "in_progress", resolutionNote: null, reopenReason: null },
-        LATER_INSTANT,
-      );
-
-      await repository.updateTicketChange(stored.id, 9, transition);
-
-      const openTransactions = await queryRows(
-        databaseUrl,
-        "SELECT pid FROM pg_stat_activity WHERE datname = current_database() AND state = 'idle in transaction'",
-      );
-      expect(openTransactions).toEqual([]);
-    });
-
-    it("ends two concurrent updates at the same version with one winner, the next version and only the winner's entry", async () => {
-      for (let round = 0; round < 20; round++) {
-        const { change, stored } = await storeTicket(
-          `Concurrent Ana ${round.toString()}`,
-        );
-
-        const transitedTicketChange = transitTicketChange(
-          change.ticket,
-          { to: "in_progress", resolutionNote: null, reopenReason: null },
-          INSTANT,
-        );
-        const transitedTicketChangeLater = transitTicketChange(
-          change.ticket,
-          { to: "in_progress", resolutionNote: null, reopenReason: null },
-          LATER_INSTANT,
-        );
-
-        const results = await Promise.all([
-          repository.updateTicketChange(
-            stored.id,
-            stored.version,
-            transitedTicketChange,
-          ),
-          repository.updateTicketChange(
-            stored.id,
-            stored.version,
-            transitedTicketChangeLater,
-          ),
-        ]);
-
-        const winnerAt = results[0] === null ? LATER_INSTANT : INSTANT;
-        expect(results.filter((result) => result === null)).toHaveLength(1);
-        expect(results.find((result) => result !== null)).toEqual({
-          id: stored.id,
-          version: 2,
-        });
-        await expect(
-          repository.findTicketById(stored.id),
-        ).resolves.toMatchObject({
-          ref: { id: stored.id, version: 2 },
-        });
-        const entries = await repository.listTicketHistoryEntries(stored.id);
-        expect(entries.map((entry) => entry.to)).toEqual([
-          "open",
-          "in_progress",
-        ]);
-        expect(entries[1]?.at).toEqual(winnerAt);
-      }
-    });
   });
 
   describe("findTicketById", () => {
@@ -410,6 +314,7 @@ describe("PgTicketRepository", () => {
 
     let listDatabaseUrl: string;
     let listPgPool: Pool;
+    let listPgClient: PoolClient;
     let listRepository: PgTicketRepository;
     let counter = 0;
 
@@ -545,10 +450,12 @@ describe("PgTicketRepository", () => {
     beforeAll(async () => {
       listDatabaseUrl = await createMigratedTestDatabase();
       listPgPool = createPgPool(listDatabaseUrl);
-      listRepository = new PgTicketRepository(listPgPool);
+      listPgClient = await listPgPool.connect();
+      listRepository = new PgTicketRepository(listPgClient);
     });
 
     afterAll(async () => {
+      listPgClient.release();
       await listPgPool.end();
     });
 

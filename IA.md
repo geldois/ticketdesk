@@ -151,6 +151,15 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: none (tweak)`: a IA reescreveu o CSS do front com variáveis de cor, espaço e tamanho num só lugar, deu à tabela
   e ao painel o mesmo desenho de cartão, acrescentou o `data-status` que colore o status e trocou os dois `select` de
   filtro por grupos de botões dentro do cartão da tabela, a partir do que pedi.
+- `spec: 00007`: a unidade de trabalho é minha, do desenho ao código. Decidi tirar a transação do repositório e
+  entregá-la ao caso de uso, e escrevi à mão o contrato `UoW`, a base `UseCase` com a fábrica injetada, o `PgUoW`, a
+  refatoração do `PgTicketRepository` para trabalhar sobre a conexão da unidade, a fábrica no container e a conversão do
+  primeiro caso de uso, o `GetTicketUseCase`. A IA entrou como tutora de sintaxe e como executora mecânica: ensinou o
+  equivalente em TypeScript de `async with` (`await using` e `[Symbol.asyncDispose]`), apontou o `BEGIN` que faltava e o
+  `begin()` chamado sem `await` no construtor, propôs a fábrica assíncrona com construtor privado, que reescrevi, depois
+  converteu os outros quatro casos de uso e o container para o padrão, e escreveu a sonda, os testes do `PgUoW` e a
+  adaptação dos testes que já existiam. Prompts relevantes: "estou procurando algo como um `__aenter__`, `__aexit__` e
+  with aqui no TS" e "garanta absolutamente que funciona. nada pode regredir".
 
 ## O que validei
 
@@ -370,6 +379,15 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   conflito 409 e a API parada com "Tentar de novo". A página não ganha rolagem horizontal em 1280, 1024, 820, 600 e 375
   pixels, os campos, os selects e o botão do formulário têm 36 pixels de altura, e não houve exceção no console nem
   resposta 5xx.
+- `spec: 00007`: pedi uma sonda vermelha antes de qualquer teste, e a IA a escreveu fora do repositório, contra um
+  PostgreSQL real, com 21 linhas: as 10 de regressão dos casos de uso passam no commit anterior e as 11 da unidade de
+  trabalho falham ali, porque o `PgUoW` não existe; na árvore nova passam as 21. Pedi que nada regredisse: os testes de
+  atomicidade que viviam no repositório foram movidos para o `PgUoW` com a mesma asserção, sem apagar nenhum, e a
+  corrida de duas gravações passou a usar duas unidades. A IA introduziu quatro defeitos de propósito, um por vez, e os
+  testes falharam em todos (o `dispose` sem `rollback`, o `commit` sem `COMMIT`, o `BEGIN` que falha sem liberar a
+  conexão e a transição sem `commit`). A suíte inteira, com 740 testes, passa acima do piso de cobertura, e uma pilha
+  descartável do compose, com a imagem construída do zero, respondeu às 11 checagens de HTTP, entre elas a corrida de
+  seis transições, com um `200` e cinco `409`, sem linha de erro, sem `5xx` e sem transação aberta.
 
 ## Um erro da IA
 
@@ -485,6 +503,10 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: none (tweak)`: o primeiro CSS da IA deixava a página mais larga que a janela (847 pixels de largura a 600),
   porque a grade da tela não limitava a coluna ao espaço disponível, e deixava estreito o campo da nota de resolução do
   painel. Apareceram ao medir a página no Chromium, e a IA corrigiu os dois antes do commit.
+- `spec: 00007`: na primeira conversão dos casos de uso, a IA escreveu `uow.ticketRepository!`, que o ESLint do projeto
+  recusa, e, quando a fábrica passou a ser assíncrona, deixou o `GetTicketUseCase` sem o `await` na fábrica, de modo que
+  `uow` seria uma `Promise`. A IA percebeu ao revisar o resultado e corrigiu os dois; a causa do `!` era o campo
+  opcional que a fábrica assíncrona eliminou.
 
 ## Uma decisão minha
 
@@ -650,6 +672,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: none (tweak)`: recusei o primeiro resultado do CSS por parecer cru e mandei um layout mais compacto e coeso,
   com tabela, painel e formulários do mesmo desenho e os filtros como botões integrados à tabela; escolhi o CSS sem
   dependência, sem biblioteca, entre as três opções que a IA apresentou.
+- `spec: 00007`: decidi que a transação é do caso de uso, por uma unidade de trabalho, e não de métodos do repositório
+  que a abrissem sozinhos: o ticket e a entrada do histórico precisam da mesma transação, e uma operação com mais uma
+  escrita, como uma chave de idempotência, também precisará, e o repositório não deve conhecer isso. A IA, quando
+  perguntei, recomendou o mesmo. Perguntei também se os casos de uso de leitura precisavam do `commit` que a IA tinha
+  posto neles e se não era melhor confiar no `rollback`; ficou assim, e só a escrita confirma.
 
 ## Onde a IA não entrou
 
@@ -698,3 +725,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00008`, passo 1: a migration do índice, com o `CREATE INDEX` e o `DROP INDEX`, é minha.
 - `spec: 00013`, passo 1: o contrato `ReadinessProbe`, o `CheckReadinessUseCase` e o primeiro rascunho da
   `PgReadinessProbe` (a primeira versão) são meus.
+- `spec: 00007`: o contrato `UoW`, a base `UseCase`, o `PgUoW` (a fábrica assíncrona, a guarda `finished` e o
+  `dispose`), a refatoração do `PgTicketRepository` para receber a conexão e a fábrica do container são meus. A IA
+  corrigiu três detalhes nos meus arquivos (a declaração do campo `ticketRepository` no `PgUoW`, um ponto e vírgula e o
+  tipo inferível de `finished`), trocou o tipo da fábrica do `UseCase` por uma que devolve `Promise` e converteu os
+  outros quatro casos de uso e as chamadas do container. A sonda e os testes do `PgUoW`, e a adaptação dos testes dos
+  casos de uso e do repositório, foram escritos pela IA.

@@ -1,4 +1,4 @@
-import type { Pool } from "pg";
+import type { Pool, PoolClient } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import {
@@ -6,6 +6,7 @@ import {
   queryRows,
 } from "../../../test/database.ts";
 import { DomainError } from "../../domain/errors.ts";
+import { PgUoW } from "../../infrastructure/pg-uow.ts";
 import { PgTicketRepository } from "../../infrastructure/repositories/pg-ticket-repository.ts";
 import { createPgPool } from "../../infrastructure/pool.ts";
 import { CreateTicketUseCase } from "./create-ticket.ts";
@@ -25,6 +26,7 @@ const INPUT: CreateTicketInput = {
 describe("CreateTicketUseCase", () => {
   let databaseUrl: string;
   let pgPool: Pool;
+  let pgClient: PoolClient;
   let repository: PgTicketRepository;
   let createTicket: CreateTicketUseCase;
 
@@ -39,11 +41,13 @@ describe("CreateTicketUseCase", () => {
   beforeAll(async () => {
     databaseUrl = await createMigratedTestDatabase();
     pgPool = createPgPool(databaseUrl);
-    repository = new PgTicketRepository(pgPool);
-    createTicket = new CreateTicketUseCase(repository);
+    pgClient = await pgPool.connect();
+    repository = new PgTicketRepository(pgClient);
+    createTicket = new CreateTicketUseCase(() => PgUoW.begin(pgPool));
   });
 
   afterAll(async () => {
+    pgClient.release();
     await pgPool.end();
   });
 

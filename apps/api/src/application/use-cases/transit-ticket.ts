@@ -1,5 +1,6 @@
 import type { UUID } from "node:crypto";
-import type { TicketRepository } from "../contracts/repositories/ticket-repository.ts";
+import type { UoW } from "../contracts/uow.ts";
+import { UseCase } from "../contracts/use-case.ts";
 import type { StoredTicket } from "../stored-ticket.ts";
 import { TicketNotFoundError, VersionConflictError } from "../errors.ts";
 import { normalizeTicketStatus } from "../../domain/invariants.ts";
@@ -11,15 +12,9 @@ export interface TransitTicketInput {
   readonly reopenReason: string | null;
 }
 
-export class TransitTicketUseCase {
-  readonly #ticketRepository: TicketRepository;
-
-  constructor(ticketRepository: TicketRepository) {
-    this.#ticketRepository = ticketRepository;
-  }
-
-  async #getStoredTicket(ticketId: UUID): Promise<StoredTicket> {
-    const storedTicket = await this.#ticketRepository.findTicketById(ticketId);
+export class TransitTicketUseCase extends UseCase {
+  async #getStoredTicket(uow: UoW, ticketId: UUID): Promise<StoredTicket> {
+    const storedTicket = await uow.ticketRepository.findTicketById(ticketId);
 
     if (storedTicket === null) {
       throw new TicketNotFoundError();
@@ -27,13 +22,16 @@ export class TransitTicketUseCase {
 
     return storedTicket;
   }
+
   async execute(
     ticketId: UUID,
     expectedVersion: number,
     input: TransitTicketInput,
     now: Date,
   ): Promise<StoredTicket> {
-    const storedTicket = await this.#getStoredTicket(ticketId);
+    await using uow = await this.uowFactory();
+
+    const storedTicket = await this.#getStoredTicket(uow, ticketId);
 
     if (storedTicket.ref.version !== expectedVersion) {
       throw new VersionConflictError(storedTicket);
@@ -50,17 +48,19 @@ export class TransitTicketUseCase {
     );
 
     const updatedStoredTicketRef =
-      await this.#ticketRepository.updateTicketChange(
+      await uow.ticketRepository.updateTicketChange(
         ticketId,
         expectedVersion,
         ticketChange,
       );
 
     if (updatedStoredTicketRef === null) {
-      const currentStoredTicket = await this.#getStoredTicket(ticketId);
+      const currentStoredTicket = await this.#getStoredTicket(uow, ticketId);
 
       throw new VersionConflictError(currentStoredTicket);
     }
+
+    await uow.commit();
 
     const updatedStoredTicket: StoredTicket = {
       ref: updatedStoredTicketRef,
