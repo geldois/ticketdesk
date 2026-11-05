@@ -349,6 +349,18 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00013`: cada passo partiu de uma sonda vermelha que ficou verde. A prontidão foi medida contra um Postgres de
   verdade pausado com `docker pause`, um teste executa o comando do healthcheck contra uma API de pé e contra uma sem
   banco, e o teste do log varre as linhas no nível `trace` atrás de texto do ticket e de query string.
+- `spec: none (tweak)`: pedi à IA uma passada completa pela tela e pela API vivas, numa pilha descartável do `compose`
+  com portas próprias e um Chromium controlado por CDP. Passaram criar, iniciar, resolver, reabrir, o conflito 409, a
+  paginação sem repetição, os filtros, a API fora do ar com "Tentar de novo", o duplo clique, o texto com HTML, o
+  celular e o teclado; trinta requisições inválidas à API responderam todas com o status e o `code` certos, e as 134
+  linhas de log eram JSON, sem nível `error`, sem 500 e sem o texto de um ticket. A passada achou três defeitos pequenos
+  da tela (o aviso de erro que ficava depois de uma ação bem-sucedida, o pedido do `favicon.ico` que dava 404 e o
+  `detail` em inglês numa tela em português), corrigidos e conferidos de novo na tela. O healthcheck do `db` por rede
+  foi provado em três subidas do zero.
+- `spec: 00004`: a regra de texto dos quatro campos passou de uma lista do que se aceita para uma lista do que se
+  recusa. Uma sonda de 33 casos nasceu vermelha (emoji composto, marca combinante de vários idiomas, apóstrofo curvo e
+  ponto no nome) e ficou verde; um caso da própria sonda estava errado (cento e vinte famílias de cinco pontos de código
+  não cabem em 120) e foi corrigido na sonda, não no código.
 
 ## Um erro da IA
 
@@ -639,8 +651,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   e revisei o texto antes do commit.
 - `spec: 00004`: os tipos de `ticket.ts`, o conjunto de códigos e a união `DomainErrorCode` de `errors.ts`, a
   `DomainError` abstrata e a primeira classe filha, em que a IA só corrigiu a declaração do `code`, são meus.
-- `spec: 00004`, passo 1: as etapas de normalização do `invariants.ts` (NFC, espaço em branco, corte) e os regex de
-  categorias aceitas de cada campo são meus.
+- `spec: 00004`, passo 1: as etapas de normalização do `invariants.ts` (NFC, espaço em branco, corte) são minhas; os
+  regex de categorias aceitas de cada campo, que também eram meus, foram depois trocados pela regra única de caracteres
+  recusados descrita em "O que validei".
 - `spec: 00004`, passo 1: o `createTicketChange` com a ordem das checagens e as cópias do instante, o `validateInstant`,
   os predicados `isTicket…` e os normalizadores de canal e prioridade são meus.
 - `spec: 00004`, passo 2: a tabela `TRANSITION_TICKET_STATUSES`, o `transitTicketChange` com a ordem das checagens e as

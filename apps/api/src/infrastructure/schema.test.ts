@@ -445,7 +445,7 @@ describe("ticket", () => {
     ).rejects.toMatchObject(notNullViolation("created_at"));
   });
 
-  it.each(["Ana $ Lima", "Ana \u{1F600}"])(
+  it.each(["Ana \u0001", "Ana ‮"])(
     "accepts the customer name %s that the domain refuses, because the character format belongs to the domain",
     async (customerName) => {
       await expect(

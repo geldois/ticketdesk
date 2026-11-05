@@ -64,10 +64,17 @@ describe("createTicketChange", () => {
     expect(ticket.description).toBe("linha um linha dois");
   });
 
-  it.each(["Maria 😀", "Maria $", "Maria <b>", "Maria + Ana", "Maria\u0000"])(
+  it.each(["Maria\u0000", "Maria\u0001", "Maria‮"])(
     "refuses the name %j",
     (customerName) => {
       expect(() => create({ customerName })).toThrow(InvalidCustomerNameError);
+    },
+  );
+
+  it.each(["Maria 😀", "Maria $", "Maria <b>", "O’Brien", "Dr. João"])(
+    "accepts the emoji, symbols and punctuation in the name %j",
+    (customerName) => {
+      expect(create({ customerName }).ticket.customerName).toBe(customerName);
     },
   );
 

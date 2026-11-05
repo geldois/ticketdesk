@@ -62,8 +62,6 @@ const FIELDS = [
   },
 ];
 
-const FREE_TEXT_FIELDS = FIELDS.filter(({ name }) => name !== "customer name");
-
 const COMBINING_TILDE = String.fromCodePoint(0x303);
 const A_TILDE = String.fromCodePoint(0xe3);
 
@@ -135,34 +133,53 @@ describe.each(FIELDS)("normalizeInvariantField of the $name", (setup) => {
   });
 });
 
-describe.each(FREE_TEXT_FIELDS)(
-  "normalizeInvariantField of the $name",
+describe.each(FIELDS)(
+  "normalizeInvariantField of the $name by the one text rule",
   (setup) => {
-    it("accepts punctuation", () => {
-      const text = "Erro 500, ao pagar (cartão)! Pode ajudar?";
+    const { field, invalid } = setup;
 
-      expect(normalizeInvariantField(text, setup.field)).toBe(text);
+    it.each([
+      "Erro 500, ao pagar (cartão)! Pode ajudar?",
+      "R$ 10 + 5 < 20 © ™",
+      "O’Brien",
+      "Dr. João",
+      "...",
+      "☺",
+    ])("accepts the punctuation and symbols in %j", (text) => {
+      expect(normalizeInvariantField(text, field)).toBe(text);
     });
 
-    it.each(["Maria 😀", "R$ 10 + 5 < 20", "100% © ™"])(
-      "accepts the emoji and symbols in %j",
-      (text) => {
-        expect(normalizeInvariantField(text, setup.field)).toBe(text);
-      },
-    );
+    it.each([
+      ["a heart with the variation selector", "❤️"],
+      ["a skin tone", "👍🏽"],
+      ["a family joined by zero width joiners", "👨‍👩‍👧"],
+      ["a flag", "🇧🇷"],
+      ["a keycap", "1️⃣"],
+    ])("accepts the emoji with %s", (_description, text) => {
+      expect(normalizeInvariantField(text, field)).toBe(text);
+    });
+
+    it.each([
+      ["Devanagari marks", "हिन्दी"],
+      ["a zero width non-joiner", "می‌خواهم"],
+      ["a right-to-left mark", "‏مرحبا"],
+    ])("accepts the text with %s", (_description, text) => {
+      expect(normalizeInvariantField(text, field)).toBe(text);
+    });
+
+    it.each([
+      ["a control character", "Ma\u0001ria"],
+      ["a lone surrogate", "Maria\uD800"],
+      ["a private use character", "Maria"],
+      ["an unassigned code point", "Maria͸"],
+      ["a right-to-left override", "Maria‮"],
+      ["a left-to-right isolate", "Maria⁦"],
+      ["only zero width spaces", "​​"],
+    ])("refuses the text with %s", (_description, text) => {
+      expect(() => normalizeInvariantField(text, field)).toThrow(invalid);
+    });
   },
 );
-
-describe("normalizeInvariantField of the customer name", () => {
-  it.each(["Maria 😀", "Maria $", "Maria <", "Maria +"])(
-    "refuses the emoji or symbol in %j",
-    (text) => {
-      expect(() => normalizeInvariantField(text, CUSTOMER_NAME)).toThrow(
-        InvalidCustomerNameError,
-      );
-    },
-  );
-});
 
 describe("normalizeTicketChannel", () => {
   it.each(["chat", "email", "phone"])("returns %j as it is", (raw) => {

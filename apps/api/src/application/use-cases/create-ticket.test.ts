@@ -91,7 +91,7 @@ describe("CreateTicketUseCase", () => {
     const entriesBefore = await countRows("ticket_history_entry");
 
     const failure = await createTicket
-      .execute({ ...INPUT, customerName: "Ana $" }, INSTANT)
+      .execute({ ...INPUT, customerName: "Ana \u0001" }, INSTANT)
       .then(() => undefined)
       .catch((error: unknown) => error);
 

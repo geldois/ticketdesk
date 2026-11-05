@@ -233,8 +233,8 @@ describe("the HTTP server", () => {
 
     it.each([
       [
-        "a customer name with a symbol",
-        { ...VALID_BODY, customerName: "Ana$" },
+        "a customer name with a control character",
+        { ...VALID_BODY, customerName: "Ana\u0001" },
         "invalid_customer_name",
       ],
       [

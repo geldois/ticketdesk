@@ -23,61 +23,61 @@ import {
 } from "./ticket.ts";
 
 export interface InvariantField {
-  readonly regex: RegExp;
   readonly maxLength: number;
   readonly invalidError: new () => DomainError;
   readonly missingError: (new () => DomainError) | null;
 }
 
 export const CUSTOMER_NAME: InvariantField = {
-  regex: RegExp("^[\\p{L}\\p{N}\\s'-]*$", "u"),
   maxLength: 120,
   invalidError: InvalidCustomerNameError,
   missingError: null,
 };
 
-const FREE_TEXT_REGEX = RegExp("^[\\p{L}\\p{N}\\p{P}\\p{S}\\s]*$", "u");
-
 export const DESCRIPTION: InvariantField = {
-  regex: FREE_TEXT_REGEX,
   maxLength: 4000,
   invalidError: InvalidDescriptionError,
   missingError: null,
 };
 
 export const RESOLUTION_NOTE: InvariantField = {
-  regex: FREE_TEXT_REGEX,
   maxLength: 2000,
   invalidError: InvalidResolutionNoteError,
   missingError: MissingResolutionNoteError,
 };
 
 export const REOPEN_REASON: InvariantField = {
-  regex: FREE_TEXT_REGEX,
   maxLength: 500,
   invalidError: InvalidReopenReasonError,
   missingError: MissingReopenReasonError,
 };
+
+const FORBIDDEN_CHARACTER = RegExp(
+  "[\\p{Cc}\\p{Cs}\\p{Co}\\p{Cn}\\u202A-\\u202E\\u2066-\\u2069]",
+  "u",
+);
+const VISIBLE_CHARACTER = RegExp("[\\p{L}\\p{N}\\p{P}\\p{S}]", "u");
 
 export function normalizeInvariantField(
   raw: string,
   field: InvariantField,
 ): string {
   const compacted = raw.normalize("NFC");
-
-  if (!field.regex.test(compacted)) {
-    throw new field.invalidError();
-  }
-
   const condensed = compacted.replace(RegExp("\\s+", "g"), " ");
-  const trimmed = condensed.trim();
-  const normalized = trimmed;
+  const normalized = condensed.trim();
   const length = Array.from(normalized).length;
 
   if (length < 1) {
     throw field.missingError !== null
       ? new field.missingError()
       : new field.invalidError();
+  }
+
+  if (
+    FORBIDDEN_CHARACTER.test(normalized) ||
+    !VISIBLE_CHARACTER.test(normalized)
+  ) {
+    throw new field.invalidError();
   }
 
   if (length > field.maxLength) {
