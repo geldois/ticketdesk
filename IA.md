@@ -128,6 +128,21 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   cada uma, o proxy do `vite.config.ts`, o script `dev:web` e as passagens do `README.md`.
 - `spec: 00010`, passo 2: por delegação minha, a IA escreveu a sonda e fez a ligação do `apps/web` ao pacote do
   contrato: a dependência no `package.json`, o lockfile e as cópias do pacote no estágio `web` do `Dockerfile`.
+- `spec: 00011`: a IA me entrevistou sobre onde ficam o formulário e as transições, como o conflito aparece e quanto da
+  regra mora na API, e redigiu o rascunho da spec, que o `docs-auditor` revisou antes do commit; os sete achados médios
+  foram corrigidos antes de congelá-la.
+- `spec: 00012`: depois que decidi fechar os dois pontos fracos do front, o corpo lido sem validação e o cliente sem
+  teste, a IA redigiu o rascunho da spec, que o `docs-auditor` revisou antes do commit; os nove achados médios foram
+  corrigidos antes de congelá-la.
+- `spec: 00010`, passo 6: por delegação minha, a IA pesquisou as versões do `stylelint` e do `html-validate`, escreveu a
+  sonda com os dezesseis defeitos provocados, montou `.stylelintrc.json` e `.htmlvalidate.json`, ligou os dois ao
+  `check` e ao `fix` e corrigiu o CSS e o HTML que as regras reprovaram.
+- `spec: 00010`, `spec: 00011` e `spec: 00012`: orquestrei a implementação do `apps/web`, decidindo o desenho (a regra
+  na API, o front no mínimo, o `.env` como única fonte dos valores) e corrigindo o rumo a cada passo, e a IA a executou
+  a partir das specs: o cliente HTTP com a leitura validada pelos esquemas do contrato, os hooks que guardam o estado da
+  lista, do painel, da criação e da transição, os componentes e o CSS responsivo, e, do lado da API, a apresentação que
+  diz em cada ticket para onde ele pode ir. Cada passo partiu de uma sonda fora do repositório, e os testes do cliente
+  rodam contra a API e o banco reais.
 
 ## O que validei
 
@@ -311,6 +326,21 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   semeados, empates de `created_at` forçados no banco, tickets com transições e um servidor local que responde 502 com
   texto; antes de entregá-la, a IA a provou contra um cliente descartável seu, fora do repositório, e depois o apagou.
   Ela partiu vermelha, na importação do arquivo, e ficou toda verde com onze linhas.
+- `spec: 00011` e `spec: 00012`: o teste do cliente roda contra a API real e o banco real, com 45 tickets e empates de
+  `created_at`, cada filtro, o histórico em ordem, os erros e vinte rodadas de duas transições disparadas juntas, que
+  dão sempre um sucesso e um conflito; um servidor local entra só para o que a API não produz, como o 502 em texto e o
+  corpo fora do contrato. Cada passo da 00011 e da 00012 partiu de uma sonda vermelha fora do repositório e fechou com
+  `fix` e `check` verdes.
+- `spec: 00010`, passo 6: antes de entrar no repositório, as versões dos linters de CSS e de HTML foram pesquisadas no
+  registro do npm e provadas num diretório descartável com dezesseis defeitos provocados, oito de CSS e oito de HTML,
+  cada um reprovado pela regra esperada; no repositório, os arquivos limpos passam, o `fix` conserta o defeito de ordem
+  das propriedades e nenhum cache aparece fora de `.cache/`.
+- `spec: none (tweak)`: uma subida do zero do `docker compose` falhou uma vez, com o `migrate` recusado pelo banco. Pedi
+  a um agente da IA que testasse a hipótese num clone do repositório, com projeto e volumes próprios, sem tocar na minha
+  pilha: em 44 subidas do zero, nenhuma falhou. A mesma medição mostrou o mecanismo possível, em que o Postgres declara
+  "pronto" duas vezes na inicialização e o `pg_isready` por socket pode marcar o banco saudável por cerca de um décimo
+  de segundo antes de a porta de rede abrir. A falha não reproduziu, então a causa segue como hipótese e o
+  `compose.yaml` não mudou.
 
 ## Um erro da IA
 
@@ -414,6 +444,9 @@ acha com `git log --grep`. O arquivo cresce com as specs.
 - `spec: 00010`, passo 3: a primeira versão da sonda reabria o ticket de `resolved` para `in_progress`, e a API recusou
   com 422 `invalid_transition`: a reabertura volta para `open`. A IA só percebeu ao validar a sonda contra o cliente
   descartável, e corrigiu a sonda, não a API.
+- `spec: 00010`, passos 4 e 5: a regra responsiva da tabela vinha antes da regra base de mesmo peso e era sobrescrita, e
+  clicar de novo na linha já selecionada deixava o painel preso em "Carregando ticket…". A IA achou o primeiro ao
+  escrever o painel e o auditor apontou o segundo antes do commit; os dois foram corrigidos.
 
 ## Uma decisão minha
 
@@ -566,6 +599,11 @@ acha com `git log --grep`. O arquivo cresce com as specs.
   pacote compartilhado e dividir o `Settings` da API, a IA listou o custo de cada caminho (um workspace novo, o
   `Dockerfile` e o `migrate`, que usa o mesmo leitor), e decidi deixar a API como está e abrir a divisão só quando ela
   ganhar outra variável.
+- `spec: 00011` e `spec: 00012`: mandei que a regra morasse na API e que o front guardasse o mínimo: cada ticket diz
+  para onde pode ir e o que a transição exige, e a tela só desenha. Mandei também fechar os dois pontos fracos do front,
+  o corpo sem validação e o cliente sem teste: o contrato virou um esquema por resposta, o cliente valida cada corpo e o
+  teste dele roda contra a API real. Quando a IA propôs a opção mais simples, pedi a mais profissional e defensável, sem
+  duplicar nenhuma fonte da verdade.
 
 ## Onde a IA não entrou
 
