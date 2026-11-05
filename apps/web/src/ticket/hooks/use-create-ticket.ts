@@ -30,9 +30,14 @@ const INITIAL_VALUES: CreateTicketValues = {
 const CREATE_ERROR = "Não foi possível criar o ticket.";
 
 export function useCreateTicket(onCreated: () => void): CreateTicketController {
-  const [values, change] = useState<CreateTicketValues>(INITIAL_VALUES);
+  const [values, setValues] = useState<CreateTicketValues>(INITIAL_VALUES);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function change(next: CreateTicketValues): void {
+    setError(null);
+    setValues(next);
+  }
 
   async function submit(): Promise<void> {
     setSending(true);
@@ -40,7 +45,7 @@ export function useCreateTicket(onCreated: () => void): CreateTicketController {
 
     try {
       await createTicket(values);
-      change(INITIAL_VALUES);
+      setValues(INITIAL_VALUES);
       onCreated();
     } catch (failure) {
       setError(describeError(CREATE_ERROR, failure));
